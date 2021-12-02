@@ -1,0 +1,1305 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="minigui" />
+		<Option pch_mode="2" />
+		<Option compiler="armelfgcc" />
+		<Build>
+			<Target title="default">
+				<Option output="default/minigui.elf" prefix_auto="0" extension_auto="0" />
+				<Option object_output="default" />
+				<Option type="1" />
+				<Option compiler="armelfgcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-g" />
+			<Add option="-O2" />
+			<Add option="-fno-common" />
+			<Add option="-mcpu=arm7tdmi" />
+			<Add option="-DEK_AT91SAM7A3" />
+			<Add option="-D__NO_CTOR_DTOR_SUPPORT__" />
+			<Add option="-DUSE_IRQ" />
+			<Add directory="src" />
+			<Add directory="h" />
+		</Compiler>
+		<Linker>
+			<Add option="-s" />
+			<Add option="-Wl,-Map,map.txt" />
+			<Add option="-mcpu=arm7tdmi" />
+			<Add option="-T ld/targetRAM.ld" />
+		</Linker>
+		<Unit filename="h/at91sam7a3.h" />
+		<Unit filename="h/sam7a3ek.h" />
+		<Unit filename="ld/target.ld" />
+		<Unit filename="ld/targetRAM.ld" />
+		<Unit filename="src/main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/vectors.S" />
+		<Unit filename="../src/client/cliconn.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/client/client.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/button.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/combobox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/ctrlmisc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/edit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/listbox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/medit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/menubutton.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/newtoolbar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/progressbar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/propsheet.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/simedit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/static.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/toolbar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/control/trackbar.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/big5unimap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/charset.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/charset.h" />
+		<Unit filename="../src/font/convgbmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/devfont.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/euckrunimap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/fontname.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ftos2/ifi/32fddef.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ftos2/ifi/32fdstrc.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ftos2/ifi/32ifimet.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ftos2/ifi/32pmifi.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ftos2/ifi/ftifi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ftos2/ifi/ftifi.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ftos2/ifi/ftmem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ftos2/ifi/test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ftos2/lib/ttmemory.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ftos2/uninst.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2bdf/remap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2bdf/remap.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2bdf/ttf2bdf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pfb/t1asm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pfb/ttf2pfb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/c-auto.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/case.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/case.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/emdir.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/emdir.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/emtexdir.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/emtexdir.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/errormsg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/errormsg.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/filesrch.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/filesrch.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/ligkern.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/ligkern.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/newobj.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/newobj.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/parse.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/parse.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/pklib.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/pklib.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/subfont.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/subfont.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/texenc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/texenc.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/tfmaux.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/tfmaux.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/ttf2pk.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/ttf2tfm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/ttf2tfm.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/ttfaux.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/ttfaux.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/ttfenc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/ttfenc.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/ttflib.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/ttflib.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/vplaux.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttf2pk/vplaux.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttfbanner/ttfbanner.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/ttfbanner/ttfbanner.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/driver32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/hack_common.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/hack_ftdump.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/hack_ftlint.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/hack_ftstring.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/hack_fttimer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/hack_ftview.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/resource.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/stdafx.cpp" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/stdafx.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/testw32.cpp" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/testw32.h" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/testw32.rc" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/testw32dlg.cpp" />
+		<Unit filename="../src/font/freetype-1.3.1/contrib/win32/testw32dlg.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/amigaos/freetype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/amigaos/ft_conf.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/ansi/freetype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/ansi/ft_conf.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/debugger/freetype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/debugger/ft_conf.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/mac/freetype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/mac/ft_conf.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/mac/ttmmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/msdos/freetype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/msdos/ft_conf.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/msdos/hugefile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/msdos/hugemem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/os2/freetype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/os2/ft_conf.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/os2/os2file.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/unix/freetype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/unix/ttmmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/vms/ft_conf.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/win16/freetype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/win16/ft_conf.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/win16/hugefile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/win16/hugemem.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/win32/freetype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/arch/win32/ft_conf.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxcmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxcmap.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxerr18.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxerr18.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxgasp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxgasp.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxgdef.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxgdef.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxgpos.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxgpos.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxgsub.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxgsub.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxkern.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxkern.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxopen.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxopen.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxopenf.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxpost.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxpost.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxsbit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxsbit.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxwidth.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/extend/ftxwidth.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/freetype.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/fterrid.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ftnameid.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/header.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttapi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttcache.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttcache.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttcalc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttcalc.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttcmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttcmap.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttconfig.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttdebug.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttdebug.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttengine.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttextend.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttextend.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttfile.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttfile.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttgload.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttgload.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttinterp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttinterp.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttload.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttload.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttmemory.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttmemory.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttmutex.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttmutex.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttobjs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttobjs.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttraster.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/lib/ttraster.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/tttables.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/tttags.h" />
+		<Unit filename="../src/font/freetype-1.3.1/lib/tttypes.h" />
+		<Unit filename="../src/font/freetype-1.3.1/test/arabic.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/arabic.h" />
+		<Unit filename="../src/font/freetype-1.3.1/test/arch/amigaos/gfsamiga.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/arch/amigaos/gw_amiga.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/arch/msdos/gfs_dos.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/arch/msdos/time_tc.h" />
+		<Unit filename="../src/font/freetype-1.3.1/test/arch/os2/gfs_os2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/arch/os2/gpm_os2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/arch/unix/gwin_x11.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/arch/win16/gw_win16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/arch/win32/gw_win32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/blitter.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/blitter.h" />
+		<Unit filename="../src/font/freetype-1.3.1/test/common.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/common.h" />
+		<Unit filename="../src/font/freetype-1.3.1/test/display.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/display.h" />
+		<Unit filename="../src/font/freetype-1.3.1/test/fdebug.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/ftdump.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/fterror.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/ftlint.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/ftmetric.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/ftsbit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/ftstring.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/ftstrpnm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/ftstrtto.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/fttimer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/ftview.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/ftzoom.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/gdriver.h" />
+		<Unit filename="../src/font/freetype-1.3.1/test/gevents.h" />
+		<Unit filename="../src/font/freetype-1.3.1/test/gmain.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype-1.3.1/test/gmain.h" />
+		<Unit filename="../src/font/freetype.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype.h" />
+		<Unit filename="../src/font/freetype/freetype.h" />
+		<Unit filename="../src/font/freetype/fterrid.h" />
+		<Unit filename="../src/font/freetype/ftnameid.h" />
+		<Unit filename="../src/font/freetype/ftxcmap.h" />
+		<Unit filename="../src/font/freetype/ftxkern.h" />
+		<Unit filename="../src/font/freetype/ftxwidth.h" />
+		<Unit filename="../src/font/freetype2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/freetype2.h" />
+		<Unit filename="../src/font/gb18030unimap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/gbkunimap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/gbunimap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/in-core/12x24-iso8859-1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/in-core/6x12-iso8859-1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/in-core/courier_8x13.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/in-core/fixedsys_8x15.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/in-core/hei-24-gb2312.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/in-core/sansserif_11x13.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/in-core/song-12-gb2312.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/in-core/symb12.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/in-core/system_14x16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/in-core/terminal_8x12.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/in-core/vgarom_8x8.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/jisunimap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/mapunitogb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/qpf.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/qpf.h" />
+		<Unit filename="../src/font/rawbitmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/rawbitmap.h" />
+		<Unit filename="../src/font/sjisunimap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/sysfont.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/type1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/type1.h" />
+		<Unit filename="../src/font/ujisunimap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/varbitmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/font/varbitmap.h" />
+		<Unit filename="../src/gal/gal.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/libggi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/libggi.h" />
+		<Unit filename="../src/gal/native/ecoslcd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/fb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/fb.h" />
+		<Unit filename="../src/gal/native/fblin-1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/fblin-2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/fblin-4.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/fblin1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/fblin16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/fblin2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/fblin32.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/fblin4.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/fblin8.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/fbvga16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/fbvga16.h" />
+		<Unit filename="../src/gal/native/genfunc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/genfunc_clipline.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/native.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/native.h" />
+		<Unit filename="../src/gal/native/qvfb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/native/qvfb.h" />
+		<Unit filename="../src/gal/native/scr_fb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/svgalib.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/svgalib.h" />
+		<Unit filename="../src/gal/vga16.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gal/vga16.h" />
+		<Unit filename="../src/gdi/attr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/bitmap-comm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/bitmap-lite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/bitmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/clip-lite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/clip.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/cliprect.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/coor.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/draw-lite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/draw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/drawtext.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/drawtext.h" />
+		<Unit filename="../src/gdi/gdi-lite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/gdi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/icon-lite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/icon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/loadicon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/logfont.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/map.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/palette.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/readbmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/rect.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/screen-lite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/screen.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/text-lite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gdi/text.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/accelkey.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/caret.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/ctrlclass.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/de-kmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/de-latin1-kmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/de-latin1-nodeadkeys-kmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/defkeymap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/dialog.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/es-cp850-kmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/es-kmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/fr-kmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/fr-pc-kmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/it-kmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/keyboard.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/keyboard.h" />
+		<Unit filename="../src/gui/linux_kd.h" />
+		<Unit filename="../src/gui/linux_keyboard.h" />
+		<Unit filename="../src/gui/linux_types.h" />
+		<Unit filename="../src/gui/menu.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/gui/window.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/2410.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/2410.h" />
+		<Unit filename="../src/ial/ads.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/ads.h" />
+		<Unit filename="../src/ial/ads_internal.h" />
+		<Unit filename="../src/ial/dummy.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/dummy.h" />
+		<Unit filename="../src/ial/ep7211.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/ep7211.h" />
+		<Unit filename="../src/ial/ep7211_internal.h" />
+		<Unit filename="../src/ial/fpc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/fpc.h" />
+		<Unit filename="../src/ial/ggi_input.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/helio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/helio.h" />
+		<Unit filename="../src/ial/ial.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/ipaq.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/ipaq.h" />
+		<Unit filename="../src/ial/libggi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/libggi.h" />
+		<Unit filename="../src/ial/mc68x328.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/mc68x328.h" />
+		<Unit filename="../src/ial/mpc823.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/mpc823.h" />
+		<Unit filename="../src/ial/native/kbd_tty.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/native/mou_gpm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/native/mou_imps2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/native/mou_ms.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/native/mou_ms3.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/native/mou_ps2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/native/native.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/native/native.h" />
+		<Unit filename="../src/ial/native/vtswitch-lite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/px255b.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/px255b.h" />
+		<Unit filename="../src/ial/qvfb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/qvfb.h" />
+		<Unit filename="../src/ial/svgaggi_internal.h" />
+		<Unit filename="../src/ial/svgalib.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/svgalib.h" />
+		<Unit filename="../src/ial/t800.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/t800.h" />
+		<Unit filename="../src/ial/tf-code.h" />
+		<Unit filename="../src/ial/tf-stb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/tf-stb.h" />
+		<Unit filename="../src/ial/vr4181.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ial/vr4181.h" />
+		<Unit filename="../src/ime/hzinput.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ime/hzinput.h" />
+		<Unit filename="../src/ime/pinyin.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/ime/pinyin.h" />
+		<Unit filename="../src/include/accelkey.h" />
+		<Unit filename="../src/include/blockheap.h" />
+		<Unit filename="../src/include/client.h" />
+		<Unit filename="../src/include/cliprect.h" />
+		<Unit filename="../src/include/control/button.h" />
+		<Unit filename="../src/include/control/combobox.h" />
+		<Unit filename="../src/include/control/ctrlmisc.h" />
+		<Unit filename="../src/include/control/edit.h" />
+		<Unit filename="../src/include/control/listbox.h" />
+		<Unit filename="../src/include/control/medit.h" />
+		<Unit filename="../src/include/control/menubutton.h" />
+		<Unit filename="../src/include/control/newtoolbar.h" />
+		<Unit filename="../src/include/control/progressbar.h" />
+		<Unit filename="../src/include/control/propsheet.h" />
+		<Unit filename="../src/include/control/simedit.h" />
+		<Unit filename="../src/include/control/static.h" />
+		<Unit filename="../src/include/control/toolbar.h" />
+		<Unit filename="../src/include/control/trackbar.h" />
+		<Unit filename="../src/include/ctrlclass.h" />
+		<Unit filename="../src/include/cursor.h" />
+		<Unit filename="../src/include/dc.h" />
+		<Unit filename="../src/include/devfont.h" />
+		<Unit filename="../src/include/drawsemop.h" />
+		<Unit filename="../src/include/event.h" />
+		<Unit filename="../src/include/fontname.h" />
+		<Unit filename="../src/include/gal.h" />
+		<Unit filename="../src/include/ial.h" />
+		<Unit filename="../src/include/icon.h" />
+		<Unit filename="../src/include/incoreres.h" />
+		<Unit filename="../src/include/inline.h" />
+		<Unit filename="../src/include/internals.h" />
+		<Unit filename="../src/include/memops.h" />
+		<Unit filename="../src/include/menu.h" />
+		<Unit filename="../src/include/misc.h" />
+		<Unit filename="../src/include/msgstr.h" />
+		<Unit filename="../src/include/newgal.h" />
+		<Unit filename="../src/include/oldgal.h" />
+		<Unit filename="../src/include/ourhdr.h" />
+		<Unit filename="../src/include/readbmp.h" />
+		<Unit filename="../src/include/server.h" />
+		<Unit filename="../src/include/sharedres.h" />
+		<Unit filename="../src/include/sockio.h" />
+		<Unit filename="../src/include/sysfont.h" />
+		<Unit filename="../src/include/sysres.h" />
+		<Unit filename="../src/include/timer.h" />
+		<Unit filename="../src/kernel/blockheap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/cursor-lite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/cursor-sa.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/cursor.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/desktop-comm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/desktop-lite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/desktop.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/event.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/fixstr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/init-lite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/init.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/message.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/sharedres.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/timer-lite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/timer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/kernel/timer_posix.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/main/main-lite.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/main/main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/about.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/drawsemop.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/endianrw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/error.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/errorlog.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/listenfd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/math.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/math3d.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/misc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/nposix.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/rwops.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/sockio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/misc/systext.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/mybmp/gif.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/mybmp/jpeg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/mybmp/lbm.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/mybmp/mybmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/mybmp/pcx.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/mybmp/png.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/mybmp/tga.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/mybmp/winbmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/RLEaccel.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/RLEaccel_c.h" />
+		<Unit filename="../src/newgal/blit.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/blit.h" />
+		<Unit filename="../src/newgal/blit_0.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/blit_1.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/blit_A.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/blit_A.h" />
+		<Unit filename="../src/newgal/blit_N.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/dummy/nullvideo.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/dummy/nullvideo.h" />
+		<Unit filename="../src/newgal/ecoslcd/ecoslcd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/ecoslcd/ecoslcd.h" />
+		<Unit filename="../src/newgal/fbcon/3dfx_mmio.h" />
+		<Unit filename="../src/newgal/fbcon/3dfx_regs.h" />
+		<Unit filename="../src/newgal/fbcon/fb3dfx.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/fbcon/fb3dfx.h" />
+		<Unit filename="../src/newgal/fbcon/fbmatrox.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/fbcon/fbmatrox.h" />
+		<Unit filename="../src/newgal/fbcon/fbneomagic.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/fbcon/fbneomagic.h" />
+		<Unit filename="../src/newgal/fbcon/fbvideo.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/fbcon/fbvideo.h" />
+		<Unit filename="../src/newgal/fbcon/matrox_mmio.h" />
+		<Unit filename="../src/newgal/fbcon/matrox_regs.h" />
+		<Unit filename="../src/newgal/fbcon/neomagic_mmio.h" />
+		<Unit filename="../src/newgal/gamma.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/leaks.h" />
+		<Unit filename="../src/newgal/newgal.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/pixels.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/pixels_c.h" />
+		<Unit filename="../src/newgal/qvfb/qvfb.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/qvfb/qvfb.h" />
+		<Unit filename="../src/newgal/stretch.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/stretch_c.h" />
+		<Unit filename="../src/newgal/surface.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/sysvideo.h" />
+		<Unit filename="../src/newgal/video.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/yuv.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/yuv_mmx.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/yuv_sw.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgal/yuv_sw_c.h" />
+		<Unit filename="../src/newgal/yuvfuncs.h" />
+		<Unit filename="../src/newgdi/arc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/attr.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/bitmap.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/clip.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/coor.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/drawtext.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/drawtext.h" />
+		<Unit filename="../src/newgdi/flood.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/gdi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/generators.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/icon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/line.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/logfont.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/map.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/palette.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/pixel.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/pixel_ops.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/pixel_ops.h" />
+		<Unit filename="../src/newgdi/polygon.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/polygon.h" />
+		<Unit filename="../src/newgdi/readbmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/rect.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/region.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/screen.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/text.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/newgdi/yuv.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/server/client.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/server/request.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/server/servaccept.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/server/server.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/server/servlisten.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/standalone/standalone.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/bmps-3d-ecos.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/bmps-3d.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/bmps-flat-ecos.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/bmps-flat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/button-3d-bmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/button-flat-bmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/checkmark-3d-bmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/checkmark-flat-bmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/cursors.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/downarrow-3d-bmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/downarrow-flat-bmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/fold-ico.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/icons-3d.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/icons-flat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/mgetc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/resource.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/spinbox-3d-bmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/spinbox-flat-bmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/syscfg.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/unfold-ico.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/updownarrow-3d-bmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/sysres/updownarrow-flat-bmp.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/template.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../src/template.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

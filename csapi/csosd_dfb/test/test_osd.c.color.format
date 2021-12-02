@@ -1,0 +1,208 @@
+#include <stdio.h>
+#include <unistd.h>
+#include <string.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
+#include <linux/ioctl.h>
+
+#include "global.h"
+#include "csosd.h"
+
+/*=============================*/
+/* config region */
+#define DEBUG
+
+/*#define TrueColorPIC*/
+/*#define SEVEN_P*/
+/*#define ARGBFOUR*/
+#define ARGBFIVE
+/*#define SECPIC*/
+/*=============================*/
+
+/* config region config */
+
+#ifdef  DEBUG
+#define debug(fmt,args...)      printf (fmt ,##args)
+#else
+#define debug(fmt,args...)
+#endif
+
+int
+main(void)
+{
+	int ret = 0;
+
+#if defined( TrueColorPIC)
+	#define BUF1_SIZE (720*480*4)
+#elif defined(SEVEN_P)
+	#define BUF1_SIZE (1280*720*2)
+#elif defined (ARGBFOUR)
+	#define BUF1_SIZE (720*576*2)
+#elif defined (ARGBFIVE)
+	#define BUF1_SIZE (720*576*2)
+#else
+	#define BUF1_SIZE (720*576*2)
+#endif
+
+	CSOSD_HANDLE osd_handle_0;
+	osd_handle_0 = CSOSD_Open(0);
+
+	CSOSD_Config   osd_config_layer1 =
+	{
+#if defined(TrueColorPIC)
+		OSD_MODE_480I,
+		OSD_COLOR_DEPTH_32,
+		OSD_COLOR_FORMAT_ARGB8888
+#elif defined (SEVEN_P)
+		OSD_MODE_720P50, 		/* TODO */
+		OSD_COLOR_DEPTH_16,
+		OSD_COLOR_FORMAT_RGB565
+#elif defined (ARGBFOUR)
+		OSD_MODE_576I,
+		OSD_COLOR_DEPTH_16,
+		OSD_COLOR_FORMAT_ARGB4444
+#elif defined (ARGBFIVE)
+		OSD_MODE_576I,
+		OSD_COLOR_DEPTH_16,
+		OSD_COLOR_FORMAT_ARGB1555
+#else
+		OSD_MODE_576I,
+		OSD_COLOR_DEPTH_16,
+		OSD_COLOR_FORMAT_RGB565
+#endif
+	};
+
+	ret = CSOSD_SetConfig( osd_handle_0, &osd_config_layer1 );
+	debug(" CSOSD_SetConfig ret = %d\n", ret);
+
+	ret = CSOSD_Enable(osd_handle_0);
+	debug(" CSOSD_Enable ret = %d\n", ret);
+
+	ret = CSOSD_SetAlpha(osd_handle_0, 255);
+	debug(" CSOSD_SetAlpha  ret = %d\n", ret);
+
+	unsigned char 	*addr1 = 0;
+	int 	ts_file1 = 0;
+	int 	read_len1 = 0;
+	unsigned char 	read_buf1[BUF1_SIZE];
+	CSOSD_GetBaseAddr(osd_handle_0, &addr1);
+	printf("CSOSD_GetBaseAddr----- addr is : %p!!\n",addr1);
+
+#if defined( TrueColorPIC)
+	ts_file1 = open("/linuxdrv/tvetest/UTMC_720x480.argb8888",O_RDONLY);
+#elif defined(ARGBFOUR)
+	ts_file1 = open("/linuxdrv/tvetest/game4444.rgb",O_RDONLY);
+#elif defined( SEVEN_P)
+	ts_file1 = open("/linuxdrv/tvetest/2-720p.bmp",O_RDONLY);
+#elif defined( ARGBFIVE)
+	ts_file1 = open("/linuxdrv/tvetest/beginlogo.rgb",O_RDONLY);
+#else
+/*        ts_file1 = open("/linuxdrv/tvetest/logo.gif",O_RDONLY);*/
+	ts_file1 = open("/linuxdrv/tvetest/beginlogo.rgb",O_RDONLY);
+#endif
+
+	if (ts_file1 == -1) {
+		printf( "----------Error open input device.\r\n" );
+		return( -1 );
+	}
+
+	lseek(ts_file1, 0, SEEK_SET);
+	if( (read_len1 = read(ts_file1,read_buf1,BUF1_SIZE)) == BUF1_SIZE)
+	{
+		printf("read OK!! lenth is : %d\n",read_len1);
+	}
+	else
+	{
+		printf("read less lenth is : %d!!\n",read_len1);
+		printf("XXXXXXXXXXXX\n");
+	}
+	memcpy(addr1,read_buf1,read_len1);
+#if 1
+	{
+		/* test 1555 */
+		int i = 0;
+		for (i = 0; i < 200000; i++) {
+			addr1[i] = 0xff;	
+		}
+	}
+#endif
+	printf("memcpy----- lenth is : %d!!\n",read_len1);
+	ret = CSOSD_Flip(osd_handle_0);
+	debug(" CSOSD_Flip ret = %d\n", ret);
+
+	close(ts_file1);
+	
+
+
+#ifdef SECPIC
+	CSOSD_HANDLE osd_handle_1;
+	osd_handle_1 = CSOSD_Open(1);
+	CSOSD_Config   osd_config_layer2 =
+	{
+		OSD_MODE_576I,
+		OSD_COLOR_DEPTH_16,			//OSD_COLOR_DEPTH_32
+		OSD_COLOR_FORMAT_ARGB4444 		//OSD_COLOR_FORMAT_ARGB8888  OSD_COLOR_FORMAT_RGB565   //6
+	};
+	CSOSD_SetConfig( osd_handle_1, &osd_config_layer2 );
+	CSOSD_Enable(osd_handle_1);
+	CSOSD_SetAlpha(osd_handle_1, 128);
+
+	//For OSD Flip Test 
+	unsigned char *addr = 0;
+	int 	ts_file = 0;
+	int	read_len = 0;
+	char 	read_buf[720*576*2];
+
+	CSOSD_GetBaseAddr(osd_handle_1, &addr);
+	printf("CSOSD_GetBaseAddr----- addr is : %p!!\n",addr);
+/*        ts_file = open("/linuxdrv/tvetest/car_720_576.bin",O_RDONLY);*/
+/*        ts_file = open("/linuxdrv/tvetest/UTMC_720x480.argb8888",O_RDONLY);*/
+	ts_file = open("/linuxdrv/tvetest/game4444.rgb",O_RDONLY);
+/*        ts_file = open("/linuxdrv/tvetest/beginlogo.rgb",O_RDONLY);*/
+	if (ts_file == -1) {
+		printf( "----------Error open input device.\r\n" );
+		return( -1 );
+	}
+
+	printf("ts_file : 0x%x\n",ts_file);
+	lseek(ts_file, 0, SEEK_SET);
+
+	if( (read_len = read(ts_file,read_buf,720*576*2)) ==720*576*2)
+		/*                if( (read_len = read(ts_file,read_buf,720*480*4)) ==720*480*4)*/
+	{
+		printf("read OK!! lenth is : %d\n",read_len);
+	}
+	else
+	{
+		printf("read less lenth is : %d!!\n",read_len);
+	}
+
+	memcpy(addr,read_buf,read_len);
+	printf("memcpy----- lenth is : %d!!\n",read_len);
+	CSOSD_Flip(osd_handle_1);
+
+	//CSOSD_SetAlpha(osd_handle_1, 128);
+	close(ts_file);
+
+	getchar();
+	CSOSD_SetAlpha(osd_handle_1, 255);
+	getchar();
+	CSOSD_SetAlpha(osd_handle_1, 0);
+	getchar();
+	CSOSD_SetAlpha(osd_handle_0, 255);
+	getchar();
+	CSOSD_SetAlpha(osd_handle_0, 0);
+	CSOSD_SetAlpha(osd_handle_1, 255);
+	getchar();
+	CSOSD_SetAlpha(osd_handle_0, 128);
+	CSOSD_SetAlpha(osd_handle_1, 128);
+	getchar();
+#endif
+
+	return 0;
+}

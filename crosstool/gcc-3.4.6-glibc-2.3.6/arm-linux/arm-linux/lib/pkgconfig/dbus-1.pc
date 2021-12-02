@@ -1,0 +1,17 @@
+prefix=/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/arm-linux
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+system_bus_default_address=unix:path=/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/arm-linux/var/run/dbus/system_bus_socket
+sysconfdir=/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/arm-linux/etc
+session_bus_services_dir=/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/arm-linux/share/dbus-1/services
+system_bus_services_dir=/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/arm-linux/share/dbus-1/system-services
+interfaces_dir=/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/arm-linux/share/dbus-1/interfaces
+daemondir=/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/arm-linux/bin
+
+Name: dbus
+Description: Free desktop message bus
+Version: 1.6.5
+Libs: -L${libdir} -ldbus-1
+Libs.private: -lpthread 
+Cflags: -I${includedir}/dbus-1.0 -I${libdir}/dbus-1.0/include 

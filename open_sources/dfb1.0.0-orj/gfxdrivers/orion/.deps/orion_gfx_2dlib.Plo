@@ -1,0 +1,102 @@
+orion_gfx_2dlib.lo .libs/orion_gfx_2dlib.o: orion_gfx_2dlib.c \
+  orion_gfx_test_vect.h orion_gfx_type_def.h orion_gfx_2dlib.h \
+  orion_gfx_api.h orion_gfx_cmd_reg_def.h orion_gfx_sys_cfg.h \
+  orion_gfx_loglib.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/assert.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/features.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/sys/cdefs.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/gnu/stubs.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/stdlib.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/include/stddef.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/waitflags.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/waitstatus.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/endian.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/endian.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/xlocale.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/sys/types.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/types.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/wordsize.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/typesizes.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/time.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/sys/select.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/select.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/sigset.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/time.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/sys/sysmacros.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/pthreadtypes.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/sched.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/alloca.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/memory.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/string.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/string.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/string2.h
+
+orion_gfx_test_vect.h:
+
+orion_gfx_type_def.h:
+
+orion_gfx_2dlib.h:
+
+orion_gfx_api.h:
+
+orion_gfx_cmd_reg_def.h:
+
+orion_gfx_sys_cfg.h:
+
+orion_gfx_loglib.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/assert.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/features.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/sys/cdefs.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/gnu/stubs.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/stdlib.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/include/stddef.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/waitflags.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/waitstatus.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/endian.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/endian.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/xlocale.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/sys/types.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/types.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/wordsize.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/typesizes.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/time.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/sys/select.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/select.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/sigset.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/time.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/sys/sysmacros.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/pthreadtypes.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/sched.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/alloca.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/memory.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/string.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/string.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/string2.h:

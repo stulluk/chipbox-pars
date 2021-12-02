@@ -1,0 +1,1395 @@
+
+
+#include "linuxos.h"
+#include "demux.h"
+#include "av_zapping.h"
+
+#define DEMUX_STACK_SIZE	   1024*8
+#define DMX_TASK_PRI		   10
+//define
+
+typedef enum CS_DemuxFilterMode{
+	CS_DemuxFilterMode_Default = 0X0, //Repeat Version
+	CS_DemuxFilterMode_OneShot = 0X01,
+	CS_DemuxFilterMode_NotVersion = 0X02
+} CS_DemuxFilterMode;
+
+typedef struct CS_DMX_Filter{
+				CSDEMUX_HANDLE		 Slot_Handle;
+				CSDEMUX_HANDLE		 Filter_Handle;
+				CSDEMUX_HANDLE 		 SLot_Params;
+				CSDEMUX_FILTER_ID	 Filter_ID;
+				CSDEMUX_PIDFT_ID	 Slot_ID;		
+				CSDEMUX_CHL_ID		 Channel_ID;
+                DB_DemuxFilterParams FilterSet;
+				CS_DemuxFilterMode	 Mode;
+				CSOS_Semaphore_t*	 DmxSemHandle;
+				DB_DemuxCallBack 	 callback;
+                DB_Demux_Buffer_Mode buff_mode;
+				U8					 Nomatch[8];
+				U8					 SWFilterMatch[8];
+				U8					 SWFilterMask[8];
+				U32 				 DestinationSize0;
+				U8 *				 Destination0_p;
+				U32 				 BufferSize;
+				U32                              Timeout;
+				U32				 StartTime;
+				U16				 Pid;
+				U8                   Inuse;
+				U8                   Running;
+                                    BOOL                 IfGetData_inCurrentCircle;
+                                    BOOL            crc_check_enable;
+                                    BOOL            Is_section_avail;
+				
+}CS_DMX_Filter;
+
+CSOS_Semaphore_t*	sem_DemuxAccess = NULL;
+
+
+//static variable
+static CS_DMX_Filter 				DMX_SectionFilter[CS_DB_MAX_NUMBER_FILTERS];
+
+//task
+static U8							NCS_demuxStack[DEMUX_STACK_SIZE];
+static CSOS_Task_Handle_t 		       NCS_DmxTaskHandle;
+static CSOS_TaskDesc_t*			NCS_DmxTaskDesc;
+static CSOS_TaskFlag_t				TaskFlag=0;
+
+
+static INT32 DB_FilterNomatch(U8* Mask,U8* Match,U8* Nomatch,U8*Data);
+static INT32 DB_DemuxRestartFilter(DB_FilterHandle handle);
+//static INT32 DB_GetMatchFilter(U8 Buffer_id,U8* DMXNum);
+static void DMXEnterCriticalSection(CSOS_Semaphore_t *Semp);
+static void DMXLeaveCriticalSection(CSOS_Semaphore_t *Semp);
+/********************************************************************************************************
+功能：获得一个Free Filter
+原型：CS_ErrorCode_t CS_GetFreeSectionFilter(void);
+参数：
+返回值：
+DB_OK-成功
+其它值-失败
+********************************************************************************************************/
+static CS_ErrorCode_t CS_GetFreeSectionFilter(CS_DMX_Filter **FreeFilter)
+{
+	U8  i=0;
+	for(i=0;i<CS_DB_MAX_NUMBER_FILTERS;i++)
+		{
+			if(DMX_SectionFilter[i].Inuse==0)
+				{
+					DMX_SectionFilter[i].Filter_ID = i;
+					DMX_SectionFilter[i].Channel_ID= 0;
+					DMX_SectionFilter[i].Slot_ID = i +2;
+					*FreeFilter=&DMX_SectionFilter[i];
+					break;
+				}
+		}
+	if(i>=CS_DB_MAX_NUMBER_FILTERS)
+			return 2;
+	
+	return CS_NO_ERROR;
+}
+
+
+static CS_ErrorCode_t CS_InitSectionFilter(void)
+{
+	U8  i=0;
+	for(i=0;i<CS_DB_MAX_NUMBER_FILTERS;i++)
+		{
+			DMX_SectionFilter[i].Inuse=0;
+			DMX_SectionFilter[i].Running=0;
+			DMX_SectionFilter[i].StartTime=0;
+                           DMX_SectionFilter[i].IfGetData_inCurrentCircle = FALSE;
+                           DMX_SectionFilter[i].crc_check_enable = FALSE;
+                           DMX_SectionFilter[i].Is_section_avail = FALSE;
+		}		
+	return CS_NO_ERROR;
+}
+
+static INT32 DMXCheckHandle(DB_FilterHandle handle)
+{
+	U8	i=0;
+
+	for(i=0;i<CS_DB_MAX_NUMBER_FILTERS;i++)
+		{
+			if(handle==&DMX_SectionFilter[i])
+				{
+					if(DMX_SectionFilter[i].Inuse==1)
+					return DB_DMX_OK;
+				}
+		}
+
+	return DB_DMX_FAILURE;
+}
+/********************************************************************************************************
+功能：Demux 任务
+原型：void NCS_DemuxTask(void);
+参数：
+无
+返回值：
+
+*******************************************************************************************************/
+void NCS_DemuxTask(void *Param)
+{
+	CSAPI_RESULT		ErrorCode = CSAPI_FAILED;
+	U32					DataSize;
+	U8					DmxFltNum;	
+	U32					SectionLength=0;
+	//BOOL				Flag;
+        U32 			crc_count;
+        U32 			crc_read;
+        BOOL		crc_check_Flag = TRUE;
+        BOOL		data_avail = FALSE;
+        U8              i  =0;
+	
+	while(1)
+	{
+                for(DmxFltNum=0;DmxFltNum<CS_DB_MAX_NUMBER_FILTERS;DmxFltNum++)
+                    {
+                        //DMXEnterCriticalSection(sem_DemuxAccess);
+                        data_avail = FALSE;
+                        if(DMX_SectionFilter[DmxFltNum].Is_section_avail)
+                            {
+                                data_avail = TRUE;
+                                DMX_SectionFilter[DmxFltNum].Is_section_avail = FALSE;
+                                //printf("data_avail\n");
+                            }
+                        //DMXLeaveCriticalSection(sem_DemuxAccess);
+                        
+            	        if((DMX_SectionFilter[DmxFltNum].Running)/*&&(data_avail)*/)
+                        	{
+                    		DataSize = 4096; //1024;
+                    		memset(DMX_SectionFilter[DmxFltNum].Destination0_p, 0, DMX_SectionFilter[DmxFltNum].DestinationSize0);
+
+                                for(i=0;i<10;i++)
+                                     {
+                                            int         reg_val = 0;
+                                            if (CSDEMUX_Filter_CheckDataSize(DMX_SectionFilter[DmxFltNum].Filter_Handle, &reg_val) != CSAPI_SUCCEED)
+                                                printf("CSXPORT_Filter_CheckDataSize failed\n");
+
+                                            if (reg_val == 0)
+                                                continue;
+                                            
+                                            //printf("CSDEMUX_Filter_ReadSectionData\n");
+                            		if(CSDEMUX_Filter_ReadSectionData(DMX_SectionFilter[DmxFltNum].Filter_Handle, DMX_SectionFilter[DmxFltNum].Destination0_p , &DataSize )
+                                                            ==CSAPI_SUCCEED)
+                                                                            
+                            		//printf("DataSize = %d, DmxFltNum = %d\n", DataSize, DmxFltNum);
+                            		//if(ErrorCode==CSAPI_SUCCEED)
+                            		{
+                                        //printf("section  data : 0x%02x, 0x%02x, 0x%02x\n", DMX_SectionFilter[DmxFltNum].Destination0_p[0],DMX_SectionFilter[DmxFltNum].Destination0_p[1],DMX_SectionFilter[DmxFltNum].Destination0_p[2]);
+                            		 
+                            			if(DMX_SectionFilter[DmxFltNum].Mode!=CS_DemuxFilterMode_Default)
+                                                               DB_DemuxStopFilter((DB_FilterHandle )&DMX_SectionFilter[DmxFltNum]);
+
+                            			SectionLength=((DMX_SectionFilter[DmxFltNum].Destination0_p[1]&0x0f)<<8)+
+                            						DMX_SectionFilter[DmxFltNum].Destination0_p[2]+3;
+
+                                                    
+                                                        if(DMX_SectionFilter[DmxFltNum].crc_check_enable)
+                                                        {
+                                                                crc_count = 0;
+                                                                crc_read = 1;
+                                                                crc_check_Flag = FALSE;
+                                                    
+                                                                CS_CRC_32bCalculate(DMX_SectionFilter[DmxFltNum].Destination0_p, SectionLength-4, &crc_count);
+                                                                
+                                                                crc_read = (DMX_SectionFilter[DmxFltNum].Destination0_p[SectionLength-4]<<24)|
+                                                                                    (DMX_SectionFilter[DmxFltNum].Destination0_p[SectionLength-3]<<16)|
+                                                                                    (DMX_SectionFilter[DmxFltNum].Destination0_p[SectionLength-2]<<8)|
+                                                                                    DMX_SectionFilter[DmxFltNum].Destination0_p[SectionLength-1];
+
+                                                                if(crc_count == crc_read)
+                                                                    {
+                                                                        crc_check_Flag = TRUE;
+                                                                    }
+                                                                else
+                                                                    {
+                                                                        crc_check_Flag = FALSE;
+                                                                        printf("It is so strange. crc_count = 0x%x, crc_read = %x, Crc is error!!\n",crc_count, crc_read);
+                                                                        printf("section  data : 0x%02x, 0x%02x, 0x%02x\n", DMX_SectionFilter[DmxFltNum].Destination0_p[0],DMX_SectionFilter[DmxFltNum].Destination0_p[1],DMX_SectionFilter[DmxFltNum].Destination0_p[2]);
+                                                                    }
+                                                        }
+                                                        else
+                                                            {
+                                                                crc_check_Flag = TRUE;
+                                                            }
+                                                                                    
+                            			if((DB_FilterNomatch(DMX_SectionFilter[DmxFltNum].SWFilterMask,DMX_SectionFilter[DmxFltNum].SWFilterMatch,
+                            							DMX_SectionFilter[DmxFltNum].Nomatch,DMX_SectionFilter[DmxFltNum].Destination0_p)==DB_DMX_OK)&&(crc_check_Flag))
+                            				{
+                            					DMX_SectionFilter[DmxFltNum].callback(NULL,(DB_FilterHandle)&DMX_SectionFilter[DmxFltNum], FALSE,DMX_SectionFilter[DmxFltNum].Destination0_p,SectionLength);
+                                                                        DMX_SectionFilter[DmxFltNum].StartTime = CS_OS_time_now();
+                                                                        DMX_SectionFilter[DmxFltNum].IfGetData_inCurrentCircle = TRUE;
+                            				}
+
+                            		}
+                                            else
+                                                {
+                                                    //printf("no data\n");
+                                                    break;
+                                                }
+                                      }
+                        			                        			
+                        	}
+
+                  if((DMX_SectionFilter[DmxFltNum].Running)&&(DMX_SectionFilter[DmxFltNum].IfGetData_inCurrentCircle == FALSE))
+                  {
+                        if((DMX_SectionFilter[DmxFltNum].Timeout!=0)&&((DMX_SectionFilter[DmxFltNum].StartTime + DMX_SectionFilter[DmxFltNum].Timeout) < CS_OS_time_now()))
+                            {
+                                    if(DMX_SectionFilter[DmxFltNum].Mode!=CS_DemuxFilterMode_Default)
+                                                          DB_DemuxStopFilter((DB_FilterHandle )&DMX_SectionFilter[DmxFltNum]);
+                                       
+                                //printf("Filter Pid=0x%x Timetout Timer = %d \n", DMX_SectionFilter[DmxFltNum].Pid, DMX_SectionFilter[DmxFltNum].Timer);
+                                DMX_SectionFilter[DmxFltNum].callback(NULL,(DB_FilterHandle)&DMX_SectionFilter[DmxFltNum], TRUE, NULL, 0);
+                                DMX_SectionFilter[DmxFltNum].StartTime = CS_OS_time_now();
+                                
+                            }
+                    }
+
+                    DMX_SectionFilter[DmxFltNum].IfGetData_inCurrentCircle = FALSE;
+            
+               }
+            
+		CSOS_DelayTaskMs(5);
+	}
+}
+
+
+CSDEMUX_HANDLE xport_chl_handle = CSDEMUX_UNVALID_HANDLE;
+INT32 DB_DemuxResetChannel(void)
+{
+#if 1
+    DMXEnterCriticalSection(sem_DemuxAccess);
+    
+    if(xport_chl_handle != CSDEMUX_UNVALID_HANDLE)
+        {
+            CSDEMUX_CHL_Disable( xport_chl_handle );
+            CSDEMUX_CHL_Close(xport_chl_handle);
+        }
+
+        /*{
+            int reg_val = 0;
+            ReadReg32( 0x41400440 + (0<<3), &reg_val );
+
+            printf("open chl before read ptr = 0x%x\n", reg_val);
+            
+            ReadReg32( 0x41400444 + (0<<3), &reg_val );
+
+            printf("open chl before write ptr = 0x%x\n", reg_val);
+            }*/
+
+
+     //ClearChipMem(0x07100000, 0x20000);
+    
+    xport_chl_handle = CSDEMUX_CHL_Open(DEMUX_CHL_ID0);
+    if(xport_chl_handle == CSDEMUX_UNVALID_HANDLE)
+    {
+        printf("!!!Error: cs_middlware open Channel0 error.\n");
+        DMXLeaveCriticalSection(sem_DemuxAccess);
+        return DB_DMX_FAILURE;
+    }
+        /*usleep(20*1000);
+        {
+            int reg_val = 0;
+            ReadReg32( 0x41400000 + 0x108, &reg_val );
+
+            printf("demux read ptr = 0x%x\n", reg_val);
+            
+            ReadReg32( 0x41400000 + 0x10c, &reg_val );
+
+            printf("demux write ptr = 0x%x\n", reg_val);
+            }*/
+
+    //CHL Config
+    CSDEMUX_CHL_SetInputMode( xport_chl_handle, DEMUX_INPUT_MOD_TUNER );
+
+        /*{
+            int reg_val = 0;
+            ReadReg32( 0x41400440 + (0<<3), &reg_val );
+
+            printf("open chl end read ptr = 0x%x\n", reg_val);
+            
+            ReadReg32( 0x41400444 + (0<<3), &reg_val );
+
+            printf("open chl end write ptr = 0x%x\n", reg_val);
+            }*/
+    CSDEMUX_CHL_Enable( xport_chl_handle );
+
+    DMXLeaveCriticalSection(sem_DemuxAccess);
+#else
+    DMXEnterCriticalSection(sem_DemuxAccess);
+
+    CSDEMUX_CHL_Reset( xport_chl_handle );
+
+    DMXLeaveCriticalSection(sem_DemuxAccess);
+
+
+#endif
+    return DB_DMX_OK;
+}
+
+/********************************************************************************************************
+功能：Demux 的初始化
+原型：DB_ERROR DB_DemuxInit(void);
+参数：
+无
+返回值：
+DB_OK-成功
+其它值-失败
+********************************************************************************************************/
+INT32 DB_DemuxInit(void)
+{
+	CS_ErrorCode_t	ErrorCode = CS_NO_ERROR;
+
+	sem_DemuxAccess = CSOS_CreateSemaphoreFifo(NULL,1);
+
+	CS_InitSectionFilter();	
+
+        //DB_DemuxResetChannel();
+        xport_chl_handle = CSDEMUX_CHL_Open(DEMUX_CHL_ID0);
+        if(xport_chl_handle == CSDEMUX_UNVALID_HANDLE)
+        {
+            printf("!!!Error: cs_middlware open Channel0 error.\n");
+            return DB_DMX_FAILURE;
+        }
+
+        //CHL Config
+        CSDEMUX_CHL_SetInputMode( xport_chl_handle, DEMUX_INPUT_MOD_TUNER );
+        CSDEMUX_CHL_Enable( xport_chl_handle );
+
+#if 1
+	ErrorCode=CSOS_CreateTask((void *)(NCS_DemuxTask),
+								NULL,
+								NULL,
+								DEMUX_STACK_SIZE,
+								NCS_demuxStack,
+								NULL,
+								&NCS_DmxTaskHandle,
+								&NCS_DmxTaskDesc,
+								DMX_TASK_PRI,
+								"CSDB_demux_task",
+								TaskFlag);
+	if(ErrorCode!=CS_NO_ERROR)
+		return DB_DMX_FAILURE;
+	ErrorCode=CSOS_StartTask(NCS_DmxTaskHandle);
+	if(ErrorCode!=CS_NO_ERROR)
+		return DB_DMX_FAILURE;
+ #endif
+
+#if 0
+        usleep(20*1000);
+
+        while(1)
+            {
+                    tCS_DEMUX_Msg_t             msg;
+        
+            	//printf("hello the world [%d] \n", evt_type);
+            	//printf("**********section arrived!************\n");
+            	msg.filter_num = 2;
+
+                    CSOS_SendMessage(Demux_MsgQid, &msg, sizeof(tCS_DEMUX_Msg_t), 0);
+
+                    usleep(1*1000);
+            }
+#endif
+	return DB_DMX_OK;
+}
+
+/********************************************************************************************************
+功能：终止Demux
+原型：DB_ERROR DB_DemuxTerm(void);
+参数：
+无
+返回值：
+DB_OK-成功
+其它值-失败
+********************************************************************************************************/
+INT32 DB_DemuxTerm(void)
+{
+	//Rtime do not supply this function
+
+	CSOS_DeleteTask(NCS_DmxTaskHandle,NULL);
+			
+	return DB_DMX_OK;
+}
+
+U8  GetFilterNumbyHandle(CSDEMUX_HANDLE handle)
+{
+        U8  i;
+        
+        for(i=0;i<CS_DB_MAX_NUMBER_FILTERS;i++)
+	{
+		if(DMX_SectionFilter[i].Filter_Handle==handle)
+		{
+			return(i);
+		}
+	}
+
+        return(CS_DB_INVALID_FILTER);
+}
+
+void hello(CSDEMUX_HANDLE handle, CSDEMUX_SECEVENT * evt_type)
+{
+        U8          filter_num;
+        
+	//printf("hello the world [%d] \n", evt_type);
+	//printf("**********section arrived!************\n");
+	//DMXEnterCriticalSection(sem_DemuxAccess);
+    
+	filter_num = GetFilterNumbyHandle(handle);
+
+        if(filter_num < CS_DB_MAX_NUMBER_FILTERS)
+            {
+                    DMX_SectionFilter[filter_num].Is_section_avail = TRUE;
+            }
+
+        //DMXLeaveCriticalSection(sem_DemuxAccess);
+
+}
+
+
+/********************************************************************************************************
+功能：创建Filter
+原型：DB_ERROR DB_DemuxCreateFilter(
+DB_FilterHandle* handle,
+DB_Pid pid,
+DB_U32 bufsize,
+DB_BYTE const data[8],
+DB_BYTE const mask[8],
+DB_DemuxFilterMode mode,
+DB_U32 timeout, //ms, 0代表无穷
+DB_DemuxCallBack callback, //每次收到符合条件的数据包都会调用一次
+void* userparam
+);
+参数：
+handle: 返回创建成功的Filter 对象
+pid: Filter 的PID
+bufsize: Filter 的缓冲区大小
+data:Filter 的Data
+mask: Filter 的mask
+timeout: 多长时间后，停止过滤数据，单位为毫秒,0 代表无穷
+callback:收到符合条件的数据包后调用的函数
+userparam:传递给callback 的第一个参数
+返回值：
+DB_OK-成功
+其它值-失败
+********************************************************************************************************/
+INT32 DB_DemuxCreateFilter(
+                                                                                    DB_FilterHandle* handle,
+                                                                                    U16 pid,
+                                                                                    DB_Demux_Buffer_Mode bufsize,
+                                                                                    U8 const match[8],
+                                                                                    U8 const mask[8],
+                                                                                    U8 const Nomatch[8],
+                                                                                    DB_DemuxFilterMode mode,
+                                                                                    BOOL    crc_enable,
+                                                                                    U32 timeout, //ms, 0代表无穷
+                                                                                    DB_DemuxCallBack callback, //每次收到符合条件的数据包都会调用一次
+                                                                                    void* userparam
+                                                                                    )
+{
+	CS_ErrorCode_t	  			ErrorCode = CS_NO_ERROR;
+	U8							ErrorFlag=0,i=0;
+	U8 							fmatch[12];
+	U8 							fmask[12];
+	CS_DMX_Filter *				PDmx_SFilter;
+
+	DMXEnterCriticalSection(sem_DemuxAccess);
+	
+	ErrorCode=CS_GetFreeSectionFilter(&PDmx_SFilter);
+	if( CS_NO_ERROR != ErrorCode ) 
+	{
+		ErrorFlag=1;
+	}
+	
+	memset(fmatch, 0 ,12);
+	memset(fmask, 0 ,12);
+
+	memcpy(fmatch,match,8);
+	memcpy(fmask,mask,8);
+
+    //printf("DB_DemuxCreateFilter Filter_ID = %d\n", PDmx_SFilter->Filter_ID);
+
+	PDmx_SFilter->Filter_Handle = CSDEMUX_Filter_Open(PDmx_SFilter->Filter_ID);
+	//printf("PDmx_SFilter->Filter_Handle = %d\n",PDmx_SFilter->Filter_Handle);
+	PDmx_SFilter->Slot_Handle = CSDEMUX_PIDFT_Open(PDmx_SFilter->Slot_ID);
+	//printf("PDmx_SFilter->Slot_Handle = %d\n",PDmx_SFilter->Slot_Handle);
+	CSDEMUX_PIDFT_SetChannel(PDmx_SFilter->Slot_Handle,DEMUX_CHL_ID0);
+	CSDEMUX_PIDFT_SetPID(PDmx_SFilter->Slot_Handle,pid);  
+//	CSDEMUX_PIDFT_Enable(PDmx_SFilter->Slot_Handle);
+	//printf("PDmx_SFilter->pid = 0x%x\n",pid);
+	CSDEMUX_Filter_SetFilter(PDmx_SFilter->Filter_Handle,fmatch,fmask);
+    //Remove by River 11.14.2007
+    CSDEMUX_Filter_SetFilterType(PDmx_SFilter->Filter_Handle,DEMUX_FILTER_TYPE_SEC);
+	//printf("PDmx_SFilter->fmatch = 0x%x\n",*fmatch);
+	//printf("PDmx_SFilter->fmask = 0x%x\n",*fmask);
+	CSDEMUX_Filter_AddPID(PDmx_SFilter->Filter_Handle,pid);
+	
+	PDmx_SFilter->DestinationSize0=4096;
+	PDmx_SFilter->Destination0_p=malloc(PDmx_SFilter->DestinationSize0);
+	PDmx_SFilter->FilterSet.FilterValues_p=malloc(12);
+	PDmx_SFilter->FilterSet.FilterMasks_p=malloc(12);
+	memset(PDmx_SFilter->FilterSet.FilterValues_p,0,12);
+	memset(PDmx_SFilter->FilterSet.FilterMasks_p,0,12);
+	memset(PDmx_SFilter->Nomatch,0,8);
+	memset(PDmx_SFilter->SWFilterMask,0,8);
+	memset(PDmx_SFilter->SWFilterMatch,0,8);
+	memcpy(PDmx_SFilter->FilterSet.FilterValues_p,match,8);
+	memcpy(PDmx_SFilter->FilterSet.FilterMasks_p,mask,8);
+	memcpy(PDmx_SFilter->SWFilterMatch,match,8);
+	memcpy(PDmx_SFilter->SWFilterMask,mask,8);
+	memcpy(PDmx_SFilter->Nomatch,Nomatch,8);
+
+	for(i=0;i<8;i++)
+	{
+		if(Nomatch[i]!=0)
+			{
+				PDmx_SFilter->FilterSet.FilterValues_p[i]=0;
+				PDmx_SFilter->FilterSet.FilterMasks_p[i]=0;
+			}
+	}
+
+
+
+	/*PDmx_SFilter->DmxSemHandle=CSOS_CreateSemaphoreFifo(NULL,1);
+	if( PDmx_SFilter->DmxSemHandle == NULL ) 
+	{
+				ErrorFlag=1;
+	}*/
+	
+	if(mode==DB_DemuxFilterMode_OneShot)
+		PDmx_SFilter->Mode=CS_DemuxFilterMode_OneShot;
+	else //if(mode==DB_DemuxFilterMode_Default)
+		PDmx_SFilter->Mode=CS_DemuxFilterMode_Default;	
+	PDmx_SFilter->Pid=pid;	
+	PDmx_SFilter->Timeout=timeout;	//CSAPI have timeout limited
+	PDmx_SFilter->callback=callback;
+	PDmx_SFilter->BufferSize=bufsize;
+	PDmx_SFilter->StartTime = CS_OS_time_now();
+	PDmx_SFilter->Inuse=1;
+         PDmx_SFilter->IfGetData_inCurrentCircle = FALSE;
+         PDmx_SFilter->crc_check_enable = crc_enable;
+	
+	*handle=(DB_FilterHandle *)PDmx_SFilter;
+
+    if (CSAPI_FAILED == CSDEMUX_FILTER_SetSectionNotify(PDmx_SFilter->Filter_Handle, hello, 1, 1)) printf(" %d \n", __LINE__);
+
+        //CSDEMUX_FILTER_SetSaveErrSectionDataFlag(PDmx_SFilter->Filter_Handle, 0);
+        
+	DMXLeaveCriticalSection(sem_DemuxAccess);
+
+	if(ErrorFlag==1)
+	{
+			DB_DemuxDeleteFilter((DB_FilterHandle)PDmx_SFilter);
+			return DB_DMX_FAILURE;
+	}
+	
+	return DB_DMX_OK;
+}
+
+INT32 DB_DemuxSetFilterParameter(DB_FilterHandle handle, U16 pid, U8 const match[8], U8 const mask[8], U8 const Nomatch[8], DB_DemuxFilterMode mode, U32 timeout, BOOL crc_enable)
+
+{
+	CS_DMX_Filter *			PDmx_SFilter;
+         //rt_error_t	  				ErrorCode = CS_NO_ERROR;
+	U8						ErrorFlag=0;
+         U8                                         i;
+
+	DMXEnterCriticalSection(sem_DemuxAccess);
+
+	PDmx_SFilter=(CS_DMX_Filter *)handle;
+
+	if(DMXCheckHandle(handle)!=DB_DMX_OK)
+		{
+			printf("Invalid Handle\n");
+			DMXLeaveCriticalSection(sem_DemuxAccess);
+			return DB_DMX_FAILURE;
+		}
+	//DB_DemuxStopFilter(handle);
+
+         PDmx_SFilter->Running=0;
+	CSDEMUX_PIDFT_Disable(PDmx_SFilter->Slot_Handle);
+	CSDEMUX_Filter_Disable(PDmx_SFilter->Filter_Handle);
+	
+	memcpy(PDmx_SFilter->FilterSet.FilterValues_p,match,8);
+	memcpy(PDmx_SFilter->FilterSet.FilterMasks_p,mask,8);
+	memcpy(PDmx_SFilter->SWFilterMatch,match,8);
+	memcpy(PDmx_SFilter->SWFilterMask,mask,8);
+	memcpy(PDmx_SFilter->Nomatch,Nomatch,8);
+
+        for(i=0;i<8;i++)
+	{
+		if(Nomatch[i]!=0)
+		{
+			PDmx_SFilter->FilterSet.FilterValues_p[i]=0;
+			PDmx_SFilter->FilterSet.FilterMasks_p[i]=0;
+		}
+	}
+
+	if(mode==DB_DemuxFilterMode_OneShot)
+		PDmx_SFilter->Mode=CS_DemuxFilterMode_OneShot;
+	else //if(mode==DB_DemuxFilterMode_Default)
+		PDmx_SFilter->Mode=CS_DemuxFilterMode_Default;	
+	PDmx_SFilter->Pid=pid;
+	PDmx_SFilter->Timeout=timeout;
+        PDmx_SFilter->crc_check_enable = crc_enable;
+
+        ErrorFlag = DB_DemuxRestartFilter((DB_FilterHandle)PDmx_SFilter);
+
+	DMXLeaveCriticalSection(sem_DemuxAccess);
+
+	if(ErrorFlag==0)
+            	return DB_DMX_OK;
+         else
+            	return DB_DMX_FAILURE;
+}
+
+/********************************************************************************************************
+功能：删除Filter
+原型：DB_ERROR DB_DemuxDeleteFilter(DB_FilterHandle handle);
+参数：
+handle: Filter 对象
+返回值：
+DB_OK-成功
+其它值-失败
+********************************************************************************************************/
+INT32 DB_DemuxDeleteFilter(DB_FilterHandle handle)
+{
+		//rt_error_t	  				ErrorCode = CS_NO_ERROR;
+		U8							ErrorFlag=0;
+		CS_DMX_Filter *				PDmx_SFilter;
+
+		DMXEnterCriticalSection(sem_DemuxAccess);
+		
+		PDmx_SFilter=(CS_DMX_Filter *)handle;
+		if(DMXCheckHandle(handle)!=DB_DMX_OK)
+		{
+			printf("Invalid Handle\n");
+			DMXLeaveCriticalSection(sem_DemuxAccess);
+			return DB_DMX_FAILURE;
+		}
+
+                 PDmx_SFilter->Inuse=0;
+	        PDmx_SFilter->Running=0;
+		
+		CSDEMUX_PIDFT_Disable(PDmx_SFilter->Slot_Handle);
+		CSDEMUX_Filter_Disable(PDmx_SFilter->Filter_Handle);
+        
+		CSDEMUX_PIDFT_Close(PDmx_SFilter->Slot_Handle);
+		CSDEMUX_Filter_Close(PDmx_SFilter->Filter_Handle);
+
+		//CSOS_DeleteSemaphore(NULL,PDmx_SFilter->DmxSemHandle);
+
+
+		free(PDmx_SFilter->Destination0_p);
+		free(PDmx_SFilter->FilterSet.FilterValues_p);
+		free(PDmx_SFilter->FilterSet.FilterMasks_p);			
+		
+		memset(PDmx_SFilter,0,sizeof(CS_DMX_Filter));
+		//printf("PDmx_SFilter=0x%x\n",PDmx_SFilter);
+
+		DMXLeaveCriticalSection(sem_DemuxAccess);
+
+		if(ErrorFlag==1)
+			return DB_DMX_FAILURE;
+		
+		return DB_DMX_OK;
+}
+
+/********************************************************************************************************
+功能：开始过滤数据
+原型：DB_ERROR DB_DemuxStartFilter(DB_FilterHandle handle);
+参数：
+handle: Filter 对象
+返回值：
+DB_OK-成功
+其它值-失败
+********************************************************************************************************/
+INT32 DB_DemuxStartFilter(DB_FilterHandle handle)
+{
+		//CS_ErrorCode_t	  		ErrorCode = CS_NO_ERROR;
+		CS_DMX_Filter *			PDmx_SFilter;
+
+		DMXEnterCriticalSection(sem_DemuxAccess);
+        
+		PDmx_SFilter=(CS_DMX_Filter *)handle;
+		if(DMXCheckHandle(handle)!=DB_DMX_OK)
+		{
+			printf("Invalid Handle\n");
+			DMXLeaveCriticalSection(sem_DemuxAccess);
+			return DB_DMX_FAILURE;
+		}
+
+		CSDEMUX_PIDFT_Enable(PDmx_SFilter->Slot_Handle);
+		CSDEMUX_Filter_Enable(PDmx_SFilter->Filter_Handle);
+
+        //printf("DB_DemuxStartFilter\n");
+		PDmx_SFilter->StartTime = CS_OS_time_now();
+                  PDmx_SFilter->IfGetData_inCurrentCircle = FALSE;
+		PDmx_SFilter->Running = 1;
+                   
+		DMXLeaveCriticalSection(sem_DemuxAccess);
+		return DB_DMX_OK;
+}
+
+/********************************************************************************************************
+功能：停止过滤数据
+原型：DB_ERROR DB_DemuxStopFilter(DB_FilterHandle handle);
+参数：
+handle: Filter 对象
+返回值：
+DB_OK-成功
+其它值-失败
+********************************************************************************************************/
+INT32 DB_DemuxStopFilter(DB_FilterHandle handle)
+{
+		//CS_ErrorCode_t	  			ErrorCode = CS_NO_ERROR;
+		CS_DMX_Filter *				PDmx_SFilter;
+		//U8							ErrorFlag=0;
+
+		DMXEnterCriticalSection(sem_DemuxAccess);
+		
+		PDmx_SFilter=(CS_DMX_Filter *)handle;
+		if(DMXCheckHandle(handle)!=DB_DMX_OK)
+		{
+			printf("Invalid Handle\n");
+			DMXLeaveCriticalSection(sem_DemuxAccess);
+			return DB_DMX_FAILURE;
+		}
+		
+		PDmx_SFilter->Running=0;
+                    PDmx_SFilter->IfGetData_inCurrentCircle = FALSE;
+		//CSDEMUX_PIDFT_Disable(PDmx_SFilter->Slot_Handle);
+		CSDEMUX_Filter_Disable(PDmx_SFilter->Filter_Handle);
+            
+            //if (CSAPI_FAILED == CSDEMUX_FILTER_SetSectionNotify(PDmx_SFilter->Filter_Handle, hello, 1, 0)) printf(" %d \n", __LINE__);
+
+        //printf("DB_DemuxStopFilter\n");
+		
+		DMXLeaveCriticalSection(sem_DemuxAccess);
+		
+	  return DB_DMX_OK;
+}
+
+/********************************************************************************************************
+功能： FlushFilter 的Buffer
+原型：DB_ERROR DB_DemuxFlushBuffer(void);
+参数：
+无
+返回值：
+DB_OK-成功
+其它值-失败
+********************************************************************************************************/
+INT32 DB_DemuxFlushBuffer(DB_FilterHandle handle)
+{
+//		rt_error_t	  				ErrorCode = CS_NO_ERROR;
+		CS_DMX_Filter *				PDmx_SFilter;
+
+		DMXEnterCriticalSection(sem_DemuxAccess);
+		
+		PDmx_SFilter=(CS_DMX_Filter *)handle;
+		if(DMXCheckHandle((CS_DMX_Filter *)handle)!=DB_DMX_OK)
+		{
+			printf("Invalid Handle\n");
+			DMXLeaveCriticalSection(sem_DemuxAccess);
+			return DB_DMX_FAILURE;
+		}
+
+		memset(PDmx_SFilter->Destination0_p,0x0,PDmx_SFilter->DestinationSize0);
+
+		DMXLeaveCriticalSection(sem_DemuxAccess);
+	
+		return DB_DMX_OK;
+}
+
+
+
+static INT32 DB_DemuxRestartFilter(DB_FilterHandle handle)
+{
+		CS_DMX_Filter *				PDmx_SFilter;
+		U8							ErrorFlag=0;
+                  //U32                         req_size = 0;
+
+		//DMXEnterCriticalSection(sem_DemuxAccess);
+		
+		PDmx_SFilter=(CS_DMX_Filter *)handle;
+		if(DMXCheckHandle(handle)!=DB_DMX_OK)
+		{
+			printf("Invalid Handle\n");
+			return DB_DMX_FAILURE;
+		}
+		//DMXEnterCriticalSection(sem_DemuxAccess);
+
+		//CSDEMUX_PIDFT_Disable(PDmx_SFilter->Slot_Handle);
+		//CSDEMUX_Filter_Disable(PDmx_SFilter->Filter_Handle);
+		//CSDEMUX_PIDFT_Close(PDmx_SFilter->Slot_Handle);
+		//CSDEMUX_Filter_Close(PDmx_SFilter->Filter_Handle);
+		
+		
+		//printf("Filter Set 0x%.2x\n",PDmx_SFilter->FilterSet.FilterValues_p[0]);
+		//PDmx_SFilter->Filter_Handle = CSDEMUX_Filter_Open(PDmx_SFilter->Filter_ID);
+		//PDmx_SFilter->Slot_Handle = CSDEMUX_PIDFT_Open(PDmx_SFilter->Slot_ID);
+		CSDEMUX_PIDFT_SetChannel(PDmx_SFilter->Slot_Handle,PDmx_SFilter->Channel_ID);
+		CSDEMUX_PIDFT_SetPID(PDmx_SFilter->Slot_Handle,PDmx_SFilter->Pid);  
+		CSDEMUX_PIDFT_Enable(PDmx_SFilter->Slot_Handle);
+
+		CSDEMUX_Filter_SetFilter(PDmx_SFilter->Filter_Handle,PDmx_SFilter->FilterSet.FilterValues_p,PDmx_SFilter->FilterSet.FilterMasks_p);
+        //Remove by River 11.14.2007
+        CSDEMUX_Filter_SetFilterType(PDmx_SFilter->Filter_Handle,DEMUX_FILTER_TYPE_SEC);
+		CSDEMUX_Filter_AddPID(PDmx_SFilter->Filter_Handle,PDmx_SFilter->Pid);
+		CSDEMUX_Filter_Enable(PDmx_SFilter->Filter_Handle);
+
+		PDmx_SFilter->StartTime = CS_OS_time_now();
+                  PDmx_SFilter->IfGetData_inCurrentCircle = FALSE;
+		PDmx_SFilter->Running=1;
+
+		//DMXLeaveCriticalSection(sem_DemuxAccess);
+
+		if(ErrorFlag==0)
+			return DB_DMX_OK;
+		else
+			return DB_DMX_FAILURE;
+}
+
+
+static INT32 DB_FilterNomatch(U8* Mask,U8* Match,U8* Nomatch,U8*Data)
+{
+	U8 i=0;
+
+	for(i=0;i<8;i++)
+	{
+		if(Nomatch[i]==0)
+			continue;
+	
+		if(((Nomatch[i]&(Mask[i]&Match[i])) == (Nomatch[i]&(Mask[i]&Data[i])))
+			||(((Match[i]&Mask[i])&(~Nomatch[i])) != ((Data[i]&Mask[i])&(~Nomatch[i]))))
+		{
+			return DB_DMX_FAILURE;
+		}				
+	}
+
+	return DB_DMX_OK;	
+}
+
+#if 0
+static INT32 DB_GetMatchFilter(U8 Buffer_id,U8* DMXNum)
+{
+
+	U8 i=0;
+	
+	for(i=0;i<CS_DB_MAX_NUMBER_FILTERS;i++)
+		{
+			if(DMX_SectionFilter[i].Filter_Handle.device_id==Buffer_id)
+				{
+					*DMXNum=i;
+					return DB_DMX_OK;
+				}
+		}
+
+	*DMXNum=0xff;
+
+	return DB_DMX_FAILURE;
+}
+#endif
+
+static void DMXEnterCriticalSection(CSOS_Semaphore_t *Semp)
+{
+	CSOS_WaitSemaphore(Semp);
+}
+
+static void DMXLeaveCriticalSection(CSOS_Semaphore_t *Semp)
+{
+	CSOS_SignalSemaphore(Semp);
+}
+
+//#define DemuxTest
+#ifdef DemuxTest
+
+#if 0
+void Get_Section(int pid_ft_id, int sec_ft_id, int pid, int tabid)
+{
+    CSDEMUX_HANDLE  hfilter;   
+    CSDEMUX_HANDLE  hpidfilter;
+   
+    unsigned char filter[12];
+    unsigned char mask[12];
+
+    memset(filter, 0 ,12);
+    memset(mask, 0 ,12);
+
+    filter[0] = tabid&0xff;
+    mask[0]   = 0xff;
+
+    hfilter = CSDEMUX_Filter_Open(sec_ft_id);
+    
+    hpidfilter = CSDEMUX_PIDFT_Open(pid_ft_id);
+
+    CSDEMUX_PIDFT_SetChannel(hpidfilter,DEMUX_CHL_ID0);
+    CSDEMUX_PIDFT_SetPID(hpidfilter,pid);  
+    CSDEMUX_PIDFT_Enable(hpidfilter);
+    
+    CSDEMUX_Filter_SetFilter(hfilter,filter,mask);
+    CSDEMUX_Filter_AddPID(hfilter,pid);
+    //Remove by River 11.14.2007
+    CSDEMUX_Filter_SetFilterType(hfilter,DEMUX_FILTER_TYPE_SEC);
+    CSDEMUX_Filter_Enable(hfilter);
+
+    unsigned int  reg_val;
+    unsigned char buf[4100];
+    
+    while(1)
+    {
+       reg_val = 4096;
+       if(CSDEMUX_Filter_ReadWait(hfilter,500) == CSAPI_SUCCEED)
+       {
+           if(CSDEMUX_Filter_ReadSectionData(hfilter, buf, &reg_val)== CSAPI_SUCCEED)
+           {
+              printf("section  = 0x%02x, 0x%02x, 0x%02x,  0x%02x, 0x%02x\n", buf[0],buf[1],buf[2],buf[3],buf[4]);
+           }
+       }
+       else printf("ReadWait Timeout\n");
+    }
+    CSDEMUX_PIDFT_Disable(hpidfilter);
+    CSDEMUX_Filter_Disable(hfilter);
+    CSDEMUX_PIDFT_Close(hpidfilter);
+    CSDEMUX_Filter_Close(hfilter);
+}
+#else
+void Get_Section(int pid_ft_id, int sec_ft_id, int pid, int tabid)
+{
+    CSDEMUX_HANDLE  hfilter;
+    CSDEMUX_HANDLE  hpidfilter;
+    CSDEMUX_FILTER_TYPE filter_type = DEMUX_FILTER_TYPE_SEC;
+    int hLog;
+    FILE *fp;
+    int i;
+    unsigned int wp, rp, in_size;
+
+    unsigned char filter[12];
+    unsigned char mask[12];
+
+    struct timeval  curr_tv, next_tv;
+    U32 t;
+
+    gettimeofday(&curr_tv, NULL);
+
+#ifdef  printlog
+    fp = fopen("LOG", "w");
+    if (fp == NULL)
+        printf("open LOG file failed!\n");
+#endif
+
+    memset(filter, 0 ,12);
+    memset(mask, 0 ,12);
+
+    filter[0] = tabid&0xff;
+    mask[0]   = 0xff;
+
+    hfilter = CSDEMUX_Filter_Open(sec_ft_id);
+
+    hpidfilter = CSDEMUX_PIDFT_Open(pid_ft_id);
+
+    CSDEMUX_PIDFT_SetChannel(hpidfilter,DEMUX_CHL_ID0);
+    CSDEMUX_PIDFT_SetPID(hpidfilter,pid);
+    CSDEMUX_PIDFT_Enable(hpidfilter);
+
+    if (filter_type == DEMUX_FILTER_TYPE_SEC)
+        CSDEMUX_Filter_SetFilter(hfilter,filter,mask);
+    CSDEMUX_Filter_AddPID(hfilter,pid);
+    CSDEMUX_Filter_SetFilterType(hfilter,filter_type);
+    CSDEMUX_Filter_Enable(hfilter);
+    
+#if 1
+                    {
+                    int crc_num;
+                    
+                    printf(" CRC config start ................................................... time[%d]\n", CS_OS_time_now());
+                    if (CSAPI_FAILED == CSDEMUX_Filter_GetFreeCRCNumber(hfilter, &crc_num)) printf(" GetFreeCRC error. \n"); 
+                    printf(" free crc_num = %d \n", crc_num);
+                    
+                    if (CSAPI_FAILED == CSDEMUX_Filter_MallocCRC(hfilter)) printf(" %d \n", __LINE__);
+                    if (CSAPI_FAILED == CSDEMUX_Filter_EnableCRC(hfilter)) printf(" %d \n", __LINE__);
+                    if (CSAPI_FAILED == CSDEMUX_Filter_GetFreeCRCNumber(hfilter, &crc_num)) printf(" GetFreeCRC error. \n"); 
+                    printf(" free crc_num = %d \n", crc_num);
+                    printf(" CRC config  end  ................................................... time[%d]\n", CS_OS_time_now());
+
+                    CSDEMUX_FILTER_SetSaveErrSectionDataFlag(hfilter, 0);
+                    }
+#endif
+
+    unsigned int  reg_val, ret_val;
+    unsigned char buf[128*1024];
+
+    while (1)
+    {
+        reg_val = 0;
+
+        if (CSDEMUX_Filter_ReadWait(hfilter,500) == CSAPI_SUCCEED)
+        {
+            if (CSDEMUX_Filter_CheckDataSize(hfilter, &reg_val) != CSAPI_SUCCEED)
+                printf("CSXPORT_Filter_CheckDataSize failed\n");
+
+            if (reg_val == 0)
+                continue;
+
+            if (filter_type == DEMUX_FILTER_TYPE_SEC)
+            {
+                reg_val = 4096;   // return value is the number of bucket
+                ret_val = CSDEMUX_Filter_ReadSectionData(hfilter, buf, &reg_val);
+            }
+            else
+            {
+                ret_val = CSDEMUX_Filter_ReadData(hfilter, buf, &reg_val);
+            }
+
+            if (ret_val == CSAPI_SUCCEED)
+            {
+#ifdef  printlog
+
+                fseek(fp, 0, SEEK_CUR);
+                fprintf(fp, "%d data read\n", reg_val);
+                fseek(fp, 0, SEEK_CUR);
+                fprintf(fp, "section = 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x", buf[0], buf[1], buf[2], buf[3], buf[4]);
+#endif
+                printf("%d data read\n", reg_val);
+                printf("section = 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x\n", buf[0], buf[1], buf[2], buf[3], buf[4]);
+
+                /*
+                for (i=0; i<reg_val; i++)
+                {
+                    printf("0x%02x,", buf[i]);
+                    fseek(fp, 0, SEEK_CUR);
+                    fprintf(fp, "0x%02x,", buf[i]);
+                }
+                */
+#ifdef  printlog
+                
+                fseek(fp, 0, SEEK_CUR);
+                fprintf(fp, "\n");
+#endif
+                gettimeofday(&next_tv, NULL);
+                t = (next_tv.tv_sec - curr_tv.tv_sec) * 1000000 +
+                    (next_tv.tv_usec - curr_tv.tv_usec);
+                t = t / 1000;
+#ifdef  printlog
+
+                fseek(fp, 0, SEEK_CUR);
+                fprintf(fp, "get section at ---- %dms\n", t);
+#endif
+                printf("get section at ---- %dms\n", t);
+
+            }
+            else
+            {
+
+                gettimeofday(&next_tv, NULL);
+                t = (next_tv.tv_sec - curr_tv.tv_sec) * 1000000 +
+                    (next_tv.tv_usec - curr_tv.tv_usec);
+                t = t / 1000;
+#ifdef  printlog
+
+                fseek(fp, 0, SEEK_CUR);
+                fprintf(fp, "Read section Data failed at ---- %dms\n", t);
+#endif
+                printf("Read section Data failed at ---- %dms\n", t);
+            }
+        }
+        else
+        {
+
+            gettimeofday(&next_tv, NULL);
+            t = (next_tv.tv_sec - curr_tv.tv_sec) * 1000000 +
+                (next_tv.tv_usec - curr_tv.tv_usec);
+            t = t / 1000;
+            printf("ReadWait Timeout at %dms\n", t);
+ 
+#ifdef  printlog
+            fseek(fp, 0, SEEK_CUR);
+            fprintf(fp, "ReadWait Timeout at %dms\n", t);
+#endif
+        }
+    }
+
+    CSDEMUX_PIDFT_Disable(hpidfilter);
+    CSDEMUX_Filter_Disable(hfilter);
+    
+#if 1
+                            {
+                            int crc_num;
+                            
+                            printf(" CRC config start ................................................... time[%d]\n", CS_OS_time_now());
+                            if (CSAPI_FAILED == CSDEMUX_Filter_GetFreeCRCNumber(hfilter, &crc_num)) printf(" GetFreeCRC error. \n"); 
+                            printf(" free crc_num = %d \n", crc_num);
+                            
+                            if (CSAPI_FAILED == CSDEMUX_Filter_DisableCRC(hfilter)) printf(" %d \n", __LINE__);
+                            if (CSAPI_FAILED == CSDEMUX_Filter_FreeCRC(hfilter)) printf(" %d \n", __LINE__);
+                            if (CSAPI_FAILED == CSDEMUX_Filter_GetFreeCRCNumber(hfilter, &crc_num)) printf(" GetFreeCRC error. \n"); 
+                            printf(" free crc_num = %d \n", crc_num);
+                            printf(" CRC config  end  ................................................... time[%d]\n", CS_OS_time_now());
+                            }
+#endif
+    CSDEMUX_PIDFT_Close(hpidfilter);
+    CSDEMUX_Filter_Close(hfilter);
+
+    /*
+    if (hLog)
+    close(hLog);
+    */
+#ifdef  printlog
+
+    fclose(fp);
+#endif
+    return;
+}
+
+#endif
+
+int test_case(void)
+{
+    int hTve, mode = 2;
+    int width = 0, length = 0;
+    //CS_DMX_Filter *				PDmx_SFilter;
+
+    //return gfx_test();
+    //CS_GetFreeSectionFilter(&PDmx_SFilter);
+
+    Get_Section(DEMUX_PIDFT_ID11, DEMUX_FILTER_ID12, 0, 0);
+    return 0;
+}
+
+
+void DB_DMXCallBack (void* userparam,DB_FilterHandle  handle,BOOL timedout,U8 const* data,U32 size)
+{int i,j;
+
+	//N_DemuxStopFilter(handle);
+	//CS_DMX_Filter*  Handle;
+
+	//Handle=(CS_DMX_Filter*)handle
+	printf("--------DMX CallBack--------\n");
+	if(timedout==TRUE)
+		{
+		printf("----------Timeout----------\n");
+		return ;
+		}
+	printf("------Data Size=%d-------\n",size);
+	for(i=0;i<16;i++)
+		{
+		printf("\n");		
+		for(j=0;j<16;j++)
+			printf("0x%x ",data[i*16+j]);
+		if((i+1)*16>size) break;
+		}
+	
+}
+
+
+ void DB_APITest_Demux(void)
+{
+	DB_FilterHandle			PAThandle,PMThandle, SDThandle,TDTHandle, NITHandle, EITHandle, EITSCHandle;
+	U16				PATPid=0x00, SDTPid=0x11, TDTPid=0x14, NITPid = 0x10, EITPid = 0x12, PMTPid  = 0x1043;
+	DB_Demux_Buffer_Mode				bufsize=CS_DEMUX_BUFFER_MODE_4K;
+	U8				data[8]={0x42,0x00,0x00,0x00,0x00,0x00,0x00,0x00}, mask[8]={0xff,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+	U8				Nomatch[8]={0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+	INT32			Status;
+    
+#if 0
+	//DB_DemuxInit();
+	data[0]=0;
+	Status=DB_DemuxCreateFilter(&PAThandle, PATPid, bufsize, data, mask,Nomatch, DB_DemuxFilterMode_Default, 5000, DB_DMXCallBack,NULL);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Create PAT filter fail...\n");
+	else
+		printf("^_^Create PAT filter OK... \n");
+
+    data[0]=0x02;
+	Status=DB_DemuxCreateFilter(&PMThandle, PMTPid, bufsize, data, mask,Nomatch, DB_DemuxFilterMode_Default, 5000, DB_DMXCallBack,NULL);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Create PMT filter fail...\n");
+	else
+		printf("^_^Create PMT filter OK... \n");
+
+    data[0]=0x4e;
+	Status=DB_DemuxCreateFilter(&EITHandle,EITPid,bufsize, data, mask,Nomatch, DB_DemuxFilterMode_Default, 3000, DB_DMXCallBack,NULL);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Create EIT filter fail...\n");
+	else
+		printf("^_^Create EIT filter OK...\n");
+	
+	Status=DB_DemuxStartFilter(EITHandle);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Start EIT filter fail...\n");
+	else
+		printf("^_^Start EIT filter OK...\n");
+    
+while(1)	
+{
+	Status=DB_DemuxStartFilter(PAThandle);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Start PAT filter fail...\n");
+	else
+		printf("^_^Start PAT filter OK...\n");
+	
+	
+	Status=DB_DemuxStartFilter(PMThandle);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Start PMT filter fail...\n");
+	else
+		printf("^_^Start PMT filter OK...\n");
+
+        usleep(5000*1000);
+
+        DB_DemuxStopFilter(PAThandle);
+        DB_DemuxStopFilter(PMThandle);
+}
+#endif
+
+
+#if 0
+	data[0]=0x42;
+	Status=DB_DemuxCreateFilter(&SDThandle,SDTPid,bufsize, data, mask,Nomatch, DB_DemuxFilterMode_Default, 3000, DB_DMXCallBack,NULL);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Create SDT filter fail...\n");
+	else
+		printf("^_^Create SDT filter OK...\n");
+	
+	Status=DB_DemuxStartFilter(SDThandle);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Start SDT filter fail...\n");
+	else
+		printf("^_^Start SDT filter OK...\n");
+#endif
+
+#if 1
+	data[0]=0x4e;
+	Status=DB_DemuxCreateFilter(&EITHandle,EITPid,bufsize, data, mask,Nomatch, DB_DemuxFilterMode_Default, 3000, DB_DMXCallBack,NULL);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Create EIT filter fail...\n");
+	else
+		printf("^_^Create EIT filter OK...\n");
+	
+	Status=DB_DemuxStartFilter(EITHandle);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Start EIT filter fail...\n");
+	else
+		printf("^_^Start EIT filter OK...\n");
+#endif
+
+#if 0
+	data[0]=0x50;
+        mask[0]= 0x5e;
+	Status=DB_DemuxCreateFilter(&EITSCHandle,EITPid,bufsize, data, mask,Nomatch, DB_DemuxFilterMode_Default, 3000, DB_DMXCallBack,NULL);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Create EIT SC filter fail...\n");
+	else
+		printf("^_^Create EIT SC filter OK...\n");
+	
+	Status=DB_DemuxStartFilter(EITSCHandle);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Start EIT SC filter fail...\n");
+	else
+		printf("^_^Start EIT SC filter OK...\n");
+#endif
+
+#if 1
+	data[0]=0x40;
+        mask[0]= 0xff;
+	Status=DB_DemuxCreateFilter(&NITHandle,NITPid,bufsize, data, mask,Nomatch, DB_DemuxFilterMode_Default, 3000, DB_DMXCallBack,NULL);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Create NIT filter fail...\n");
+	else
+		printf("^_^Create NIT filter OK...\n");
+	
+	Status=DB_DemuxStartFilter(NITHandle);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Start NIT filter fail...\n");
+	else
+		printf("^_^Start NIT filter OK...\n");
+#endif
+
+
+
+//	DB_DemuxFlushBuffer(PAThandle);
+//	data[0]=0x42;
+//	DB_DemuxSetFilterParameter(PAThandle,SDTPid, data, mask,Nomatch,DB_DemuxFilterMode_OneShot,3000);
+
+#if 0
+	data[0]=0x70;
+	//mask[0]=0x00;
+	//Nomatch[0]=0x01;
+	Status=DB_DemuxCreateFilter(&TDTHandle,TDTPid,bufsize, data, mask,Nomatch, DB_DemuxFilterMode_Default, 3000, DB_DMXCallBack,NULL);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Create TDT filter fail...\n");
+	else
+		printf("^_^Create TDT filter OK...\n");
+
+
+	Status=DB_DemuxStartFilter(TDTHandle);
+	if(Status==DB_DMX_FAILURE)
+		printf("~_~Start TDT filter fail...\n");
+	else
+		printf("^_^Start TDT filter OK...\n");
+#endif
+
+#if 0
+        while(1)
+            {
+                CSAPI_RESULT		ErrorCode = CSAPI_FAILED;
+                U32					DataSize;
+            	U8					DmxFltNum;	
+            	U32					SectionLength=0;
+                
+                ErrorCode = CSDEMUX_Filter_ReadWait(((CS_DMX_Filter *)SDThandle)->Filter_Handle,500);
+		if(ErrorCode==CSAPI_SUCCEED)
+		{
+
+			DataSize = 4096; //1024;
+			ErrorCode = CSDEMUX_Filter_ReadSectionData(((CS_DMX_Filter *)SDThandle)->Filter_Handle, ((CS_DMX_Filter *)SDThandle)->Destination0_p , &DataSize );
+                            //printf("data size = %d\n", DataSize);
+                            #if 1
+			if(ErrorCode==CSAPI_SUCCEED)
+			{
+                
+				SectionLength=((((CS_DMX_Filter *)SDThandle)->Destination0_p[1]&0x0f)<<8)+
+							((CS_DMX_Filter *)SDThandle)->Destination0_p[2]+3;
+				if(DB_FilterNomatch(((CS_DMX_Filter *)SDThandle)->SWFilterMask, ((CS_DMX_Filter *)SDThandle)->SWFilterMatch,
+								((CS_DMX_Filter *)SDThandle)->Nomatch, ((CS_DMX_Filter *)SDThandle)->Destination0_p)==DB_DMX_OK)
+					{
+						((CS_DMX_Filter *)SDThandle)->callback(NULL,(DB_FilterHandle)SDThandle,\
+							FALSE,((CS_DMX_Filter *)SDThandle)->Destination0_p,SectionLength);
+					}
+
+			}
+                        #endif
+			
+		}
+
+                    ErrorCode = CSDEMUX_Filter_ReadWait(((CS_DMX_Filter *)EITHandle)->Filter_Handle,500);
+		if(ErrorCode==CSAPI_SUCCEED)
+		{
+
+			DataSize = 4096; //1024;
+			ErrorCode = CSDEMUX_Filter_ReadSectionData(((CS_DMX_Filter *)EITHandle)->Filter_Handle, ((CS_DMX_Filter *)EITHandle)->Destination0_p , &DataSize );
+                            //printf("data size = %d\n", DataSize);
+                        #if 1
+			if(ErrorCode==CSAPI_SUCCEED)
+			{
+                
+				SectionLength=((((CS_DMX_Filter *)EITHandle)->Destination0_p[1]&0x0f)<<8)+
+							((CS_DMX_Filter *)EITHandle)->Destination0_p[2]+3;
+				if(DB_FilterNomatch(((CS_DMX_Filter *)EITHandle)->SWFilterMask, ((CS_DMX_Filter *)EITHandle)->SWFilterMatch,
+								((CS_DMX_Filter *)EITHandle)->Nomatch, ((CS_DMX_Filter *)EITHandle)->Destination0_p)==DB_DMX_OK)
+					{
+						((CS_DMX_Filter *)EITHandle)->callback(NULL,(DB_FilterHandle **)EITHandle,\
+							FALSE,((CS_DMX_Filter *)EITHandle)->Destination0_p,SectionLength);
+					}
+
+			}
+            #endif
+			
+		}
+            }
+#endif	
+}
+
+#endif
+

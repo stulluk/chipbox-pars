@@ -1,0 +1,10 @@
+prefix=/
+exec_prefix=/
+libdir=/lib
+includedir=/include
+
+Name: Direct
+Description: DirectFB base development library
+Version: 1.0.0
+Libs: -L${libdir} -ldirect -lpthread -ldl
+Cflags: -D_REENTRANT -I/include/directfb

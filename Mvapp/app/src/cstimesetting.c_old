@@ -1,0 +1,811 @@
+#include "linuxos.h"
+
+#include "database.h"
+#include "cs_app_common.h"
+
+#include "userdefine.h"
+#include "cs_app_main.h"
+#include "mwsetting.h"
+#include "cstimesetting.h"
+#include "date_time.h"
+
+
+#define		FIELDS_PER_LINE				        2
+
+static CSAPP_Applet_t	CSApp_TimeSetting_Applets;
+static BITMAP 			bmp_timesetting, bmp_time_tips;
+static BITMAP		 	Focus_button,UnFocus_button;
+
+
+static tComboList_Field_Rect		TIMESetting_ComboList_First_Line[FIELDS_PER_LINE] = {
+                                                                                                                                                                            	{180, 200},
+                                                                                                                                                                            	{400, 150}
+                                                                                                                                                                            };
+
+static tComboList_Element	TIMESetting_ComboList_First = {	
+                                                                                                                    	        {170, 180, 400, 40},
+                                                                                                                    		FIELDS_PER_LINE,
+                                                                                                                    		TIMESetting_ComboList_First_Line
+                                                                                                                    };
+
+static U16 sTimeMode[CS_APP_TIME_MODE_NUM] = 
+{
+	CSAPP_STR_TIME_MODE_NET,
+	CSAPP_STR_TIME_MODE_LOCAL,
+};
+
+static U16 TimeSetting_Get_Item_Num(U16 time_mode)
+{
+		if (time_mode == CS_APP_TIME_MODE_LOCAL)
+		{
+			return CS_APP_TIME_SETTING_ITEM_NUM_LOCAL;
+		}
+		else if (time_mode == CS_APP_TIME_MODE_NET)
+		{
+			return CS_APP_TIME_SETTING_ITEM_NUM_NET;
+		}
+		else
+			return 0;
+}
+
+static BOOL TimeSetting_Check_Leap_Year(U16 year)
+{
+	if((((year % 4) == 0) && ((year % 100) != 0)) || ((year % 400) == 0))
+	{
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+static tCS_DT_Date TimeSetting_Convert_Date(tTIME_SETTING_YMD ymd)
+{
+	tCS_DT_Date tmp;
+	char str[5];
+
+	str[0] = ymd.ymd[6];
+	str[1] = ymd.ymd[7];
+	str[2] = ymd.ymd[8];
+	str[3] = ymd.ymd[9];
+	str[4] = '\0';
+	tmp.year = atoi(str);
+	str[0] = ymd.ymd[0];
+	str[1] = ymd.ymd[1];
+	str[2] = '\0';
+	tmp.month = atoi(str);
+	str[0] = ymd.ymd[3];
+	str[1] = ymd.ymd[4];
+	str[2] = '\0';
+	tmp.day = atoi(str);
+
+	return tmp;
+}
+
+
+static tCS_DT_Time TimeSetting_Convert_Time(tTIME_SETTING_HM hm)
+{
+	tCS_DT_Time tmp;
+	char str[3];
+
+	str[0] = hm.hm[0];
+	str[1] = hm.hm[1];
+	str[2] = '\0';
+	tmp.hour = atoi(str);
+	str[0] = hm.hm[3];
+	str[1] = hm.hm[4];
+	str[2] = '\0';
+	tmp.minute = atoi(str);
+	
+	return tmp;
+}
+
+static BOOL TimeSetting_Check_Input_Date(char input_num, tTIME_SETTING_YMD *ymd)
+{
+	U16 year;
+	char year_str[5];
+	
+	if (ymd == NULL)
+		return FALSE;
+
+	year_str[0] = ymd->ymd[6];
+	year_str[1] = ymd->ymd[7];
+	year_str[2] = ymd->ymd[8];
+	year_str[3] = ymd->ymd[9];
+	year_str[4] = '\0';
+	year = atoi(year_str);
+	
+	switch(ymd->current_char)
+	{
+	case 1:	// month 1
+		if ((input_num == '1') || (input_num == '0'))
+		{
+			ymd->ymd[0] = input_num;
+			if (input_num == '0' && ymd->ymd[1] == '2')
+			{
+				if (ymd->ymd[3] == '3')
+				{
+					ymd->ymd[3] = '0';
+					ymd->ymd[4] = '1';
+				}
+			}
+			return TRUE;
+		}
+		
+		return FALSE;
+	case 2:	// month 2
+		if (ymd->ymd[0] == '0')
+		{
+			ymd->ymd[1] = input_num;
+			if (ymd->ymd[1] == '2')
+			{
+				if (ymd->ymd[3] == '3')
+				{
+					ymd->ymd[3] = '0';
+					ymd->ymd[4] = '1';
+				}
+			}
+			return TRUE;
+		}
+		else if (ymd->ymd[0] == '1')
+		{
+			if (input_num == '1' || input_num == '2')
+			{
+				ymd->ymd[1] = input_num;
+				return TRUE;
+			}
+		}
+		
+		return FALSE;
+	case 4:	// day 1	
+		if (ymd->ymd[0] == '0' && ymd->ymd[1] == '2')	// Feb
+		{
+			if ((input_num >= '0') && input_num <= '2')
+			{
+				ymd->ymd[3] = input_num;
+				return TRUE;
+			}
+		}
+		else
+		{
+			if ((input_num >= '0') && (input_num <= '3'))
+			{
+				ymd->ymd[3] = input_num;
+				if (ymd->ymd[3] == '3')
+				{
+					if (ymd->ymd[4] != '0' && ymd->ymd[4] != '1')
+						ymd->ymd[4] = '0';
+				}
+				return TRUE;
+			}
+		}
+		
+		return FALSE;
+	case 5:	// day 2
+		if (ymd->ymd[0] == '0' && ymd->ymd[1] == '2')	// Feb
+		{
+			if (ymd->ymd[3] == '3')
+				return FALSE;
+			else if (ymd->ymd[3] == '0' || ymd->ymd[3] == '1')
+			{
+				ymd->ymd[4] = input_num;
+				return TRUE;
+			}
+			else if (ymd->ymd[3] == '2')
+			{
+				if (TimeSetting_Check_Leap_Year(year))
+				{
+					ymd->ymd[4] = input_num;
+					return TRUE;
+				}
+				else
+				{
+					if (input_num != '9')
+					{
+						ymd->ymd[4] = input_num;
+						return TRUE;
+					}
+				}
+			}
+		}
+		else
+		{
+			if (ymd->ymd[3] == '3')
+			{
+				if ((input_num == '1') || (input_num == '0'))
+				{
+					ymd->ymd[4] = input_num;
+					return TRUE;
+				}
+			}
+			else if (ymd->ymd[3] == '2' || ymd->ymd[3] == '1' || ymd->ymd[3] == '0')
+			{
+				ymd->ymd[4] = input_num;
+				return TRUE;
+			}
+		}
+		
+		return FALSE;
+	case 7:	// year 1
+		if ((input_num == '1') || (input_num == '2'))
+		{
+			ymd->ymd[6] = input_num;
+			if (ymd->ymd[6] == '1')
+			{
+				ymd->ymd[7] = '9';
+				ymd->current_char++;
+			}
+			if (ymd->ymd[6] == '2')
+			{
+				ymd->ymd[7] = '0';
+				ymd->current_char++;
+			}
+			return TRUE;
+		}
+		
+		return FALSE;
+	case 8:	// year 2
+		if ((ymd->ymd[6] == '2') && (input_num == '0'))
+		{
+			ymd->ymd[7] = input_num;
+			return TRUE;
+		}
+		if ((ymd->ymd[6] == '1') && (input_num == '9'))
+		{
+			ymd->ymd[7] = input_num;
+			return TRUE;
+		}
+		
+		return FALSE;
+	case 9:	// year 3
+		if ((ymd->ymd[7] == '9') && ((input_num == '8') || (input_num == '9')))
+		{
+			ymd->ymd[8] = input_num;
+			return TRUE;
+		}
+		else
+		{
+			ymd->ymd[8] = input_num;
+			return TRUE;
+		}
+		
+		return FALSE;
+		
+	case 10:	// year 4
+		ymd->ymd[9] = input_num;
+		return TRUE;
+
+	default:
+		return FALSE;		
+	}
+}
+
+static BOOL TimeSetting_Check_Input_Time(char input_num, tTIME_SETTING_HM *hm)
+{
+	switch(hm->current_char)
+	{
+	case 1:
+		if (input_num == '0' || input_num == '1' || input_num == '2')
+		{
+			hm->hm[0] = input_num;
+			if (input_num == '2')
+			{
+				if (hm->hm[1] > '4')
+				{
+					hm->hm[1] = '0';
+				}
+			}
+			return TRUE;
+		}
+		
+		return FALSE;		
+	case 2:
+		if (hm->hm[0] == '2')
+		{
+			if (input_num >= '0' && input_num <= '3')
+			{
+				hm->hm[1] = input_num;
+				return TRUE;
+			}
+		}
+		else
+		{
+			hm->hm[1] = input_num;
+			return TRUE;
+		}
+
+		return FALSE;
+	case 4:
+		if (input_num >= '0' && input_num <= '5')
+		{
+			hm->hm[3] = input_num;
+			return TRUE;
+		}
+
+		return FALSE;
+	case 5:
+		hm->hm[4] = input_num;
+		return TRUE;
+	default:
+		return FALSE;
+	}
+}
+
+static int Time_Msg_cb(HWND hwnd,int message,WPARAM wparam,LPARAM lparam);
+
+CSAPP_Applet_t	CSApp_TimeSetting(void)
+{
+	int   	BASE_X, BASE_Y, WIDTH, HEIGHT;
+	MSG   	msg;
+	HWND  	hwndMain;
+	MAINWINCREATE			CreateInfo;
+	
+	
+#ifdef  Screen_1080
+	BASE_X = 0;
+	BASE_Y = 0;
+	WIDTH  = 1920;
+	HEIGHT = 1080;
+#else
+	BASE_X = 0;
+	BASE_Y = 0;
+	WIDTH  = ScalerWidthPixel(720);
+	HEIGHT = ScalerHeigthPixel(576);
+#endif
+	
+	
+	CreateInfo.dwStyle	 = WS_VISIBLE;
+	CreateInfo.dwExStyle = WS_EX_NONE;
+	CreateInfo.spCaption = "cspinsetting window";
+	CreateInfo.hMenu	 = 0;
+	CreateInfo.hCursor	 = 0;
+	CreateInfo.hIcon	 = 0;
+	CreateInfo.MainWindowProc = Time_Msg_cb;
+	CreateInfo.lx = BASE_X;
+	CreateInfo.ty = BASE_Y;
+	CreateInfo.rx = BASE_X+WIDTH;
+	CreateInfo.by = BASE_Y+HEIGHT;
+    CreateInfo.iBkColor = CSAPP_BLACK_COLOR;
+	CreateInfo.dwAddData = 0;
+	CreateInfo.hHosting = HWND_DESKTOP;
+	
+	hwndMain = CreateMainWindow (&CreateInfo);
+	
+	if (hwndMain == HWND_INVALID)	return CSApp_Applet_Error;
+	
+	ShowWindow(hwndMain, SW_SHOWNORMAL);
+	
+	while (GetMessage(&msg, hwndMain)) 
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	MainWindowThreadCleanup (hwndMain);
+	return CSApp_TimeSetting_Applets;
+    
+}
+
+
+static int Time_Msg_cb(HWND hwnd,int message,WPARAM wparam,LPARAM lparam)
+{
+	int 						i;
+	HDC 						hdc;
+	static BOOL 				MainPaintFlag = TRUE;
+	static U16					Current_Item = 0;
+    static U16					Current_TimeZone = 0;
+	static U16					Current_TimeMode = 0;
+	static U16					Item_Num = 0;
+	static char					Num_Input;	
+	static tTIME_SETTING_YMD	Current_ymd;
+	static tTIME_SETTING_HM		Current_hm;
+	static tCS_DT_Date  		Current_Date;
+	static tCS_DT_Time			Current_Time;
+	char						buff[20];
+	
+	switch(message)
+	{
+	case MSG_CREATE:
+		if(LoadBitmap(HDC_SCREEN,&bmp_timesetting, "/home/resource/Audio.gif"))
+		{
+			CSApp_TimeSetting_Applets = CSApp_Applet_Error;
+			return -1;
+		}
+		
+		if (LoadBitmap(HDC_SCREEN, &Focus_button, "/home/resource/AV_button2.gif"))
+		{
+			CSApp_TimeSetting_Applets = CSApp_Applet_Error;
+			return -1;
+		}
+		
+		if (LoadBitmap(HDC_SCREEN, &UnFocus_button, "/home/resource/AV_button1.gif"))
+		{
+			CSApp_TimeSetting_Applets = CSApp_Applet_Error;
+			return -1;
+		}
+
+                if (LoadBitmap(HDC_SCREEN, &bmp_time_tips, "/home/resource/password_tips.gif"))
+		{
+			CSApp_TimeSetting_Applets = CSApp_Applet_Error;
+			return -1;
+		}
+
+        bmp_timesetting.bmType = 0x10;
+        bmp_timesetting.bmColorKey = 0;
+
+        //CS_AV_SetOSDAlpha(0xff);
+
+		Item_Num = TimeSetting_Get_Item_Num(Current_TimeMode);
+
+		Current_TimeZone =  CS_MW_GetTimeZone(); 
+		Current_Item = 0;
+		Current_Date = CS_DT_MJDtoYMD(CS_DT_GetLocalMJD());
+		Current_Time = CS_DT_UTCtoHM(CS_DT_GetLocalUTC());
+
+		Current_ymd.current_char = 1;
+		Current_hm.current_char = 1;
+		sprintf(Current_ymd.ymd, "%02d/%02d/%04d", Current_Date.month, Current_Date.day, Current_Date.year);
+		sprintf(Current_hm.hm, "%02d:%02d", Current_Time.hour, Current_Time.minute);
+		
+		ComboList_Create(&TIMESetting_ComboList_First, CS_APP_TIME_SETTING_ITEM_TOTAL_NUM);
+		
+		break;
+	case MSG_PAINT:
+		{
+			hdc=BeginPaint(hwnd);				
+			if((MainPaintFlag)||(wparam == param_paint_all))
+			{         
+				FillBoxWithBitmap(hdc, ScalerWidthPixel(94), ScalerHeigthPixel(122), ScalerWidthPixel(534), ScalerHeigthPixel(255),  &bmp_timesetting);
+				SetTextColor(hdc,CSAPP_BLACK_COLOR);
+				SetBkMode(hdc,BM_TRANSPARENT);
+				CS_MW_TextOut(hdc,ScalerWidthPixel(150),ScalerHeigthPixel(134),CS_MW_LoadStringByIdx(CSAPP_STR_TIME_SETTING));
+				MainPaintFlag = FALSE;
+
+                                    FillBoxWithBitmap(hdc,ScalerWidthPixel(133), ScalerHeigthPixel(318), ScalerWidthPixel(486), ScalerHeigthPixel(34), &bmp_time_tips);
+                                    CS_MW_TextOut(hdc, ScalerWidthPixel(140), ScalerHeigthPixel(320), CS_MW_LoadStringByIdx(CSAPP_STR_TIME_TIPS));
+			}
+			
+			for(i = 0; i<Item_Num; i++)
+			{
+				if(Current_Item == i)
+					FillBoxWithBitmap(hdc, ScalerWidthPixel(TIMESetting_ComboList_First.element.x), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+TIMESetting_ComboList_First.element.dy*i), ScalerWidthPixel(TIMESetting_ComboList_First.element.dx), ScalerHeigthPixel(TIMESetting_ComboList_First.element.dy-10), &Focus_button);
+				else
+					FillBoxWithBitmap(hdc, ScalerWidthPixel(TIMESetting_ComboList_First.element.x), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+TIMESetting_ComboList_First.element.dy*i), ScalerWidthPixel(TIMESetting_ComboList_First.element.dx), ScalerHeigthPixel(TIMESetting_ComboList_First.element.dy-10), &UnFocus_button);
+			}
+			SetTextColor(hdc,CSAPP_BLACK_COLOR);
+			SetBkMode(hdc,BM_TRANSPARENT);
+			
+			CS_MW_TextOut(hdc, ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[0].x), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+5), CS_MW_LoadStringByIdx(CSAPP_STR_TIME_MODE));
+			if (Current_TimeMode == CS_APP_TIME_MODE_NET)
+				CS_MW_TextOut(hdc, ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[0].x), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+ TIMESetting_ComboList_First.element.dy+5), CS_MW_LoadStringByIdx(CSAPP_STR_TIME_ZONE));
+			if (Current_TimeMode == CS_APP_TIME_MODE_LOCAL)
+			{
+				CS_MW_TextOut(hdc, ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[0].x), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+ TIMESetting_ComboList_First.element.dy+5), CS_MW_LoadStringByIdx(CSAPP_STR_DATE));
+				CS_MW_TextOut(hdc, ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[0].x), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+ TIMESetting_ComboList_First.element.dy*2+5), CS_MW_LoadStringByIdx(CSAPP_STR_TIME));    
+			}
+			
+			SetTextColor(hdc,CSAPP_WHITE_COLOR);
+			SetBkMode(hdc,BM_TRANSPARENT);
+			if (Current_TimeMode == CS_APP_TIME_MODE_LOCAL)
+			{
+				//CS_MW_TextOut(hdc, ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[1].x + 20), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y + TIMESetting_ComboList_First.element.dy + 5), "0:00");
+			}
+			else
+			{
+				if(Current_TimeZone < 24)
+				{
+					sprintf(buff, "-%d:%02d", (12-(Current_TimeZone+1)/2), (Current_TimeZone%2)*30);
+				}
+				else
+				{
+					sprintf(buff, "%d:%02d", (Current_TimeZone/2-12), (Current_TimeZone%2)*30);
+				}
+				CS_MW_TextOut(hdc, ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[1].x + 20), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y + TIMESetting_ComboList_First.element.dy + 5), buff);
+			}
+			CS_MW_TextOut(hdc,ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[1].x + 20), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+ 5), CS_MW_LoadStringByIdx(sTimeMode[Current_TimeMode]));
+			
+			if (Current_TimeMode == CS_APP_TIME_MODE_LOCAL)
+			{
+            if (CS_MW_GetCurrentMenuLanguage() == CSAPP_LANG_CHINESE)
+                CS_MW_TextOut(hdc,ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[1].x-12), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+ TIMESetting_ComboList_First.element.dy+5), Current_ymd.ymd);
+            else if (CS_MW_GetCurrentMenuLanguage() == CSAPP_LANG_ENGLISH)
+                CS_MW_TextOut(hdc,ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[1].x+8), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+ TIMESetting_ComboList_First.element.dy+5), Current_ymd.ymd);
+            
+            CS_MW_TextOut(hdc,ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[1].x+20), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+ TIMESetting_ComboList_First.element.dy*2+5), Current_hm.hm);
+				if (Current_Item == CS_APP_YMD)
+				{
+                if (CS_MW_GetCurrentMenuLanguage() == CSAPP_LANG_CHINESE)
+                    CS_MW_TextOut(hdc, ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[1].x - 12 + 12 * (Current_ymd.current_char-1)), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+TIMESetting_ComboList_First.element.dy*Current_Item+5), "_");
+                else if (CS_MW_GetCurrentMenuLanguage() == CSAPP_LANG_ENGLISH)
+                    CS_MW_TextOut(hdc, ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[1].x + 8 + 8 * (Current_ymd.current_char-1)), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+TIMESetting_ComboList_First.element.dy*Current_Item+5), "_");
+				}
+				if (Current_Item == CS_APP_HM)
+				{                if (CS_MW_GetCurrentMenuLanguage() == CSAPP_LANG_CHINESE)
+                CS_MW_TextOut(hdc, ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[1].x + 20 + 12 * (Current_hm.current_char-1)), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+TIMESetting_ComboList_First.element.dy*Current_Item+5), "_");
+                else if (CS_MW_GetCurrentMenuLanguage() == CSAPP_LANG_ENGLISH)
+                CS_MW_TextOut(hdc, ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[1].x + 20 + 8 * (Current_hm.current_char-1)), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+TIMESetting_ComboList_First.element.dy*Current_Item+5), "_");
+				}
+			}
+			else if (Current_TimeMode == CS_APP_TIME_MODE_NET)
+			{
+				//CS_MW_TextOut(hdc,ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[1].x-12), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+ TIMESetting_ComboList_First.element.dy*2+5), "--/--/----");   
+				//CS_MW_TextOut(hdc,ScalerWidthPixel(TIMESetting_ComboList_First.element_fields[1].x+20), ScalerHeigthPixel(TIMESetting_ComboList_First.element.y+ TIMESetting_ComboList_First.element.dy*3+5), "--:--");
+			}
+			
+			EndPaint(hwnd,hdc);
+            CS_MW_SetTxprc(CS_MW_GetTxprc());
+			
+		}
+		return 0;
+
+	case MSG_KEYDOWN:
+		switch(wparam)
+		{
+		case CSAPP_KEY_0:
+		case CSAPP_KEY_1:
+		case CSAPP_KEY_2:
+		case CSAPP_KEY_3:
+		case CSAPP_KEY_4:
+		case CSAPP_KEY_5:
+		case CSAPP_KEY_6:
+		case CSAPP_KEY_7:
+		case CSAPP_KEY_8:
+		case CSAPP_KEY_9:
+			if (Current_TimeMode == CS_APP_TIME_MODE_NET)
+				break;
+			Num_Input = Key_to_Ascii(wparam);
+			switch(Current_Item)
+			{
+			case CS_APP_YMD:
+				if (TimeSetting_Check_Input_Date(Num_Input, &Current_ymd))
+				{
+					if (Current_ymd.current_char != TIME_SETTING_YMD_STR_LEN - 1)
+						Current_ymd.current_char++;
+					if (Current_ymd.current_char == 3 || Current_ymd.current_char == 6)
+						Current_ymd.current_char++;
+					ComboList_Update_Element(hwnd, Current_Item);
+				}
+
+				break;
+			case CS_APP_HM:
+				if (TimeSetting_Check_Input_Time(Num_Input, &Current_hm))
+				{
+					if (Current_hm.current_char != TIME_SETTING_HM_STR_LEN - 1)
+						Current_hm.current_char++;
+					if (Current_hm.current_char == 3)
+						Current_hm.current_char++;
+					ComboList_Update_Element(hwnd, Current_Item);
+				}
+				break;
+			default:
+				break;
+			}
+			break;
+		case CSAPP_KEY_ESC:
+		case CSAPP_KEY_MENU:
+			{
+				CSApp_TimeSetting_Applets = CSapp_Applet_SystemSetting;
+				SendMessage(hwnd,MSG_CLOSE,0,0);
+			}
+			break;
+		case CSAPP_KEY_ENTER:
+			if (Current_TimeMode == CS_APP_TIME_MODE_LOCAL)
+			{
+				CS_DT_EnableAutomaticTime(FALSE);
+				CS_DT_ManualSetDateAndTime(CS_DT_YMDtoMJD(TimeSetting_Convert_Date(Current_ymd)), \
+					CS_DT_HMtoUTC(TimeSetting_Convert_Time(Current_hm)));
+
+                                    CS_MW_SetTimeMode(eCS_DBU_TIME_MANUAL);
+			}
+			else if (Current_TimeMode == CS_APP_TIME_MODE_NET)
+			{
+				CS_MW_SetTimeZone(Current_TimeZone);
+
+                                    CS_MW_SetTimeMode(eCS_DBU_TIME_AUTOMATIC);
+			}
+			
+			CSApp_TimeSetting_Applets = CSapp_Applet_SystemSetting;
+			SendMessage(hwnd,MSG_CLOSE,0,0);
+
+			break;
+		case CSAPP_KEY_UP:
+			//ComboList_Update_Element(hwnd, Current_Item);
+			if(Current_Item == 0)
+				Current_Item = Item_Num- 1;
+			else
+				Current_Item--;
+			
+			//ComboList_Update_Element(hwnd, Current_Item);
+			ComboList_UpdateAll(hwnd);
+			break;
+		case CSAPP_KEY_DOWN:
+			//ComboList_Update_Element(hwnd, Current_Item);
+			if(Current_Item == Item_Num- 1)
+				Current_Item = 0;
+			else
+				Current_Item++;
+			
+			//ComboList_Update_Element(hwnd, Current_Item);
+			ComboList_UpdateAll(hwnd);
+			break;
+		case CSAPP_KEY_LEFT:
+			{
+					if (Current_TimeMode == CS_APP_TIME_MODE_LOCAL)
+					{
+					switch(Current_Item)
+					{
+					case CS_APP_TIME_LOCAL:
+					if (Current_TimeMode == 0)
+					{
+						Current_TimeMode = CS_APP_TIME_MODE_NUM - 1;
+					}
+					else
+					{
+						Current_TimeMode--;
+					}
+						
+						Item_Num = TimeSetting_Get_Item_Num(Current_TimeMode);
+						SendMessage(hwnd, MSG_PAINT, param_paint_all, 0);
+					break;
+				case CS_APP_YMD:
+					if (Current_TimeMode == CS_APP_TIME_MODE_NET)
+						break;
+									
+					if (Current_ymd.current_char != 1)
+						Current_ymd.current_char--;	
+					if (Current_ymd.current_char == 3 || Current_ymd.current_char == 6)
+						Current_ymd.current_char--;
+				
+					ComboList_Update_Element(hwnd, Current_Item);
+					break;
+				case CS_APP_HM:
+					if (Current_TimeMode == CS_APP_TIME_MODE_NET)
+						break;
+					
+					if (Current_hm.current_char != 1)
+						Current_hm.current_char--;
+					if (Current_hm.current_char == 3)
+						Current_hm.current_char--;
+
+					ComboList_Update_Element(hwnd, Current_Item);
+					break;
+				default:
+					break;
+				}				
+			}
+				else if (Current_TimeMode == CS_APP_TIME_MODE_NET)
+			{
+				switch(Current_Item)
+				{
+				case CS_APP_TIME_ZONE_NOW:
+					if (Current_TimeMode == CS_APP_TIME_MODE_LOCAL)
+						break;
+
+						if (Current_TimeZone == 0)
+					{
+							Current_TimeZone = CS_APP_TIME_ZONE_NUM - 1;
+					}
+					else
+							Current_TimeZone--;
+					
+					ComboList_Update_Element(hwnd, Current_Item);
+					break;
+					case CS_APP_TIME_NET:
+						if (Current_TimeMode == 0)
+						{
+							Current_TimeMode = CS_APP_TIME_MODE_NUM - 1;
+						}
+						else
+						{
+							Current_TimeMode--;
+						}
+						Item_Num = TimeSetting_Get_Item_Num(Current_TimeMode);
+						SendMessage(hwnd, MSG_PAINT, param_paint_all, 0);
+						break;
+
+					default:
+						break;
+					}
+				}
+			}
+			break;
+		case CSAPP_KEY_RIGHT:
+			{
+				if (Current_TimeMode == CS_APP_TIME_MODE_LOCAL)
+				{
+					switch(Current_Item)
+					{
+					case CS_APP_TIME_LOCAL:
+					if (Current_TimeMode == CS_APP_TIME_MODE_NUM - 1)
+					{
+						Current_TimeMode = 0;
+					}
+					else
+					{
+						Current_TimeMode++;
+					}
+						Item_Num = TimeSetting_Get_Item_Num(Current_TimeMode);
+						SendMessage(hwnd, MSG_PAINT, param_paint_all, 0);
+					break;
+				case CS_APP_YMD:
+					if (Current_TimeMode == CS_APP_TIME_MODE_NET)
+						break;
+					
+					if (Current_ymd.current_char != TIME_SETTING_YMD_STR_LEN - 1)
+						Current_ymd.current_char++;
+					if (Current_ymd.current_char == 3 || Current_ymd.current_char == 6)
+						Current_ymd.current_char++;
+					ComboList_Update_Element(hwnd, Current_Item);
+					break;
+				case CS_APP_HM:
+					if (Current_TimeMode == CS_APP_TIME_MODE_NET)
+						break;
+					
+					if (Current_hm.current_char != TIME_SETTING_HM_STR_LEN - 1)
+						Current_hm.current_char++;
+					if (Current_hm.current_char == 3)
+						Current_hm.current_char++;
+					ComboList_Update_Element(hwnd, Current_Item);
+					break;
+				default:
+					break;
+				}	
+			}
+				else if(Current_TimeMode == CS_APP_TIME_MODE_NET)
+				{
+					switch(Current_Item)
+					{
+					case CS_APP_TIME_ZONE_NOW:
+						if (Current_TimeMode == CS_APP_TIME_MODE_LOCAL)
+							break;
+
+						if (Current_TimeZone == CS_APP_TIME_ZONE_NUM)
+						{
+							Current_TimeZone = 0;
+						}
+						else
+							Current_TimeZone++;
+						
+						ComboList_Update_Element(hwnd, Current_Item);
+						break;
+					case CS_APP_TIME_NET:
+						if (Current_TimeMode == CS_APP_TIME_MODE_NUM - 1)
+						{
+							Current_TimeMode = 0;
+						}
+						else
+						{
+							Current_TimeMode++;
+						}
+						Item_Num = TimeSetting_Get_Item_Num(Current_TimeMode);
+						SendMessage(hwnd, MSG_PAINT, param_paint_all, 0);
+						break;
+
+					default:
+						break;
+					}	
+				}
+			}
+			break;
+		default:
+			break;
+		}
+		break;
+		
+	case MSG_CLOSE:
+		MainPaintFlag = TRUE;
+                CS_DBU_SaveUserSettingDataInHW();
+                  CS_AV_SetOSDAlpha(0);
+		UnloadBitmap(&bmp_timesetting);
+		UnloadBitmap(&Focus_button);
+		UnloadBitmap(&UnFocus_button);
+                    UnloadBitmap(&bmp_time_tips);
+		PostQuitMessage(hwnd);
+		DestroyMainWindow(hwnd);
+		break;
+		
+	default:
+		break;		
+	}
+	
+	return DefaultMainWinProc(hwnd,message,wparam,lparam);
+}
+

@@ -1,0 +1,27 @@
+
+CC =arm-elf-gcc
+LD =arm-elf-ld
+OBJCP =arm-elf-objcopy
+
+SOURCES := raw_usb/src/fs/fat/fat.c raw_usb/src/fs/fat/file.c raw_usb/src/drv/cmd_testusb.c raw_usb/src/drv/mentor_usb.c raw_usb/src/drv/usbdcore.c raw_usb/src/disk/part_dos.c raw_usb/src/disk/part.c raw_usb/src/common/usb.c raw_usb/src/common/usb_storage.c raw_usb/src/utils/dummy.c raw_usb/src/os/ecos/plat_ecos.c raw_usb/src/os/ecos/timer.c raw_usb/src/common/fs_io.c raw_usb/src/common/cmd_fat.c raw_usb/src/common/cmd_usb.c raw_usb/src/utils/str.c
+
+OBJS := $(SOURCES:.c=.o)
+TARGETS := lowusb
+
+CFLAGS :=  -Wstrict-prototypes -Winline -Wundef -ffunction-sections -fdata-sections -Wall -mcpu=arm9 -DCONFIG_ARCH_ORION_13 -D__LITTLE_ENDIAN -DCONFIG_LBA48 -DLITTLEENDIAN 
+
+LDFLAGS := -nostartfiles -nostdlib --gc-sections -static  
+ECOS_INCLUDE := ./include
+ECOS_LIB := ./lib
+
+
+$(TARGETS): $(OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -I./raw_usb/inc -I$(ECOS_INCLUDE)  -L$(ECOS_LIB) --Wl,start-group  --Wl,end-group -Ttarget.ld $? -o $(TARGETS).elf
+	$(OBJCP) -O binary $(TARGETS).elf $(TARGETS).bin
+
+$(OBJS):%.o:%.c $(INCLUDE)
+	$(CC) $(CFLAGS) -I$(ECOS_INCLUDE) -I./raw_usb/inc -o $@ -c $<
+
+clean: 
+	-$(RM) *.o *.elf *.bin
+

@@ -1,0 +1,197 @@
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+
+#include <types.h>
+
+static s32 fd = 0;
+static u8 *va = NULL;
+static u32 page_size, page_size_shift, pa;
+
+#define CACHED(x)  ( ( (x) >= (pa) ) && ( (x) < (pa + page_size) ) )
+
+s32 init_regs(void)
+{
+	fd = open("/dev/mem", O_RDWR);
+	if (fd == -1) {
+		printf("can not open mem device map\n");
+		return -1;
+	}
+
+	page_size = getpagesize();
+	page_size_shift = 0;
+
+	while ((page_size >> page_size_shift) != 0)
+		page_size_shift++;
+	page_size_shift--;
+
+	pa = 0xffffffff << page_size_shift;
+	va = (u8 *) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, pa);
+	if (va == MAP_FAILED) {
+		printf("map physical memory failed\n");
+
+		close(fd);
+		fd = 0;
+
+		return -1;
+	}
+
+	printf("page_size %d shift %d pa 0x%08x  va 0x%08x\n", page_size, page_size_shift, pa, (u32) va);
+
+	return 0;
+}
+
+s32 deinit_regs(void)
+{
+	if (va) munmap(va, page_size);
+	if (fd) close(fd);
+
+	return 0;
+}
+
+u32 read_regs32(u32 address, u32 *val)
+{
+	volatile u32 tmp = 0;
+
+	if (fd == 0)
+		init_regs();
+
+	if (!CACHED(address)) {
+		munmap(va, page_size);
+
+		pa = address & (0xffffffff << page_size_shift);
+		va = (u8 *) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, pa);
+		if (va == MAP_FAILED) {
+			printf
+			    ("map physical memory failed: shift %d  address 0x%08x  pa 0x%08x page_size %d  va 0x%08x\n",
+			     page_size_shift, address, pa, page_size, (u32) va);
+
+			return -1;
+		}
+	}
+
+	tmp = *((volatile u32 *) (va + (address & (page_size - 1))));
+
+	if (NULL != val) *val = tmp;
+
+	return tmp;
+}
+
+u16 read_regs16(u32 address, u16 *val)
+{
+	volatile u16 tmp = 0;
+
+	if (fd == 0)
+		init_regs();
+
+	if (!CACHED(address)) {
+		munmap(va, page_size);
+
+		pa = address & (0xffffffff << page_size_shift);
+		va = (u8 *) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, pa);
+		if (va == MAP_FAILED) {
+			printf("map physical memory failed\n");
+			return -1;
+		}
+	}
+
+	tmp = *((volatile u16 *) (va + (address & (page_size - 1))));
+
+	if (NULL != val) *val = tmp;
+
+	return tmp;
+}
+
+u8 read_regs8(u32 address, u8 *val)
+{
+	volatile u8 tmp = 0;
+
+	if (fd == 0)
+		init_regs();
+
+	if (!CACHED(address)) {
+		munmap(va, page_size);
+
+		pa = address & (0xffffffff << page_size_shift);
+		va = (u8 *) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, pa);
+		if (va == MAP_FAILED) {
+			printf("map physical memory failed\n");
+			return -1;
+		}
+	}
+
+	tmp = *((volatile u8 *) (va + (address & (page_size - 1))));
+
+	if (NULL != val) *val = tmp;
+
+	return tmp;
+}
+
+s32 write_regs32(u32 address, u32 val)
+{
+	if (fd == 0)
+		init_regs();
+
+	if (!CACHED(address)) {
+		munmap(va, page_size);
+
+		pa = address & (0xffffffff << page_size_shift);
+		va = (u8 *) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, pa);
+		if (va == MAP_FAILED) {
+			printf
+			    ("map physical memory failed: shift %d  address 0x%08x  pa 0x%08x page_size %d  va 0x%08x\n",
+			     page_size_shift, address, pa, page_size, (u32) va);
+			return -1;
+		}
+	}
+
+	*((volatile u32 *) (va + (address & (page_size - 1)))) = val;
+
+	return 0;
+}
+
+s32 write_regs16(u32 address, u16 val)
+{
+	if (fd == 0)
+		init_regs();
+
+	if (!CACHED(address)) {
+		munmap(va, page_size);
+
+		pa = address & (0xffffffff << page_size_shift);
+		va = (u8 *) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, pa);
+		if (va == MAP_FAILED) {
+			printf("map physical memory failed\n");
+			return -1;
+		}
+	}
+
+	*((volatile u16 *) (va + (address & (page_size - 1)))) = val;
+
+	return 0;
+}
+
+s32 write_regs8(u32 address, u8 val)
+{
+	if (fd == 0)
+		init_regs();
+
+	if (!CACHED(address)) {
+		munmap(va, page_size);
+	
+		pa = address & (0xffffffff << page_size_shift);
+		va = (u8 *) mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, pa);
+		if (va == MAP_FAILED) {
+			printf("map physical memory failed\n");
+			return -1;
+		}
+	}
+
+	*((volatile u8 *) (va + (address & (page_size - 1)))) = val;
+
+	return 0;
+}
+

@@ -1,0 +1,15 @@
+prefix=/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/arm-linux
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+target=directfb
+
+gtk_binary_version=2.10.0
+gtk_host=arm-unknown-linux-gnu
+
+Name: GTK+
+Description: GTK+ Graphical UI Library (${target} target)
+Version: 2.20.1
+Requires: gdk-${target}-2.0 atk cairo gio-2.0
+Libs: -L${libdir} -lgtk-${target}-2.0 
+Cflags: -I${includedir}/gtk-2.0 

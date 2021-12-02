@@ -1,0 +1,56 @@
+# /etc/inittab
+#
+# Copyright (C) 2001 Erik Andersen <andersen@codepoet.org>
+#
+# Note: BusyBox init doesn't support runlevels.  The runlevels field is
+# completely ignored by BusyBox init. If you want runlevels, use
+# sysvinit.
+#
+# Format for each entry: <id>:<runlevels>:<action>:<process>
+#
+# id        == tty to run on, or empty for /dev/console
+# runlevels == ignored
+# action    == one of sysinit, respawn, askfirst, wait, and once
+# process   == program to run
+
+# Startup the system
+null::sysinit:/bin/mknod /dev/orion_fpc c 10 63
+null::sysinit:/bin/ln -s /dev/fb/0 /dev/fb0
+
+
+null::sysinit:/bin/mknod /dev/tty0 c 4 0
+null::sysinit:/bin/mount -o remount,rw /
+null::sysinit:/bin/mount -t proc proc /proc
+null::sysinit:/bin/mount -a
+null::sysinit:/bin/hostname -F /etc/hostname
+null::sysinit:/sbin/ifconfig lo 127.0.0.1 up
+null::sysinit:/sbin/route add -net 127.0.0.0 netmask 255.0.0.0 lo
+
+# now run any rc scripts
+#::sysinit:/etc/init.d/rcS
+
+# Start an "askfirst" shell on the console (whatever that may be)
+#::askfirst:-/bin/sh
+# Start an "askfirst" shell on /dev/tty2-4
+#tty2::askfirst:-/bin/sh
+#tty3::askfirst:-/bin/sh
+#tty4::askfirst:-/bin/sh
+
+# Put a getty on the serial port
+ttyS0::respawn:-/bin/sh
+
+# Logging junk
+#null::sysinit:/bin/touch /var/log/messages
+#null::respawn:/sbin/syslogd -n -m 0
+#null::respawn:/sbin/klogd -n
+#tty3::respawn:/usr/bin/tail -f /var/log/messages
+
+# Stuff to do for the 3-finger salute
+::ctrlaltdel:/sbin/reboot
+
+# Stuff to do before rebooting
+#null::shutdown:/usr/bin/killall klogd
+#null::shutdown:/usr/bin/killall syslogd
+null::shutdown:/bin/umount -a -r
+null::shutdown:/sbin/swapoff -a
+

@@ -1,0 +1,11 @@
+prefix=/
+exec_prefix=/
+moduledir=/lib/directfb-1.0-0
+moduledirname=directfb-1.0-0
+includedir=/include/directfb-internal
+
+Name: DirectFB-Internal
+Description: Third party module support package for DirectFB.
+Version: 1.0.0
+Requires: directfb = 1.0.0
+Cflags: -D_GNU_SOURCE  -I/include/directfb-internal

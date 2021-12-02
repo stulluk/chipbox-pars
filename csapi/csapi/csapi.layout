@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="default" />
+	<File name="../csdemux/test/csdemux_test.c" open="1" top="0" tabpos="1">
+		<Cursor position="1958" topLine="61" />
+	</File>
+	<File name="../csplayer_new/src/csplayer.c" open="1" top="0" tabpos="2">
+		<Cursor position="0" topLine="201" />
+	</File>
+	<File name="../csplayer_new/test/csplayer_test.c" open="1" top="0" tabpos="3">
+		<Cursor position="0" topLine="131" />
+	</File>
+	<File name="../testtools/testtools.c" open="1" top="0" tabpos="4">
+		<Cursor position="0" topLine="18" />
+	</File>
+	<File name="../testtools/tt_vid.c" open="1" top="1" tabpos="5">
+		<Cursor position="667" topLine="132" />
+	</File>
+</CodeBlocks_layout_file>

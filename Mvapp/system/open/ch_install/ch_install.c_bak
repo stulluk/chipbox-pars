@@ -1,0 +1,960 @@
+#include "linuxos.h"
+
+#include "database.h"
+#include "fe_mngr.h"
+#include "db_builder.h"
+#include "ch_install.h"
+
+#define PATPMT_InstalledMask            0x1
+#define SDT_Actual_InstalledMask      0x2
+#define NIT_Actual_InstalledMask        0x4
+
+
+static tCS_INSTALL_Mode	CS_INSTALL_Mode;
+static U8			                  CS_INSTALL_FE_Client = 0;
+static U16					NumberOfTPInstalled = 0;
+static tCS_INSTALL_TPList	CS_INSTALL_TPList;
+static tCS_INSTALL_State	CS_INSTALL_State = eCS_INSTALL_STATE_NONE;
+
+static CSOS_Semaphore_t 	*sem_InstallAccess = NULL;
+
+static U8 ClientId_PAT = 0;
+static U8 ClientId_PMT = 0;
+//static U8 ClientId_CAT = 0;
+static U8 ClientId_Actual_NIT = 0;
+static U8 ClientId_Actual_SDT = 0;
+static tCS_INSTALL_ServiceList CS_INSTALL_ServiceList;
+static U8 CS_INSTALL_TableInstalledMask = 0;/*bit0: pat&pmt, bit1: sdt_actual, bit2: nit_actual*/
+
+tCS_INSTALL_NotificationFunction	INSTALL_NotifyFunction[kCS_INSTALL_MAX_NO_OF_NOTIFY_CLIENTS];
+
+BOOL CS_INSTALL_Register_Notify(U8 *ClientId, tCS_INSTALL_NotificationFunction NotifyFunction)
+{
+	U8	index = 0;
+	BOOL    found = FALSE;
+	
+ 	if((ClientId != NULL)&&(NotifyFunction != NULL))
+	{
+		CSOS_WaitSemaphore(sem_InstallAccess);
+		
+		for(index = 0; index< kCS_INSTALL_MAX_NO_OF_NOTIFY_CLIENTS; index++)
+		{
+			if(INSTALL_NotifyFunction[index] == NULL)
+			{
+				found = TRUE;
+				INSTALL_NotifyFunction[index] = NotifyFunction;
+				*ClientId = index;
+				break;
+			}
+		}
+
+		CSOS_SignalSemaphore(sem_InstallAccess);
+	}
+	
+	return(found);
+
+}
+
+BOOL CS_INSTALL_Unregister_Notify(U8 ClientId)
+{
+	BOOL NoError = TRUE;
+	
+	if(ClientId < kCS_INSTALL_MAX_NO_OF_NOTIFY_CLIENTS)
+	{
+		CSOS_WaitSemaphore(sem_InstallAccess);
+
+		if(INSTALL_NotifyFunction[ClientId] != NULL)
+		{
+			INSTALL_NotifyFunction[ClientId] = NULL;
+		}
+
+		CSOS_SignalSemaphore(sem_InstallAccess);
+	}
+	else
+	{
+		NoError = FALSE;
+	}
+	
+	return(NoError);
+
+}
+
+void INSTALL_Notify(tCS_INSTALL_Notification notification)
+{
+	U8	notify_index = 0;
+	
+	for(notify_index = 0; notify_index< kCS_SI_MAX_NO_OF_NOTIFY_CLIENTS; notify_index++)
+	{
+		if(INSTALL_NotifyFunction[notify_index] != NULL) 
+		{
+			(INSTALL_NotifyFunction[notify_index])(notification);
+		}
+
+	}
+
+	return;
+}
+
+
+void INSTALL_EmptyServiceList(void)
+{
+    tCS_INSTALL_ServiceInfo *Current_Service = NULL;
+    tCS_INSTALL_ServiceInfo *pTemp = NULL;
+    
+    Current_Service = CS_INSTALL_ServiceList.pServiceListHead;
+
+    while(Current_Service != NULL)
+    {
+        pTemp = Current_Service;
+        Current_Service = pTemp->pNext_Service;
+
+        if(pTemp != NULL)
+        {
+            CSOS_DeallocateMemory(NULL, pTemp);
+            pTemp = NULL;
+        }
+
+    }
+
+    CS_INSTALL_ServiceList.ONID = 0;
+    CS_INSTALL_ServiceList.TSID = 0;
+    CS_INSTALL_ServiceList.Service_Num = 0;
+    CS_INSTALL_ServiceList.pServiceListHead = NULL;
+    CS_INSTALL_ServiceList.pCurrent_Service = NULL;
+   
+    return;
+}
+
+tCS_INSTALL_ServiceInfo* INSTALL_SeekServiceInfo(U16 ServiceID)
+{
+    tCS_INSTALL_ServiceInfo *  Current_Service = NULL;
+
+    Current_Service = CS_INSTALL_ServiceList.pServiceListHead;
+    while(Current_Service != NULL)
+    {
+        if(Current_Service->Service_ID == ServiceID )
+        {
+            return(Current_Service);
+        }
+        Current_Service = Current_Service->pNext_Service;
+    }
+    return(NULL);
+}
+
+
+BOOL INSTALL_CheckServiceInfoExist(tCS_INSTALL_ServiceInfo Servicedata)
+{
+    tCS_INSTALL_ServiceInfo *Current_Service;
+    BOOL found  = FALSE;
+
+    Current_Service = CS_INSTALL_ServiceList.pServiceListHead;
+    while (Current_Service != NULL)
+    {
+        if(Current_Service->Service_ID == Servicedata.Service_ID)
+        {
+            found = TRUE;
+            break;
+        }
+        
+        Current_Service = Current_Service->pNext_Service;
+    }
+
+    return(found);
+}
+
+BOOL INSTALL_AppendServiceInfo(tCS_INSTALL_ServiceInfo Servicedata)
+{
+    tCS_INSTALL_ServiceInfo *pTemp = NULL;
+    tCS_INSTALL_ServiceInfo *pNewServiceData = NULL;
+
+    if(!INSTALL_CheckServiceInfoExist(Servicedata))
+    {
+
+        pNewServiceData = (tCS_INSTALL_ServiceInfo *)CSOS_AllocateMemory(NULL, sizeof(tCS_INSTALL_ServiceInfo));
+        if ( pNewServiceData == NULL )
+        {
+            return(FALSE);
+        }
+
+        memcpy(pNewServiceData,&Servicedata,sizeof(tCS_INSTALL_ServiceInfo));
+        pNewServiceData->pNext_Service = NULL;
+
+        if( CS_INSTALL_ServiceList.pServiceListHead == NULL)
+	{
+		CS_INSTALL_ServiceList.pServiceListHead = pNewServiceData;
+	}
+	else if(CS_INSTALL_ServiceList.pCurrent_Service != NULL)
+	{
+		pTemp = CS_INSTALL_ServiceList.pCurrent_Service->pNext_Service;
+		CS_INSTALL_ServiceList.pCurrent_Service->pNext_Service = pNewServiceData;
+		pNewServiceData->pNext_Service = pTemp;
+	}
+	else
+	{
+		CSOS_DeallocateMemory(NULL, pNewServiceData);
+		pNewServiceData = NULL;
+		return(FALSE);
+	}
+
+        CS_INSTALL_ServiceList.pCurrent_Service = pNewServiceData;
+
+        CS_INSTALL_ServiceList.Service_Num++;
+
+    }
+
+     return(TRUE);
+}
+
+tCS_INSTALL_ServiceList * CS_INSTALL_GetServiceList(void)
+{
+    return(&CS_INSTALL_ServiceList);
+}
+
+void INSTALL_NextTune(void)
+{
+    tCS_INSTALL_TPData *pCurrent_TP = NULL;
+    tCS_FE_TerScanParams 	FE_ScanData;
+    tCS_DB_TerTPData		DB_TPData;
+
+    CS_INSTALL_State = eCS_INSTALL_STATE_NONE;
+    CS_FE_StopScan();
+    CS_INSTALL_TableInstalledMask = 0;
+
+    if(CS_DB_GetALLServiceNumber() < kCS_DB_MAX_NO_OF_SERVICES)
+    {
+        pCurrent_TP = CS_INSTALL_TPList.pCurrent_TP;
+
+        if(pCurrent_TP == NULL)
+            {
+                INSTALL_Notify(eCS_INSTALL_COMPLETE);
+                return;
+            }
+
+        if((pCurrent_TP->HPLP_Install_Mask & (eCS_INSTALL_HP|eCS_INSTALL_LP))==0)
+            {
+                CS_INSTALL_TPList.pCurrent_TP = CS_INSTALL_TPList.pCurrent_TP->pNext_TP;
+                pCurrent_TP = CS_INSTALL_TPList.pCurrent_TP;
+
+                NumberOfTPInstalled++;
+                 INSTALL_Notify(eCS_INSTALL_TPINFO);
+              
+            }
+
+            if(pCurrent_TP == NULL)
+                {
+                    INSTALL_Notify(eCS_INSTALL_COMPLETE);
+                    return;
+                }
+
+        if((pCurrent_TP->HPLP_Install_Mask & eCS_INSTALL_HP)!= 0)
+            {
+                FE_ScanData.Priority = eCS_FE_HIGH_PRIORITY;
+                pCurrent_TP->HPLP_Install_Mask  &=(~ eCS_INSTALL_HP);
+            }
+        else if((pCurrent_TP->HPLP_Install_Mask & eCS_INSTALL_LP)!= 0)
+            {
+                FE_ScanData.Priority = eCS_FE_LOW_PRIORITY;
+                pCurrent_TP->HPLP_Install_Mask  &=(~ eCS_INSTALL_LP);
+            }  
+        
+        CS_DB_GetTerTPDataByIndex(&DB_TPData, pCurrent_TP->TerTP_Index);		
+
+        FE_ScanData.Bandwidth = DB_TPData.sCS_DB_ScanData.sCS_DB_ChanBW;
+        FE_ScanData.FrequencyKHz = DB_TPData.sCS_DB_ScanData.sCS_DB_FrequencyKhz;
+        CS_INSTALL_State = eCS_INSTALL_STATE_SCANNING;
+
+        CS_FE_StartScan(FE_ScanData);
+
+    }
+    else
+    {
+    	INSTALL_Notify(eCS_INSTALL_MAX_SERVICE_NUMBER_REACHED);
+    }
+
+    return;
+
+}
+
+static void INSTALL_Get_SI_CallBackFunction( tCS_SI_Report report, tCS_SI_NotifyType si_type )
+{
+	tCS_SI_PAT_Info* pat;
+	tCS_SI_PMT_Info* pmt;
+	tCS_SI_SDT_Info* sdt;
+	tCS_SI_NIT_Info* nit;
+
+	U8 index = 0;
+        U8  index2 = 0;
+        U8  index3 = 0;
+	tCS_INSTALL_ServiceInfo ServiceItem;
+	tCS_SI_PATProgram   pmt_acq;
+
+        
+	if(CS_INSTALL_State != eCS_INSTALL_STATE_SCANNING)
+	{
+            return;
+	}
+
+    printf("si notify type %d, report = %d\n", si_type, report);
+
+	switch( si_type )
+	{
+
+	    case eCS_SI_PAT_NOTIFY:
+                if((CS_INSTALL_TableInstalledMask &PATPMT_InstalledMask)==0)
+                    {
+            	        if( report == eCS_SI_OK )
+            	        {
+            	            
+            	            CS_SI_Disable_PAT_Acquisition();
+            	            INSTALL_EmptyServiceList();                
+
+            	            pat = CS_SI_Get_PAT_Info();
+            	            if( pat->IsValid == TRUE )
+            	            {
+            	                printf("***************************PAT INFO*******************************\n");
+            	                printf("TSID = 0x%x, service number = %d\n", pat->TSID, pat->ServiceNumber);
+
+                                    if(CS_INSTALL_TPList.pCurrent_TP == NULL)
+                                        {
+                                            return;
+                                        }
+                                    
+            	                for( index = 0; index < pat->ServiceNumber; index++ )
+            	                {
+            	                    BOOL test;
+            	                    //printf(" SID= 0x%x,  PMT_PID = 0x%x\n", pat->Programs[index].ServiceID, pat->Programs[index].PMT_PID);
+            	                    ServiceItem.TerTP_Index = CS_INSTALL_TPList.pCurrent_TP->TerTP_Index;
+            	                    ServiceItem.Service_ID = pat->Programs[index].ServiceID ;
+            	                    ServiceItem.PMT_PID = pat->Programs[index].PMT_PID;
+            	                    ServiceItem.ServiceScramble = 0;
+            	                    ServiceItem.ServiceType = eCS_SI_UNKOWN_SERVICE;
+            	                    ServiceItem.LCN = 0;
+
+            	                    test = INSTALL_AppendServiceInfo(ServiceItem);
+                                    //printf("INSTALL_AppendServiceInfo %d,service num = %d\n", test, CS_INSTALL_ServiceList.Service_Num);
+            	                    
+            	                }
+                                CS_INSTALL_ServiceList.TSID = pat->TSID;
+
+            	                CS_INSTALL_ServiceList.pCurrent_Service = CS_INSTALL_ServiceList.pServiceListHead;
+            	                if( CS_INSTALL_ServiceList.pCurrent_Service != NULL )
+            	                {
+            	                    pmt_acq.ServiceID = CS_INSTALL_ServiceList.pCurrent_Service->Service_ID;
+            	                    pmt_acq.PMT_PID = CS_INSTALL_ServiceList.pCurrent_Service->PMT_PID;
+
+            	                    //CS_SI_Register_SI_CallBackFunction(&Pmt_ClientId, eCS_SI_PMT_NOTIFY, TEST_Get_SI);
+            	                    CS_SI_Disable_PMT_Acquisition();
+            	                    CS_SI_Enable_PMT_Acquisition(pmt_acq);
+
+                                    printf("acquire pmt pid = 0x%x\n", pmt_acq.PMT_PID);
+                                    
+                                    //CS_SI_Disable_SDT_Actual_Acquisition();
+                                         //CS_SI_Enable_SDT_Actual_Acquisition();
+
+                                         CS_SI_Disable_NIT_Actual_Acquisition();
+                                         CS_SI_Enable_NIT_Actual_Acquisition();
+            	                }
+                                     
+            	            }
+            	        }
+            	        else/*NO PAT, install failed*/
+            	        {
+            	                //printf("********NO PAT, install failed*******************\n");
+                                    CS_SI_Disable_PAT_Acquisition();
+                                        /*install failed*/
+                                   CS_INSTALL_TableInstalledMask = PATPMT_InstalledMask|SDT_Actual_InstalledMask|NIT_Actual_InstalledMask;
+            	        }
+                    }
+	        break;
+
+	    case eCS_SI_PMT_NOTIFY:
+                if((CS_INSTALL_TableInstalledMask &PATPMT_InstalledMask)==0)
+                    {
+            	        if( report == eCS_SI_OK )
+            	        {
+            	            BOOL found_aud = FALSE, found_vid = FALSE;
+                            
+            	            CS_SI_Disable_PMT_Acquisition();
+                            
+            	            pmt = CS_SI_Get_PMT_Info();
+            	        
+            	            if( pmt->IsValid == TRUE )
+            	            {
+            	                printf("***************************PMT INFO SID = 0x%x*******************************\n", pmt->ServiceID);
+            	                CS_INSTALL_ServiceList.pCurrent_Service->PCR_PID = pmt->PCR_PID; 
+                                    CS_INSTALL_ServiceList.pCurrent_Service->ServiceScramble = pmt->Scramble;
+            	                CS_INSTALL_ServiceList.pCurrent_Service->Video_PID = kCS_INSTALL_INVAILD_PID;
+            	                CS_INSTALL_ServiceList.pCurrent_Service->Audio_PID = kCS_INSTALL_INVAILD_PID;
+            	        
+            	                for( index = 0; index < pmt->ESNumber; index++ )
+            	                {
+            	                    if( pmt->ESDescriptors[index] != NULL )
+            	                    {
+            	                        switch( pmt->ESDescriptors[index]->ESType )
+            	                        {
+            	                            case eCS_SI_ES_TYPE_VIDEO:
+                                                if(!found_vid)
+                                                        {
+            	                                        CS_INSTALL_ServiceList.pCurrent_Service->Video_PID = pmt->ESDescriptors[index]->ESPID;
+                                                        CS_INSTALL_ServiceList.pCurrent_Service->Video_Type = eCS_DB_VIDEO_MPEG2;
+                                                             found_vid = TRUE;
+                                                        }
+            	                                break;
+                                                
+                                              case  eCS_SI_ES_TYPE_VIDEO_MPEG4:
+                                                    if(!found_vid)
+                                                        {
+            	                                        CS_INSTALL_ServiceList.pCurrent_Service->Video_PID = pmt->ESDescriptors[index]->ESPID;
+                                                        CS_INSTALL_ServiceList.pCurrent_Service->Video_Type = eCS_DB_VIDEO_H264;
+                                                             found_vid = TRUE;
+                                                        }
+            	                                break;
+            	                                
+            	                            case eCS_SI_ES_TYPE_AUDIO:
+                                                        if(!found_aud)
+                                                            {
+                                                                CS_INSTALL_ServiceList.pCurrent_Service->Audio_PID = pmt->ESDescriptors[index]->ESPID;
+                                                                CS_INSTALL_ServiceList.pCurrent_Service->Audio_Type = eCS_DB_AUDIO_PCM;
+                                                                found_aud = TRUE;
+                                                            }
+            	                                break;
+
+                                                case eCS_SI_ES_TYPE_AUDIO_AC3:
+                                                    if(!found_aud)
+                                                        {
+                                                            CS_INSTALL_ServiceList.pCurrent_Service->Audio_PID = pmt->ESDescriptors[index]->ESPID;
+                                                            CS_INSTALL_ServiceList.pCurrent_Service->Audio_Type = eCS_DB_AUDIO_AC3;
+                                                            found_aud = TRUE;
+                                                        }
+            	                                break;
+            	                            default:
+
+            	                                break;
+            	                        }
+            	                    }
+            	                        
+            	                }
+            	        
+                    	                if( CS_INSTALL_ServiceList.pCurrent_Service->Video_PID != kCS_INSTALL_INVAILD_PID )
+                    	                {
+                    	                    CS_INSTALL_ServiceList.pCurrent_Service->ServiceType= eCS_DB_TV_SERVICE;                    
+                    	                }
+                    	                else /*if( CS_INSTALL_ServiceList.pCurrent_Service->Audio_PID != kCS_INSTALL_INVAILD_PID )*/
+                    	                {
+                    	                    CS_INSTALL_ServiceList.pCurrent_Service->ServiceType = eCS_DB_RADIO_SERVICE; 
+                    	                }
+            	        
+            	                printf("VID PID = 0x%x, AUD PID = 0x%x\n", CS_INSTALL_ServiceList.pCurrent_Service->Video_PID, CS_INSTALL_ServiceList.pCurrent_Service->Audio_PID); 
+            	                                     
+            	            
+            	            }
+            	        }
+            	        else/*NO PMT*/
+            	        {
+            	            //printf("!!!Error:  Acquisition PMT Timeout.\n");
+            	            CS_SI_Disable_PMT_Acquisition();
+            	        }
+
+                        CS_INSTALL_ServiceList.pCurrent_Service = CS_INSTALL_ServiceList.pCurrent_Service->pNext_Service;
+                        if( CS_INSTALL_ServiceList.pCurrent_Service != NULL )
+                        {
+                            pmt_acq.ServiceID = CS_INSTALL_ServiceList.pCurrent_Service->Service_ID;
+                            pmt_acq.PMT_PID   = CS_INSTALL_ServiceList.pCurrent_Service->PMT_PID;
+
+                            CS_SI_Disable_PMT_Acquisition();
+                            CS_SI_Enable_PMT_Acquisition(pmt_acq);            
+                            //printf("acquire pmt pid = 0x%x\n", pmt_acq.PMT_PID);
+	                }
+                        else
+                        {
+                            //printf("33333333333333333333333333\n");
+                            CS_INSTALL_TableInstalledMask |= PATPMT_InstalledMask;
+
+                            CS_SI_Disable_SDT_Actual_Acquisition();
+                             CS_SI_Enable_SDT_Actual_Acquisition();   
+                        }
+                    }
+	        break;
+
+	    case eCS_SI_SDT_ACTUAL_NOTIFY:
+            if((CS_INSTALL_TableInstalledMask &SDT_Actual_InstalledMask)==0)
+                {
+        	        if( report == eCS_SI_OK )
+        	        {
+        	            tCS_INSTALL_ServiceInfo*    Cur_Service = NULL;
+                        
+        	            CS_SI_Disable_SDT_Actual_Acquisition();
+        	            sdt = CS_SI_Get_SDT_ACTUAL_Info();
+
+        	            if( sdt->IsValid == TRUE )
+        	            {
+        	                printf("***************************SDT INFO*******************************\n");
+        	                printf("TSID = 0x%x, ONID = 0x%x, service number = %d\n", sdt->TSID, sdt->ONID, sdt->ServiceNumber);
+                        CS_INSTALL_ServiceList.ONID = sdt->ONID;
+                        //CS_INSTALL_ServiceList.TSID = sdt->TSID;
+        	                for( index = 0; index < sdt->ServiceNumber; index++ )
+        	                {                   
+        	                        Cur_Service = INSTALL_SeekServiceInfo(sdt->ServicesInfo[index]->ServiceID);
+        	                        if(Cur_Service != NULL)
+                                        {   
+                                        //printf(" SID= 0x%x,  service type = %d, service name = %s\n", sdt->ServicesInfo[index]->ServiceID, sdt->ServicesInfo[index]->ServiceType, sdt->ServicesInfo[index]->ServiceName);
+                                        strcpy(Cur_Service->ServiceName, sdt->ServicesInfo[index]->ServiceName);
+                                        }
+        	                }
+
+        	            }
+        	        }
+                else/*NO SDT*/
+                    {
+	                        CS_SI_Disable_SDT_Actual_Acquisition();
+                    }
+
+                        //CS_SI_Disable_NIT_Actual_Acquisition();
+                        //CS_SI_Enable_NIT_Actual_Acquisition();
+
+                    CS_INSTALL_TableInstalledMask |= SDT_Actual_InstalledMask;
+                }
+	        break;
+            
+            case eCS_SI_NIT_ACTUAL_NOTIFY:
+                if((CS_INSTALL_TableInstalledMask &NIT_Actual_InstalledMask)==0)
+                    {
+                        if( report == eCS_SI_OK )
+                            {
+                                    CS_SI_Disable_NIT_Actual_Acquisition();
+                                    nit = CS_SI_Get_NIT_ACTUAL_Info();
+
+                                    printf("***************************NIT INFO*******************************\n");
+                        #if 1
+                                if(nit->IsValid == TRUE)
+                                 {
+                                    for( index = 0; index < nit->TSNumber; index++ )
+                                        {
+                                            if(nit->TSInfo[index]->TSID == CS_INSTALL_ServiceList.TSID)
+                                                {
+                                                    for(index2 = 0; index2 < nit->TSInfo[index]->TSDescNumber; index2++)
+                                                        {
+                                                            if(nit->TSInfo[index]->TSDescriptors[index2]->TSDescType == LOGIC_CHANNEL_NUMBER)
+                                                                {
+                                                                    for(index3 = 0; index3< nit->TSInfo[index]->TSDescriptors[index2]->uTSDescriptor.LCNDesc.ServiceNumber; index3++)
+                                                                      {
+                                                                            tCS_INSTALL_ServiceInfo*    Cur_Service = NULL;
+
+                                                                            Cur_Service = INSTALL_SeekServiceInfo(nit->TSInfo[index]->TSDescriptors[index2]->uTSDescriptor.LCNDesc.ServiceLCN[index3].ServiceID);
+                                                                            
+                                                                            if(Cur_Service!= NULL)
+                                                                            {   
+                                                                                Cur_Service->LCN = nit->TSInfo[index]->TSDescriptors[index2]->uTSDescriptor.LCNDesc.ServiceLCN[index3].LCN;
+                                                                            }
+                                                                            printf("ServiceID[0x%x], LCN[0x%x]\n", nit->TSInfo[index]->TSDescriptors[index2]->uTSDescriptor.LCNDesc.ServiceLCN[index3].ServiceID, nit->TSInfo[index]->TSDescriptors[index2]->uTSDescriptor.LCNDesc.ServiceLCN[index3].LCN);
+                                                                      }
+                                                                }
+                                                        }
+                                                }
+                                        }
+                                    }
+                                #endif
+                            }
+                        else/*NO NIT*/
+                            {
+                                CS_SI_Disable_NIT_Actual_Acquisition();
+                            }
+
+                        CS_INSTALL_TableInstalledMask |= NIT_Actual_InstalledMask;
+                    }
+                break;
+
+	     default:
+	        //printf("!!!Error: CS_MW_Get_SI_CallBackFunction Unknow Service Information Type.\r\n");
+	        break;
+	}
+
+        if((CS_INSTALL_TableInstalledMask &(PATPMT_InstalledMask|SDT_Actual_InstalledMask))==(PATPMT_InstalledMask|SDT_Actual_InstalledMask))
+            INSTALL_Notify(eCS_INSTALL_SERVICEINFO);
+
+        if((CS_INSTALL_TableInstalledMask &(PATPMT_InstalledMask|SDT_Actual_InstalledMask|NIT_Actual_InstalledMask))==(PATPMT_InstalledMask|SDT_Actual_InstalledMask|NIT_Actual_InstalledMask))
+        {
+                tCS_INSTALL_ServiceInfo* pCurrent_Service;
+                tCS_DB_ServiceData   DBServiceData;
+                U16                  Service_Index;
+                
+                pCurrent_Service = CS_INSTALL_ServiceList.pServiceListHead;
+
+                while( pCurrent_Service != NULL )
+                {
+                    if( pCurrent_Service->ServiceType != eCS_SI_UNKOWN_SERVICE )
+                    {
+                        strcpy(DBServiceData.sCS_DB_ServiceName, pCurrent_Service->ServiceName);
+                        DBServiceData.sCS_DB_TerTPIndex = pCurrent_Service->TerTP_Index;
+                        DBServiceData.sCS_DB_ServiceID = pCurrent_Service->Service_ID;
+                        DBServiceData.sCS_DB_ServiceType = pCurrent_Service->ServiceType;
+                        DBServiceData.sCS_DB_AudioPid = pCurrent_Service->Audio_PID;
+                        DBServiceData.sCS_DB_AudioType = pCurrent_Service->Audio_Type;
+                        DBServiceData.sCS_DB_ServiceScramble = pCurrent_Service->ServiceScramble;
+                        DBServiceData.sCS_DB_PcrPid = pCurrent_Service->PCR_PID;
+                        DBServiceData.sCS_DB_VideoPid = pCurrent_Service->Video_PID;
+                        DBServiceData.sCS_DB_VideoType = pCurrent_Service->Video_Type;
+
+                        DBServiceData.sCS_DB_LCN = pCurrent_Service->LCN;
+
+                        CS_DB_AddOneService(DBServiceData,&Service_Index);
+                        
+                    }
+                    pCurrent_Service = pCurrent_Service->pNext_Service;
+
+                }
+                INSTALL_NextTune();
+        }
+
+              
+}
+
+
+
+BOOL CS_INSTALL_Init(void)
+{
+	tCS_SI_Report csSIResult = eCS_SI_OK;
+	sem_InstallAccess  = CSOS_CreateSemaphoreFifo ( NULL, 1 );
+
+        memset(&CS_INSTALL_ServiceList, 0, sizeof(tCS_INSTALL_ServiceList));
+
+	csSIResult = CS_SI_Register_SI_CallBackFunction( &ClientId_PAT, 
+	                                                 eCS_SI_PAT_NOTIFY,
+	                                                 INSTALL_Get_SI_CallBackFunction );
+	if( csSIResult != eCS_SI_OK )
+	{
+		return(FALSE);
+	}
+
+	csSIResult = CS_SI_Register_SI_CallBackFunction( &ClientId_Actual_NIT, 
+	                                                 eCS_SI_NIT_ACTUAL_NOTIFY,
+	                                                 INSTALL_Get_SI_CallBackFunction );
+	if( csSIResult != eCS_SI_OK )
+	{
+		return(FALSE);
+	}
+
+	csSIResult = CS_SI_Register_SI_CallBackFunction( &ClientId_Actual_SDT,
+	                                                 eCS_SI_SDT_ACTUAL_NOTIFY, 
+	                                                 INSTALL_Get_SI_CallBackFunction );
+	if( csSIResult != eCS_SI_OK )
+	{
+		return(FALSE);
+	}
+
+	csSIResult = CS_SI_Register_SI_CallBackFunction( &ClientId_PMT,
+	                                                 eCS_SI_PMT_NOTIFY, 
+	                                                 INSTALL_Get_SI_CallBackFunction );
+	if( csSIResult != eCS_SI_OK )
+	{
+		return(FALSE);
+	}
+
+	return(TRUE);
+}
+
+void INSTALL_TPLocked (void)
+{
+    tCS_SI_Report csSIResult = eCS_SI_OK;
+
+    if(CS_INSTALL_State == eCS_INSTALL_STATE_SCANNING)
+    {
+        CS_SI_Disable_PAT_Acquisition();
+	CS_SI_Disable_PMT_Acquisition();
+	CS_SI_Disable_SDT_Actual_Acquisition();
+	CS_SI_Disable_NIT_Actual_Acquisition();
+    
+    	csSIResult = CS_SI_Enable_PAT_Acquisition();
+    	/*if ( csSIResult != eCS_SI_OK )
+    	{
+    		return;        
+    	}*/
+    }
+}
+
+void INSTALL_TPUnlocked(void)
+{
+    if(CS_INSTALL_State == eCS_INSTALL_STATE_SCANNING)
+    {
+        INSTALL_NextTune();
+    }
+}
+
+void  INSTALL_FECallback(tCS_FE_Notification Notification)
+{
+	
+	tCS_FE_TerTunerInfo		FETunerInfo;
+         tCS_DB_TerTPData		current_tertp_data;
+
+        
+        if(CS_INSTALL_State != eCS_INSTALL_STATE_SCANNING)
+	{
+                return;
+	}
+		
+		CS_FE_GetInfo(&FETunerInfo);
+		
+		CS_DB_GetTerTPDataByIndex(&current_tertp_data, CS_INSTALL_TPList.pCurrent_TP->TerTP_Index);
+
+		current_tertp_data.sCS_DB_FECHP = FETunerInfo.Ter_FECHP;
+		current_tertp_data.sCS_DB_FECLP = FETunerInfo.Ter_FECLP;
+		current_tertp_data.sCS_DB_Constellation = FETunerInfo.Ter_Constellation;
+		current_tertp_data.sCS_DB_Force = FETunerInfo.Ter_Force;
+		current_tertp_data.sCS_DB_GuardInterval = FETunerInfo.Ter_GuardInterval;
+		current_tertp_data.sCS_DB_HierarchicalInfo = FETunerInfo.Ter_Hierarchical;
+		current_tertp_data.sCS_DB_Mode = FETunerInfo.Ter_Mode;
+		current_tertp_data.sCS_DB_Offset = FETunerInfo.Ter_Offset;
+		current_tertp_data.sCS_DB_Signal_HPlock = FETunerInfo.Ter_HPLockStatus;
+		current_tertp_data.sCS_DB_Signal_LPlock = FETunerInfo.Ter_LPLockStatus;
+		current_tertp_data.sCS_DB_Signal_quality = FETunerInfo.Ter_Signal_HPquality&0x07;
+
+		CS_DB_ModifyTerTP(CS_INSTALL_TPList.pCurrent_TP->TerTP_Index, current_tertp_data);
+
+	 printf("INSTALL_FECallback %d\n", Notification);
+    	switch (Notification)
+    	{
+    		case eCS_FE_LOCKED:
+    	   		INSTALL_TPLocked ();
+    	   		//INSTALL_TPUnlocked();
+    	    		break;
+
+    		case eCS_FE_UNLOCKED:
+    			INSTALL_TPUnlocked();
+	   		break;
+
+		case eCS_FE_SIGNAL_LOST:
+		default:
+			break;
+    	}
+
+    	return;
+}
+
+
+void CS_INSTALL_SetInstallMode(tCS_INSTALL_Mode Mode)
+{
+	CSOS_WaitSemaphore(sem_InstallAccess);
+	CS_INSTALL_Mode  = Mode;
+
+	CSOS_SignalSemaphore(sem_InstallAccess);
+}
+
+BOOL CS_INSTALL_StartInstallation(void)
+{
+    CSOS_WaitSemaphore(sem_InstallAccess);
+    
+    CS_INSTALL_TableInstalledMask = 0;
+    NumberOfTPInstalled =0;
+    CS_INSTALL_State = eCS_INSTALL_STATE_SCANNING;
+    CS_FE_Register_Tuner_Notify(&CS_INSTALL_FE_Client, INSTALL_FECallback);
+
+    CS_INSTALL_TPList.pCurrent_TP = CS_INSTALL_TPList.pTPListHead;
+
+    if(CS_INSTALL_TPList.pCurrent_TP == NULL)
+    {
+        CSOS_SignalSemaphore(sem_InstallAccess);
+        return(FALSE);
+    }
+
+    CSOS_SignalSemaphore(sem_InstallAccess);
+        
+        INSTALL_NextTune();
+
+    return(TRUE);
+}
+
+BOOL CS_INSTALL_StopInstallation(void)
+{
+    CSOS_WaitSemaphore(sem_InstallAccess);
+    
+    CS_INSTALL_State = eCS_INSTALL_STATE_NONE;
+	CS_SI_Disable_PAT_Acquisition();
+	CS_SI_Disable_PMT_Acquisition();
+	CS_SI_Disable_SDT_Actual_Acquisition();
+	CS_SI_Disable_NIT_Actual_Acquisition();
+    CS_INSTALL_TableInstalledMask = 0;
+    NumberOfTPInstalled = 0;
+    CS_FE_StopScan();
+    CS_FE_Unregister_Tuner_Notify(CS_INSTALL_FE_Client);
+    
+    CSOS_SignalSemaphore(sem_InstallAccess);
+    return(TRUE);
+}
+
+BOOL CS_INSTALL_SetTuner(void)
+{
+    return(TRUE);
+}
+
+BOOL  CS_INSTALL_EmptyTPList(void)
+{
+	tCS_INSTALL_TPData *Current_TPData = NULL;
+	tCS_INSTALL_TPData *pTemp = NULL;
+
+	CSOS_WaitSemaphore(sem_InstallAccess);
+	
+	Current_TPData = CS_INSTALL_TPList.pTPListHead;
+
+	while(Current_TPData != NULL)
+	{
+		pTemp = Current_TPData;
+		Current_TPData = pTemp->pNext_TP;
+
+                if(pTemp != NULL)
+                {
+        		CSOS_DeallocateMemory(NULL, pTemp);
+        		pTemp = NULL;
+                 }
+
+	}
+	
+	CS_INSTALL_TPList.pTPListHead = NULL;
+	CS_INSTALL_TPList.pCurrent_TP = NULL;
+	CS_INSTALL_TPList.TP_Num = 0;
+	CSOS_SignalSemaphore(sem_InstallAccess);
+   	return(TRUE);
+}
+
+#if 0
+BOOL CS_INSTALL_SeekTPListHeader(void)
+{
+	CSOS_WaitSemaphore(sem_InstallAccess);
+	CS_INSTALL_TPList.pCurrent_TP = CS_INSTALL_TPList.pTPListHead;
+	CSOS_SignalSemaphore(sem_InstallAccess);
+	
+      	return(TRUE);
+}
+#endif
+
+U16  CS_INSTALL_GetTPListNum(void)
+{
+	U16	num;
+	CSOS_WaitSemaphore(sem_InstallAccess);
+	num = CS_INSTALL_TPList.TP_Num;
+	CSOS_SignalSemaphore(sem_InstallAccess);
+      	return(num);
+}
+
+U16  CS_INSTALL_GetNumOfTPInstalled(void)
+{
+	U16	num;
+	CSOS_WaitSemaphore(sem_InstallAccess);
+	num = NumberOfTPInstalled;
+	CSOS_SignalSemaphore(sem_InstallAccess);
+      	return(num);
+}
+
+
+BOOL INSTALL_CheckTPExist(tCS_INSTALL_TPData TPData)
+{
+	tCS_INSTALL_TPData *Current_TPData;
+	BOOL found  = FALSE;
+			
+	Current_TPData = CS_INSTALL_TPList.pTPListHead;
+		
+	while (Current_TPData != NULL)
+	{
+		if(Current_TPData->TerTP_Index == TPData.TerTP_Index)
+		{
+			found = TRUE;
+                           break;
+		}
+
+		Current_TPData = Current_TPData->pNext_TP;
+	}
+		
+	return(found);
+}
+
+
+BOOL CS_INSTALL_AppendTP(tCS_INSTALL_TPData TPData)
+{
+	tCS_INSTALL_TPData *pTemp = NULL;
+	tCS_INSTALL_TPData *pNewTPData = NULL;
+
+	CSOS_WaitSemaphore(sem_InstallAccess);
+
+	if(!INSTALL_CheckTPExist(TPData))
+	{
+		if ((pNewTPData = (tCS_INSTALL_TPData *)CSOS_AllocateMemory(NULL, sizeof(tCS_INSTALL_TPData))) == NULL)
+		{
+			CSOS_SignalSemaphore(sem_InstallAccess);
+			return(FALSE);
+		}
+
+		memcpy(pNewTPData,&TPData,sizeof(tCS_INSTALL_TPData));
+		pNewTPData->pNext_TP = NULL;
+		
+		
+		if( CS_INSTALL_TPList.pTPListHead == NULL)
+		{
+			CS_INSTALL_TPList.pTPListHead = pNewTPData;
+		}
+		else if(CS_INSTALL_TPList.pCurrent_TP != NULL)
+		{
+			pTemp = CS_INSTALL_TPList.pCurrent_TP->pNext_TP;
+			CS_INSTALL_TPList.pCurrent_TP->pNext_TP = pNewTPData;
+			pNewTPData->pNext_TP= pTemp;
+		}
+		else
+		{
+			CSOS_DeallocateMemory(NULL, pNewTPData);
+			pNewTPData = NULL;
+			CSOS_SignalSemaphore(sem_InstallAccess);
+			return(FALSE);
+		}
+
+                   CS_INSTALL_TPList.pCurrent_TP = pNewTPData;
+
+		CS_INSTALL_TPList.TP_Num++;
+
+	}
+
+	CSOS_SignalSemaphore(sem_InstallAccess);
+
+   	 return(TRUE);
+}
+
+tCS_INSTALL_TPData * CS_INSTALL_GetCurrentTPData(void)
+{
+    return(CS_INSTALL_TPList.pCurrent_TP);
+}
+
+
+void CS_INSTALL_GetSignalInfo (U8 *Level, U8 * Quality, BOOL* lock)
+{
+	tCS_FE_TerTunerInfo	FE_Info;
+  
+	CS_FE_GetInfo(&FE_Info);
+
+	if(FE_Info.Ter_FECParity == kCS_FE_LOW_PARITY)
+	{
+		*Quality	= FE_Info.Ter_Signal_LPquality;
+		*Level	= FE_Info.Ter_Signal_LPlevel;
+		if (FE_Info.Ter_LPLockStatus == 1)
+	     	{
+	        		* lock = TRUE;
+	   	}
+		else
+		{
+	           	* lock = FALSE;
+	     	}
+	}
+	else
+	{
+		*Quality	= FE_Info.Ter_Signal_HPquality;
+		*Level	= FE_Info.Ter_Signal_HPlevel;
+		if (FE_Info.Ter_HPLockStatus == 1)
+	     	{
+	        		* lock = TRUE;
+	   	}
+		else
+		{
+	           	* lock = FALSE;
+	     	}
+	}
+
+    	return ;
+}
+
+

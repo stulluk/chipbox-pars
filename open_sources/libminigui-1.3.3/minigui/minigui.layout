@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="default" />
+	<File name="../src/control/button.c" open="1" top="0" tabpos="2">
+		<Cursor position="7485" topLine="225" />
+	</File>
+	<File name="../src/control/toolbar.c" open="1" top="0" tabpos="6">
+		<Cursor position="6254" topLine="190" />
+	</File>
+	<File name="../src/control/trackbar.c" open="1" top="0" tabpos="4">
+		<Cursor position="9573" topLine="245" />
+	</File>
+	<File name="../src/gdi/attr.c" open="1" top="0" tabpos="3">
+		<Cursor position="1851" topLine="70" />
+	</File>
+	<File name="../src/gdi/drawtext.h" open="1" top="0" tabpos="5">
+		<Cursor position="0" topLine="0" />
+	</File>
+	<File name="../src/gdi/readbmp.c" open="1" top="0" tabpos="1">
+		<Cursor position="4712" topLine="124" />
+	</File>
+	<File name="../src/ial/fpc.c" open="1" top="0" tabpos="8">
+		<Cursor position="14022" topLine="606" />
+	</File>
+	<File name="../src/kernel/desktop-comm.c" open="1" top="0" tabpos="9">
+		<Cursor position="67879" topLine="2428" />
+	</File>
+	<File name="../src/kernel/message.c" open="1" top="1" tabpos="10">
+		<Cursor position="14849" topLine="622" />
+	</File>
+	<File name="../src/mybmp/mybmp.c" open="1" top="0" tabpos="7">
+		<Cursor position="6844" topLine="277" />
+	</File>
+	<File name="../src/newgal/fbcon/fbvideo.c" open="0" top="0" tabpos="0">
+		<Cursor position="17683" topLine="1023" />
+	</File>
+	<File name="../src/newgal/fbcon/fbvideo.h" open="0" top="0" tabpos="0">
+		<Cursor position="0" topLine="114" />
+	</File>
+</CodeBlocks_layout_file>

@@ -1,0 +1,13 @@
+orion_gfx_hw_if.lo .libs/orion_gfx_hw_if.o: orion_gfx_hw_if.c \
+  orion_gfx_hw_if.h orion_gfx_type_def.h orion_gfx_cmd_reg_def.h \
+  orion_gfx_sys_cfg.h orion_gfx_loglib.h
+
+orion_gfx_hw_if.h:
+
+orion_gfx_type_def.h:
+
+orion_gfx_cmd_reg_def.h:
+
+orion_gfx_sys_cfg.h:
+
+orion_gfx_loglib.h:

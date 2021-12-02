@@ -1,0 +1,53 @@
+idctref.lo .libs/idctref.o: idctref.c \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/math.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/features.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/sys/cdefs.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/gnu/stubs.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/huge_val.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/huge_valf.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/huge_vall.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/inf.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/nan.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/mathdef.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/mathcalls.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/mathinline.h \
+  global.h mpeg2dec.h ../../../include/dfb_types.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/stdint.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/wchar.h \
+  /opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/wordsize.h
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/math.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/features.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/sys/cdefs.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/gnu/stubs.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/huge_val.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/huge_valf.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/huge_vall.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/inf.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/nan.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/mathdef.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/mathcalls.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/mathinline.h:
+
+global.h:
+
+mpeg2dec.h:
+
+../../../include/dfb_types.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/stdint.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/wchar.h:
+
+/opt/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/lib/gcc/arm-linux/3.4.6/../../../../arm-linux/sys-include/bits/wordsize.h:

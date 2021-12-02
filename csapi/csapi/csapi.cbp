@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="csapi" />
+		<Option pch_mode="2" />
+		<Option compiler="armelfgcc" />
+		<Build>
+			<Target title="default">
+				<Option output="default/csapi.elf" prefix_auto="0" extension_auto="0" />
+				<Option object_output="default" />
+				<Option type="1" />
+				<Option compiler="armelfgcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add option="-g" />
+			<Add option="-O2" />
+			<Add option="-fno-common" />
+			<Add option="-mcpu=arm7tdmi" />
+			<Add option="-DEK_AT91SAM7A3" />
+			<Add option="-D__NO_CTOR_DTOR_SUPPORT__" />
+			<Add option="-DUSE_IRQ" />
+			<Add directory="src" />
+			<Add directory="h" />
+		</Compiler>
+		<Linker>
+			<Add option="-s" />
+			<Add option="-Wl,-Map,map.txt" />
+			<Add option="-mcpu=arm7tdmi" />
+			<Add option="-T ld/targetRAM.ld" />
+		</Linker>
+		<Unit filename="h/at91sam7a3.h" />
+		<Unit filename="h/sam7a3ek.h" />
+		<Unit filename="ld/target.ld" />
+		<Unit filename="ld/targetRAM.ld" />
+		<Unit filename="src/main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/vectors.S" />
+		<Unit filename="../csaud/include/csaud.h" />
+		<Unit filename="../csaud/src/csaud.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csaud/test/csaudio_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csdemux/include/csdemux.h" />
+		<Unit filename="../csdemux/src/csdemux.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csdemux/src/xport_defines.h" />
+		<Unit filename="../csdemux/test/csdemux_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csdemux/test/fw_debug.h" />
+		<Unit filename="../csevt/include/csevt.h" />
+		<Unit filename="../csevt/src/csevt.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csfrontpanel/include/csfrontpanel.h" />
+		<Unit filename="../csfrontpanel/src/csfrontpanel.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csgpio/include/csgpio.h" />
+		<Unit filename="../csgpio/src/csgpio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csgpio/test/csgpio_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cshdmi/include/ANX9030_Sys9030.h" />
+		<Unit filename="../cshdmi/include/ANX9030_System_Config.h" />
+		<Unit filename="../cshdmi/include/cshdmi.h" />
+		<Unit filename="../cshdmi/include/hdmi_gpio.h" />
+		<Unit filename="../cshdmi/include/hdmi_i2c.h" />
+		<Unit filename="../cshdmi/src/ANX9030_Sys9030.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cshdmi/src/ANX9030_System_Config.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cshdmi/src/hdmi_gpio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cshdmi/src/hdmi_i2c.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cshdmi/src/hdmi_main.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cshdmi/test/hdmi_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csi2c/include/csi2c.h" />
+		<Unit filename="../csi2c/src/csi2c.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csi2c/test/csi2c_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csosd/include/csosd.h" />
+		<Unit filename="../csosd/src/csosd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csosd_dfb/include/csosd.h" />
+		<Unit filename="../csosd_dfb/src/csosd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csosd_dfb/test/csosd_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csplayer/include/csplayer.h" />
+		<Unit filename="../csplayer/src/csplayer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csplayer/test/csplayer_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csplayer_new/include/csplayer.h" />
+		<Unit filename="../csplayer_new/src/csplayer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csplayer_new/test/csplayer_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csrec/include/csrec.h" />
+		<Unit filename="../csrec/src/csrec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csrec/test/csrec_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csrec_new/include/csrec.h" />
+		<Unit filename="../csrec_new/src/csrec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csrec_new/test/csrec_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cssci/include/cssci.h" />
+		<Unit filename="../cssci/src/cssci.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cssci/test/cssci_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cssec/include/cssec.h" />
+		<Unit filename="../cssec/src/cssec.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cssi/include/cssi.h" />
+		<Unit filename="../cssi/src/cssi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csspi/include/csspi.h" />
+		<Unit filename="../csspi/src/csspi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csspi/test/spi-test-mod.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cssqc/include/cssqc.h" />
+		<Unit filename="../cssqc/src/cssqc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cstuner/include/cs_tuner.h" />
+		<Unit filename="../cstuner/src/cs_tuner.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cstuner/src/tda10023.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cstuner/src/tda10023.h" />
+		<Unit filename="../cstuner/src/tuner_error.h" />
+		<Unit filename="../cstuner/src/tuner_i2c.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cstuner/src/tuner_i2c.h" />
+		<Unit filename="../cstuner/test/tuner_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cstuner_dvbs/include/dvbs_tuner.h" />
+		<Unit filename="../cstuner_dvbs/src/dvbs_tuner.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cstuner_dvbs/src/i2c_if.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cstuner_dvbs/src/i2c_if.h" />
+		<Unit filename="../cstuner_dvbs/src/stv0288_regs.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cstuner_dvbs/src/stv0288_regs.h" />
+		<Unit filename="../cstuner_dvbs/src/tuner_0288.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cstvout/include/cstvout.h" />
+		<Unit filename="../cstvout/src/cstvout.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cstvout/test/ttx_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../cstvout/test/wss_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csuhfmod/include/csuhfmod.h" />
+		<Unit filename="../csuhfmod/src/csuhfmod.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csuhfmod/test/uhf_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csvid/include/csvid.h" />
+		<Unit filename="../csvid/src/csvid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../csvid/test/csvideo_test.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../include/csapi.h" />
+		<Unit filename="../include/global.h" />
+		<Unit filename="../testtools/cmd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/cmd.h" />
+		<Unit filename="../testtools/stdhdr.h" />
+		<Unit filename="../testtools/testtools.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_aud.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_df.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_dispout.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_eeprom.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_flash.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_fpc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_gpio.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_hdmi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_i2c.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_osd.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_sci.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_sqc.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_tuner.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/tt_vid.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/util.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../testtools/util.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

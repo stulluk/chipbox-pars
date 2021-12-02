@@ -1,0 +1,115 @@
+//1.operation in uboot
+
+mw.b 0x1000000 0x00
+mw.b 0x1000001 0x1a
+mw.b 0x1000002 0xcc
+mw.b 0x1000003 0x19
+mw.b 0x1000004 0xaa
+mw.b 0x1000005 0x00
+eeprom write 0x1000000 0x114 0x6
+
+0x10110010
+
+
+
+
+erase 0x38000000 +0x60000
+cp.b 0x40000 0x38000400 0x50000
+
+erase 0x38800000 +0x60000
+cp.b 0x40000 0x38800400 0x50000
+
+
+//Set tftp Service Ip
+set serverip 192.168.1.12
+set ipaddr 192.168.1.133
+
+//烧boot
+tftp 0x100000 u-boot-533M.bin
+erase 0x34000000  +0x2b120
+cp.b 0x100000 0x34000000 0x2b120
+
+//烧kernel
+tftp 0x500000 csdriver_uimage_linux.bin
+tftp 0x500000 uImage
+erase 0x34060000 +0x1b0000
+cp.b 0x500000 0x34060000 0x1b0000
+
+//烧jffs2 rootfs
+ramdisk.img
+tftp 0x500000 rootfs.nor.jffs2
+tftp 0x500000 rootfs.glibc.nor.jffs2
+erase 0x34210000 0x34800000
+cp.b 0x500000 0x34210000 0x3f0000
+
+//1.use jffs2   //1728
+setenv bootargs 'root=/dev/mtdblock/2 rw rootfstype=jffs2 console=ttyS0,115200 mem=60M mtdparts=phys_mapped_flash:384k(u-boot)ro,1728k(kernel),-(fs)'
+setenv bootargs 'root=/dev/mtdblock/2 rw rootfstype=jffs2 console=ttyS0,115200 mem=64M mtdparts=phys_mapped_flash:384k(u-boot)ro,1856k(kernel),-(fs)'
+setenv bootargs 'root=/dev/mtdblock/2 rw rootfstype=jffs2 console=ttyS0,115200 mem=40M mtdparts=phys_mapped_flash:384k(u-boot)ro,1920k(kernel),-(fs)'
+setenv bootcmd mw 7a00000 0 180000\;update\;bootm 0x34080000 
+saveenv
+
+setenv bootargs 'root=/dev/mtdblock/2 rw rootfstype=jffs2 console=ttyS0,115200 mem=40M mtdparts=phys_mapped_flash:512k(u-boot)ro,1920k(kernel),5760k(fs)'
+setenv bootcmd mw 7a00000 0 180000\;bootm 0x34080000 
+
+setenv bootcmd mw 7400000 0 180000\;bootm 0x34060000 
+
+
+setenv bootargs 'root=/dev/mtdblock/2 rw rootfstype=jffs2 console=ttyS0,115200 mem=40M mtdparts=phys_mapped_flash:512k(u-boot)ro,1792k(kernel),-(fs)'
+
+setenv bootargs 'root=/dev/mtdblock/2 rw rootfstype=jffs2 console=ttyS0,115200 mem=148M mtdparts=phys_mapped_flash:384k(u-boot)ro,1920k(kernel),5760k(fs)'
+
+//2.use ramdisk
+set bootargs 'root=/dev/rd/0 mem=60M console=ttyS0,115200'
+set bootcmd 'tftp 0x300000 uImage; tftp 0x500000 ramdisk.img; bootm 0x300000 0x500000'
+saveenv
+
+setenv bootargs root=/dev/rd/0 console=ttyS0,115200 mem=64M mtdparts=phys_mapped_flash:1m(u-boot)ro,4m(ramdisk),2m(kernel),-(fs)
+
+ifconfig eth0 192.168.1.125
+mount -t nfs -o nolock 192.168.1.126:/nfsroot /tmp
+cd /tmp
+./csapp.elf
+
+//3.install font
+cp MiniGUI.cfg /usr/local/etc/
+cp big5_24x24.bin /usr/local/lib/minigui/res/font/big5_24x24.bin
+
+//4. install ide usb
+mount -t ntfs /dev/ide/host0/bus0/target0/lun0/part1 /opt -o iocharset=cp936,umask=000
+mount -t ext3 /dev/ub/a/part1 /opt
+mount -t vfat /dev/ub/a/part1 /opt
+
+//5. start nfs
+/etc/rc.d/init.d/portmap start (在REDHAT中PORTMAP是默认启动的） 
+/etc/rc.d/init.d/nfs start 
+
+2.operation in linux
+
+插入U盘(先插入U盘，再重新上电)，等到liunx启动完成，执行以下操作：
+//把U盘挂载到tmp目录
+mount -t -vfat -o iocharset=cp936 /dev/ub/a/part1 /tmp
+
+//拷贝应用程序csapp-HD到home下，拷贝资源文件夹img到mnt下
+cp /tmp/csapp-HD /home/csapp-HD
+cp /tmp/img /mnt/img -rf
+
+//设置启动运行csapp-HD
+vi /etc/profile
+(在打开的文件中的最后加入下面两句)
+cd /home/
+./csapp-HD
+(保存该文件:按ESC键->shift+冒号键->键入wq->回车)
+
+重新上电即可
+
+3.other
+
+udhcpc
+mount -t nfs -o nolock 192.168.18.117:/nfsroot /mnt
+cd /mnt
+cp *.so /lib
+
+set serverip 192.168.18.124
+save
+

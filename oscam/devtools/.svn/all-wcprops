@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/oscam/!svn/ver/7516/trunk/devtools
+END
+check_config_tables.sh
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/oscam/!svn/ver/7516/trunk/devtools/check_config_tables.sh
+END
+README
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/oscam/!svn/ver/7516/trunk/devtools/README
+END

@@ -1,0 +1,279 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#include<sys/types.h>
+#include<unistd.h>
+#include <string.h>
+
+//#include "csapi.h"
+#include "csosd.h"
+#include "../../cstvout/include/cstvout.h"
+#include "directfb.h"
+
+
+
+int
+main(void)
+{
+	CSOSD_HANDLE 		g_osd_handle = 0;	
+
+	int ret=0, i, read_len, n=0, addr;
+	PIC_ID	id0, id1, id2, id3, id4, id5, id6, id7;
+	FILE *rgb_file = NULL;
+	CSOSD_REC_Region	region;
+	CSOSD_TRI_Region	triregion;
+	CSOSD_LINE_Region	lineregion;
+	CSOSD_Color	color;
+	CSTVOUT_HANDLE		tvout_handle;
+	CSOSD_Config	osd_config;
+	//CSTVOUT_HANDLE		tvout2_handle;
+	unsigned char tempchar, read_buf[720*576*2*2];
+	struct timeval tm;
+
+	if(NULL == (tvout_handle = CSTVOUT_Open(0)))
+	{
+		printf("open tvout device Failed\n");
+		return 0;
+	}	
+	CSTVOUT_SetMode(tvout_handle, TVOUT_MODE_576I);	
+	g_osd_handle = CSOSD_Open(OSD_LAYER_0);
+	if(g_osd_handle == NULL)
+	{
+		printf("CSOSD_Open error.....\n");
+	}																											
+	printf("\n");
+	ret = CSOSD_Enable(g_osd_handle);
+	ret |= CSOSD_SetAlpha(g_osd_handle, 0xff);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");
+
+	osd_config.mode = OSD_MODE_576I;
+	osd_config.color_depth = OSD_COLOR_DEPTH_32;//OSD_COLOR_DEPTH_16;
+	osd_config.color_format = OSD_COLOR_FORMAT_ARGB8888;//OSD_COLOR_FORMAT_RGB565;
+	CSOSD_SetConfig(g_osd_handle, &osd_config);
+	
+	printf("after CSOSD_SetConfig, pause.....\n");getchar();
+	
+
+#if	1
+
+	ret = CSOSD_OpenDFB(OSD_LAYER_0);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");																			printf("CSOSD_Flip: %d\n",CSOSD_Flip(g_osd_handle));
+
+
+	printf("ready to CSOSD_OpenImageBuffer\n");getchar();
+	rgb_file = fopen("./7205768888-cs.bmp","rb");		//	7205768888.bmp	7205768888-cs.bmp	7082768888.bmp.bak		2.bmp
+	if (rgb_file == 0){
+		printf( "----------Error open input device.\r\n" );
+		return( -1 );
+	}
+	fseek(rgb_file, 0, SEEK_SET);
+	fread(read_buf, sizeof(unsigned char), 720*576*4, rgb_file);
+	fclose(rgb_file);
+	region.x = 0;
+	region.y = 0;
+	region.width = 0;
+	region.height = 0;
+	ret = CSOSD_OpenImageBuffer(g_osd_handle, &region, OSD_COLOR_FORMAT_ARGB8888, read_buf, &id3);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");
+
+	printf("ready to CSOSD_ShowImage\n");getchar();
+	ret = CSOSD_ShowImage(g_osd_handle, id3);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");																			//printf("show image over, ready to flip...\n");getchar();
+																												printf("CSOSD_Flip: %d\n",CSOSD_Flip(g_osd_handle));
+	printf("ready to clear...\n");getchar();
+	CSOSD_ObjectClear(g_osd_handle, id3);										printf("CSOSD_Flip: %d\n",CSOSD_Flip(g_osd_handle));
+
+
+	printf("ready to CSOSD_OpenImageBuffer\n");getchar();
+	rgb_file = fopen("./2.bmp","rb");		//	7205768888.bmp	7205768888-cs.bmp	7082768888.bmp.bak		2.bmp
+	if (rgb_file == 0){
+		printf( "----------Error open input device.\r\n" );
+		return( -1 );
+	}
+	fseek(rgb_file, 0, SEEK_SET);
+	fread(read_buf, sizeof(unsigned char), 708*276*4, rgb_file);
+	fclose(rgb_file);
+	for( i =0; i < 708*276*4; i+=4){
+			read_buf[i+3] = ~read_buf[i+3];
+	}
+	region.x = 10;
+	region.y = 10;
+	region.width = 708;
+	region.height = 276;
+	ret = CSOSD_OpenImageBuffer(g_osd_handle, &region, OSD_COLOR_FORMAT_ARGB8888, read_buf, &id0);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");
+
+	printf("ready to CSOSD_ShowImage\n");getchar();
+	
+	ret = CSOSD_ShowImage(g_osd_handle, id0);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");																			//printf("show image over, ready to flip...\n");getchar();
+																												printf("CSOSD_Flip: %d\n",CSOSD_Flip(g_osd_handle));
+
+
+	printf("ready to CSOSD_OpenImage\n");getchar();
+	region.x = 10;
+	region.y = 295;
+	region.width = 708;
+	region.height = 276;
+	ret = CSOSD_OpenImage(g_osd_handle, &region, "./7082768888.png", &id1);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");	
+	printf("ready to CSOSD_ShowImage\n");getchar();
+	
+	ret = CSOSD_ShowImage(g_osd_handle, id1);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");																			printf("CSOSD_Flip: %d\n",CSOSD_Flip(g_osd_handle));
+
+		
+
+	printf("ready to CSOSD_ObjectClearAll & Close\n");getchar();
+	ret = CSOSD_ObjectClearAll(g_osd_handle);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");																			printf("CSOSD_Flip: %d\n",CSOSD_Flip(g_osd_handle));
+		ret = CSOSD_Close(g_osd_handle);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");
+	return 0;
+
+#endif
+#if	0
+
+	/*osd_config.mode = OSD_MODE_576I;
+	osd_config.color_depth = OSD_COLOR_DEPTH_32;//OSD_COLOR_DEPTH_16;
+	osd_config.color_format = OSD_COLOR_FORMAT_ARGB8888;//OSD_COLOR_FORMAT_RGB565;
+	CSOSD_SetConfig(g_osd_handle, &osd_config);*/
+	CSOSD_SetAlpha(g_osd_handle, 0xff);
+	CSOSD_GetBaseAddr(g_osd_handle, &addr);	
+	printf("addr: 0x%x\n", addr);
+	
+	rgb_file = fopen("./7205768888-cs.bmp","rb");//	cs32bit.bmp 3002008888.bmp 7205768888.bmp	7082768888.bmp	7082768888.bmp.bak
+	if (rgb_file == 0)
+	{
+		printf( "----------Error open input device.\r\n" );
+		return( -1 );
+	}
+	fseek(rgb_file, 0, SEEK_SET);
+
+	while(!feof(rgb_file))
+	{
+		read_len = fread(read_buf, sizeof(unsigned char), /*708*/720*4, rgb_file);
+
+		for( i =0; i < read_len; i+=4){
+			/*tempchar = read_buf[i];
+			read_buf[i] = read_buf[i+3];//~read_buf[i+3];	read_buf[i+3];		0xff;
+			read_buf[i+3] = tempchar;
+			tempchar = read_buf[i+2];
+			read_buf[i+2] = read_buf[i+1];
+			read_buf[i+1] = tempchar;*/
+			//read_buf[i]=0xff;
+			//read_buf[i+1]=0x0;
+			//read_buf[i+2]=0x0;
+			//read_buf[i+3]=0xff;
+		}
+		/*if(read_len != 708*4){
+			printf("not enough data...  read_len: %d\n", read_len);
+			break;
+		}*/
+
+		memcpy(addr + (1440*2*n++), read_buf, read_len);
+	}
+
+	fclose(rgb_file);
+	CSOSD_Flip(g_osd_handle);
+	printf("Flip over, ready to close...\n");getchar();
+	ret = CSOSD_Close(g_osd_handle);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");
+
+#endif
+
+
+
+
+
+
+	
+#if	0
+
+	/*
+		depth=32 
+		pixelformat=ARGB
+	*/
+
+	ret =  CSOSD_OpenDFB(OSD_LAYER_0);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");
+
+	printf("ready to CSOSD_OpenImage\n");getchar();
+	region.x = 10;
+	region.y = 10;
+	region.width = 708;
+	region.height = 276;
+	ret = CSOSD_OpenImage(g_osd_handle, &region, "./7082768888.png", &id1);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");	
+	printf("ready to CSOSD_ShowImage\n");getchar();
+	ret = CSOSD_ShowImage(g_osd_handle, id1);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");																			//printf("CSOSD_Flip: %d\n",CSOSD_Flip(g_osd_handle));
+
+
+	printf("ready to CSOSD_OpenImage\n");getchar();
+	region.x = 10;
+	region.y = 290;
+	region.width = 708;
+	region.height = 276;
+	ret = CSOSD_OpenImage(g_osd_handle, &region, "./708276565_2.png", &id2);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");	
+	printf("ready to CSOSD_ShowImage\n");getchar();
+	ret = CSOSD_ShowImage(g_osd_handle, id2);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");																			//printf("CSOSD_Flip: %d\n",CSOSD_Flip(g_osd_handle));
+	
+
+	/*printf("ready to CSOSD_OpenImageBuffer\n");getchar();
+	rgb_file = fopen("./300200565.bmp","rb");
+	if (rgb_file == 0){
+		printf( "----------Error open input device.\r\n" );
+		return( -1 );
+	}
+	fseek(rgb_file, 0, SEEK_SET);
+	fread(read_buf, sizeof(unsigned char), 300*200*2+72, rgb_file);
+	fclose(rgb_file);
+	region.x = 350;
+	region.y = 200;
+	region.width = 300;
+	region.height = 200;
+	ret = CSOSD_OpenImageBuffer(g_osd_handle, &region, OSD_COLOR_FORMAT_RGB565, read_buf+72, &id0);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");
+	else
+		printf("id0 = %d\n",id0);
+
+	printf("ready to CSOSD_ShowImage\n");getchar();
+	ret = CSOSD_ShowImage(g_osd_handle, id0);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");																			printf("CSOSD_Flip: %d\n",CSOSD_Flip(g_osd_handle));*/
+	
+
+	printf("ready to CSOSD_ObjectClearAll\n");getchar();
+	ret = CSOSD_ObjectClearAll(g_osd_handle);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");																			//printf("CSOSD_Flip: %d\n",CSOSD_Flip(g_osd_handle));
+
+
+	printf("ready to CSOSD_Close\n");getchar();
+	ret = CSOSD_Close(g_osd_handle);
+	if(ret == CSAPI_FAILED)
+		printf( "error \n");
+#endif
+
+	return 0;
+}

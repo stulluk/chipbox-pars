@@ -1,0 +1,34 @@
+#!/bin/sh
+
+#
+# Please make sure that the following things are OK:
+#
+#   1. You have installed the GNU arm-elf-tools already.
+#   2. Your eCos for iPAQ has been installed into the directory of '/tmp/ipaq_ecos/install'.
+#   3. You have set ECOS_RESPOSITORY and PATH correctly.
+#
+
+rm config.cache config.status -f
+
+CC=arm-linux-gcc \
+./configure \
+    --build=i386-linux \
+    --host=arm-elf-linux \
+    --target=arm-elf-linux \
+	--prefix=/ \
+	--enable-incoreres \
+	--enable-gifsupport \
+	--enable-extfullgif \
+	--disable-cursor \
+	--disable-nativegal \
+	--disable-videoqvfb \
+	--disable-videoecoslcd \
+	--disable-nativeimps2 \
+	--disable-nativems \
+	--disable-nativems3 \
+	--disable-nativegpm \
+	--disable-type1support \
+	--disable-jpgsupport \
+	--enable-kbdfrpc \
+	--enable-extskin 
+

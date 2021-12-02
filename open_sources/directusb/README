@@ -1,0 +1,14 @@
+
+    This library is used to deal with Mentor USB controller, it only supports USB storage devices.
+And only work on eCos platform. Following the below steps can help you build the lib file and exa-
+mple codes:
+
+#1. run "make -f makefile.usb", will generate all of .o files.
+#2. run "find raw_usb -name "*.o"|xargs arm-elf-ar crv libdirectusb.a " for generating libdirectusb.a
+#3. copy it to 'lib' directory.
+#4. running "make" will build the binary code 'tt_fs.bin'
+#5. download it to target board, and run 'go <addr>' to execute it.
+ 
+TIPS:
+    All of codes were ported from U-boot. for any problems, pls consult to U-boot codes.
+

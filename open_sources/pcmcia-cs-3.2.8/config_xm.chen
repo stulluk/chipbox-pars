@@ -1,0 +1,1 @@
+./Configure --arch=arm --ucc=arm-linux-gcc --kcc=arm-linux-gcc --ld=arm-linux-ld

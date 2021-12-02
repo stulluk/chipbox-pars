@@ -1,0 +1,430 @@
+#include "linuxos.h"
+
+//#include "mwtypes.h"
+//#include "mwOS.h"
+#include "mwpublic.h"
+#include "mwlayers.h"
+//#include "mwsi.h"
+
+#include "csapi.h"
+#include "database.h"
+
+#if 0
+static unsigned char fp_letter_code[] = { 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, /* 0xff */
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, /* 0x10 */
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, /* 0x20 */
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xfd, 0xff, 0xff, 
+	0x03, 0x9f, 0x25, 0x0d, 0x99, 0x49, 0x41, 0x1f, /* 0x30 */
+	0x01, 0x09, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0x11, 0xff, 0x63, 0xff, 0x61, 0x71, 0xff, /* 0x40 */
+	0x91, 0xff, 0xff, 0xff, 0xe3, 0xff, 0xff, 0xff, 
+	0x31, 0xff, 0xff, 0xff, 0x73, 0x83, 0xff, 0xff, /* 0x50 */
+	0xff, 0x89, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, /* 0x60 */
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, /* 0x70 */
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, /* 0x80 */
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, /* 0x90 */
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, /* 0xa0 */
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, /* 0xb0 */
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, /* 0xc0 */
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, /* 0xd0 */
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, /* 0xe0 */
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, /* 0xf0 */
+	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff 
+};
+#endif
+
+static CSFP_HANDLE fp_handle = NULL;
+
+#if 0
+static CSGPIO_HANDLE   gpio_handle_2 = NULL;
+static CSGPIO_HANDLE   gpio_handle_4 = NULL;
+static CSGPIO_HANDLE   gpio_handle_5 = NULL;
+static CSGPIO_HANDLE   gpio_handle_7 = NULL;
+static CSGPIO_HANDLE   gpio_handle_8 = NULL;
+static CSGPIO_HANDLE   gpio_handle_9 = NULL;
+
+
+void Gpin_Init(void)
+{
+	CSFP_HANDLE fp_handle_1;
+    CSAPI_RESULT    result;
+
+	
+	printf("Gpin_Init \n");  
+	fp_handle_1 = CSFP_Open();
+	 CSFP_DisableKeyScan (fp_handle_1);
+	
+	gpio_handle_2= CSGPIO_Open(2);
+       if(gpio_handle_2==NULL)
+       {
+              printf("\n open gpio 2 erro\n");
+            //  return;
+       }
+	result= CSGPIO_SetDirection(gpio_handle_2, GPIO_DIRECTION_WRITE);		// 1: write  0:read
+      if(result != CSAPI_SUCCEED)
+       {
+       	printf("\n set direction 2 error\n");
+      // return;
+       }
+	result= CSGPIO_Write(gpio_handle_2, 1);	/* only 0 and 1 are valid */
+              if(result != CSAPI_SUCCEED)
+              {
+                     printf("\n write gpio 2 error\n");
+            //         return;
+              }
+	gpio_handle_4= CSGPIO_Open(4);
+       if(gpio_handle_4==NULL)
+       {
+              printf("\n open gpio 4 erro\n");
+          //    return;
+       }
+	result= CSGPIO_SetDirection(gpio_handle_4, GPIO_DIRECTION_WRITE);		// 1: write  0:read
+      if(result != CSAPI_SUCCEED)
+       {
+       printf("\n set direction 4 error\n");
+     //  return;
+       }
+	 result= CSGPIO_Write(gpio_handle_4, 1);	/* only 0 and 1 are valid */
+              if(result != CSAPI_SUCCEED)
+              {
+                     printf("\n write gpio 4 error\n");
+             //        return;
+              }
+	gpio_handle_5= CSGPIO_Open(5);
+       if(gpio_handle_5==NULL)
+       {
+              printf("\n open gpio 5 erro\n");
+          //    return;
+       }
+	result= CSGPIO_SetDirection(gpio_handle_5, GPIO_DIRECTION_WRITE);		// 1: write  0:read
+      if(result != CSAPI_SUCCEED)
+       {
+       printf("\n set direction 5 error\n");
+
+     //  return;
+       }
+	result =  CSGPIO_Write(gpio_handle_5, 1);	/* only 0 and 1 are valid */
+              if(result != CSAPI_SUCCEED)
+              {
+                     printf("\n write gpio 5 error\n");
+             //        return;
+              }
+
+	gpio_handle_7= CSGPIO_Open(7);
+       if(gpio_handle_7==NULL)
+       {
+              printf("\n open gpio 7 erro\n");
+          //    return;
+       }
+	result = CSGPIO_SetDirection(gpio_handle_7, GPIO_DIRECTION_READ);		// 1: write  0:read
+      if(result != CSAPI_SUCCEED)
+       {
+       printf("\n set direction 7error\n");
+     //  return;
+       }
+	//  CSGPIO_Write(gpio_handle_7, 1);	/* only 0 and 1 are valid */
+
+	gpio_handle_8= CSGPIO_Open(8);
+	 CSGPIO_SetDirection(gpio_handle_8, GPIO_DIRECTION_WRITE);		// 1: write  0:read
+	  CSGPIO_Write(gpio_handle_8, 1);	/* only 0 and 1 are valid */
+	 
+	gpio_handle_9= CSGPIO_Open(9);
+	 CSGPIO_SetDirection(gpio_handle_9, GPIO_DIRECTION_WRITE);		// 1: write  0:read
+	  CSGPIO_Write(gpio_handle_9, 1);	/* only 0 and 1 are valid */
+
+
+
+}
+#endif
+
+BOOL CS_MW_Init(void)
+{
+
+    //if( CS_MW_Register_SI_CallBackFunction() != TRUE ) return FALSE;
+    //Gpin_Init();
+#if 0
+{
+        int key_map[255], key_num = 255;
+        U16         i;
+    
+	IAL_GetKeyMap( key_map, &key_num );
+
+         for(i=0;i<255;i++)
+            {
+                printf("defaut key value [0x%x] = 0x%x\n", i, key_map[i]);
+            }
+}
+#endif
+#if 1
+        fp_handle = CSFP_Open();
+    
+    //system("cat /dev/input/event0 |hexdump");
+        CSFP_EnableKeyScan(fp_handle);
+    
+         CS_MW_SetKeyMap( 0x81, 0x48 );
+	CS_MW_SetKeyMap( 0x85, 0x4b );
+	CS_MW_SetKeyMap( 0x89, 0x4d );
+	CS_MW_SetKeyMap( 0x80, 0x50 );
+
+	CS_MW_SetKeyMap( 0x84, 0x3b );
+	CS_MW_SetKeyMap( 0x88, 0x1c );
+
+        //CS_MW_SetKeyMap( 0x0, 0x48 );
+#endif
+#if 0
+        CS_MW_SetKeyMap( 0x0D, 0x3b );//MUTE
+    		CS_MW_SetKeyMap( 0x1e, 0x2 ); //  1
+		    		CS_MW_SetKeyMap( 0x00, 0x3 );   //  2
+	    		CS_MW_SetKeyMap( 0x01, 0x4 );//3//3
+
+	    		CS_MW_SetKeyMap( 0x02, 0x5 );//3//4
+	    		CS_MW_SetKeyMap( 0x1F, 0x6 );//3//5
+	    		CS_MW_SetKeyMap( 0x03, 0x7 );//3//6
+	    		CS_MW_SetKeyMap( 0x04, 0x8 );//3//7
+	    		CS_MW_SetKeyMap( 0x05, 0x9 );//3//8
+	    		CS_MW_SetKeyMap( 0x1C, 0xA );//3//9
+	    		CS_MW_SetKeyMap( 0x06, 0xB );//3//0
+	    		CS_MW_SetKeyMap( 0x1D,   0x18 );//3//TVRADIO
+			CS_MW_SetKeyMap( 0x09, 0xA );//3//FAV
+		      CS_MW_SetKeyMap( 0x0a, 0x31 );//3//	//INFO
+                    CS_MW_SetKeyMap( 0x0B, 0x40 );//3//AUDIO
+	//  CS_MW_SetKeyMap( 0x14, 0x2e );//3//PREV
+  			 // 	  CS_MW_SetKeyMap( 0x15, 0x12 );//3//NEXT
+  	             CS_MW_SetKeyMap( 0x20, 0x22 );//3//R
+		  	CS_MW_SetKeyMap( 0x22, 0x23 );//3//G
+  	    	     CS_MW_SetKeyMap( 0x23, 0x17 );//3//Y
+  	           CS_MW_SetKeyMap( 0x21, 0x24 );//3//B
+  	          CS_MW_SetKeyMap( 0x12, 0x4b );//3//left
+  	          CS_MW_SetKeyMap( 0x13, 0x4d );//3//riht
+  	           CS_MW_SetKeyMap( 0x10, 0x48 );//3//up
+  	          CS_MW_SetKeyMap( 0x11, 0x50 );//3//down
+  	          CS_MW_SetKeyMap( 0x55, 0x3b );//3//B
+  	  	    CS_MW_SetKeyMap( 0x36, 0x1 );//3//B
+  	  	  	CS_MW_SetKeyMap( 0x28, 0x41 );//3//B
+  	  	  	 CS_MW_SetKeyMap( 0x29, 0x19 );//3//B
+  	  	  	  CS_MW_SetKeyMap( 0x2a, 0x32 );//3//B
+  	  	  	  CS_MW_SetKeyMap( 0x08,0x26 );//3//swap
+  	  	  CS_MW_SetKeyMap( 0x0e,0x1c );
+#endif
+
+#if 0
+        {
+                int key_map[255], key_num = 255;
+                U16         i;
+            
+            IAL_GetKeyMap( key_map, &key_num );
+        
+                 for(i=0;i<255;i++)
+                    {
+                        printf("now key value [0x%x] = 0x%x\n", i, key_map[i]);
+                    }
+        }
+#endif
+
+        CS_MW_USBDeviceFWUpdate();
+
+    return TRUE;
+}
+
+
+void CS_MW_TextOut( HDC hdc, U32 x, U32 y, char* text )
+{
+    PLOGFONT pfutf8;
+    PLOGFONT pfutf16be;
+    PLOGFONT tmp;
+
+	if (*(text) == 0x11)	
+	{	
+		pfutf16be = CreateLogFontByName("*-fixed-rrncnn-*-24-UTF-16BE"); 	
+		if(!pfutf16be) 	
+			CS_MW_DbgPrintf("\ncreate font *-fixed-rrncnn-*-24-UTF-16BE error!\n"); 	
+		tmp = SelectFont((hdc), pfutf16be); 	
+		if(!tmp) 	
+			CS_MW_DbgPrintf("\nselect font error!\n"); 	
+		TextOut((hdc), (x), (y), ((text)+1));		
+		SelectFont((hdc), tmp); 	
+		DestroyLogFont(pfutf16be); 
+	}	
+	else		
+	{	
+		pfutf8 = CreateLogFontByName("*-fixed-rrncnn-*-24-UTF-8"); 	
+		if(!pfutf8) 	
+			CS_MW_DbgPrintf("\ncreate font *-fixed-rrncnn-*-24-UTF-8 error!\n"); 	
+		tmp = SelectFont((hdc), pfutf8); 	
+		if(!tmp) 	
+			CS_MW_DbgPrintf("\nselect font error!\n"); 	
+			
+            	if (*(text) == 0x15)		
+            	{	
+            			TextOut((hdc), (x), (y), ((text)+1));	
+            	}	
+            	else		
+            	{	
+            			TextOut((hdc), (x), (y), (text));	
+            		}
+            		SelectFont((hdc), tmp); 	
+            		DestroyLogFont(pfutf8); 
+            	}
+    
+}
+
+void CS_MW_DrawText( HDC hdc, const char* text, int nCount, RECT* pRect, UINT nFormat )
+{
+    PLOGFONT pfutf8;
+    PLOGFONT pfutf16be;
+    PLOGFONT tmp;
+
+	if (*(text) == 0x11)
+	{
+		pfutf16be = CreateLogFontByName("*-fixed-rrncnn-*-24-UTF-16BE");
+		if(!pfutf16be)
+			CS_MW_DbgPrintf("\ncreate font *-fixed-rrncnn-*-24-UTF-16BE error!\n");
+		tmp = SelectFont((hdc), pfutf16be);
+		if(!tmp)
+			CS_MW_DbgPrintf("\nselect font error!\n");
+		DrawText((hdc), ((text)+1), nCount, pRect, nFormat);
+		SelectFont((hdc), tmp);
+		DestroyLogFont(pfutf16be);
+	}
+	else	
+	{
+		pfutf8 = CreateLogFontByName("*-fixed-rrncnn-*-24-UTF-8");
+		if(!pfutf8)
+			CS_MW_DbgPrintf("\ncreate font *-fixed-rrncnn-*-24-UTF-8 error!\n"); 
+		tmp = SelectFont((hdc), pfutf8); 
+		if(!tmp)
+			CS_MW_DbgPrintf("\nselect font error!\n");
+		if( *(text) == 0x15 )
+		{
+			DrawText((hdc), ((text)+1), nCount, pRect, nFormat);
+		}
+		else
+		{
+			DrawText((hdc), (text), nCount, pRect, nFormat);
+		}
+		SelectFont((hdc), tmp);
+		DestroyLogFont(pfutf8); 
+	}
+    
+}
+
+BOOL CS_MW_FrontPanelDisplay( char* str )
+{
+#if 1
+    char LEDDisplayBuff[5];
+    
+    if( str == NULL ) return FALSE;
+
+    CS_MW_MemSet( LEDDisplayBuff, 0, 5 );
+    memcpy( LEDDisplayBuff, str, 4 );
+    CSFP_SetLEDDisplay( fp_handle, LEDDisplayBuff );
+#else
+    char LEDDisplayBuff[5];
+    
+    if( str == NULL ) return FALSE;
+
+    CS_MW_MemSet( LEDDisplayBuff, 0, 5 );
+    //memcpy( LEDDisplayBuff, str, 4 );
+    LEDDisplayBuff[0] = str[2];
+    LEDDisplayBuff[1] = str[1];
+    LEDDisplayBuff[2] = str[3];
+    LEDDisplayBuff[3] = str[0];
+    CSFP_SetLEDDisplay( fp_handle, LEDDisplayBuff );
+#endif
+	return TRUE;
+}
+
+BOOL CS_MW_SetKeyMap( U8 KeyIndex, U8 KeyValue )
+{
+	int key_map[255], key_num = 255;
+    
+	IAL_GetKeyMap( key_map, &key_num );
+
+        //printf("default key_value = 0x%x\n", key_map[ KeyIndex ]);
+    
+	if( KeyIndex > key_num ) return FALSE;
+    
+	key_map[ KeyIndex ] = KeyValue;
+	IAL_SetKeyMap( key_map, key_num );
+
+        return TRUE;
+
+}
+
+
+BOOL CS_MW_USBDeviceConnect(void)
+{
+    int     fp_usbdevice;
+    int     retval;
+    char    usb_status;
+
+    fp_usbdevice = fopen( "/proc/usb_conn_status", "r" );
+
+    if( fp_usbdevice <= 0 )
+    {
+    	return(FALSE);
+    }
+
+    retval = fread( &usb_status, 1, 1, fp_usbdevice );
+    if( retval != 1 )
+    {
+        fclose(fp_usbdevice);
+        return(FALSE);
+    }
+
+    
+    CS_MW_DbgPrintf( "USB Device Connected %c\n", usb_status );
+    fclose(fp_usbdevice);
+
+    if( usb_status == '1' )
+    {
+        return(TRUE);
+    }
+    else
+    {
+        return(FALSE);
+    }
+
+}
+
+
+BOOL CS_MW_USBDeviceFWUpdate(void)
+{
+    if ( CS_MW_USBDeviceConnect() != TRUE ) return FALSE;
+    
+    CS_MW_Delayms(3000);
+    system("mount -t vfat -o iocharset=cp936 /dev/ub/a/part1 /tmp");
+    
+    if( access( "/tmp/csapp", 0 ) != -1 )
+    {
+        CS_MW_DbgPrintf("USB Update csapp...\n");
+        system("cp /tmp/csapp /home -rf");
+    }
+
+    if( access( "/tmp/resource", 0 ) != -1 )
+    {
+        CS_MW_DbgPrintf("USB Update resource...\n");
+        system("cp /tmp/resource /home -rf");
+    }
+
+    system("umount /tmp");
+
+    return(TRUE);
+
+}
+
+
+

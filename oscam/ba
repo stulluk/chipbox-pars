@@ -1,0 +1,10 @@
+#!/bin/sh
+mkdir -p build
+cd build
+make clean
+cmake -DCMAKE_TOOLCHAIN_FILE=../toolchains/toolchain-arm-dockstar-openwrt.cmake ..
+make -j4
+chmod 777 oscam
+mkdir -p ../output
+cp oscam ../output/oscam-chipbox
+cd ..

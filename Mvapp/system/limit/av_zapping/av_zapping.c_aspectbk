@@ -1,0 +1,3322 @@
+#include "linuxos.h"
+
+#include "database.h"
+#include "demux.h"
+#include "av_zapping.h"
+#include "pvr.h"
+
+ CSVID_HANDLE   vid_handle = NULL;
+ CSAUD_HANDLE   aud_handle = NULL;
+static CSTVOUT_HANDLE tve_handle = NULL;
+static CSOSD_HANDLE   osd_handle = NULL;
+static  CSDF_HANDLE     df_handle = NULL;
+
+//CSDEMUX_HANDLE xport_chl_handle;
+CSDEMUX_HANDLE xport_pid_filter0_handle = CSDEMUX_UNVALID_HANDLE;;
+CSDEMUX_HANDLE xport_pid_filter1_handle = CSDEMUX_UNVALID_HANDLE;;
+
+CSDEMUX_HANDLE xport_vidout_handle = CSDEMUX_UNVALID_HANDLE;
+CSDEMUX_HANDLE xport_audout_handle = CSDEMUX_UNVALID_HANDLE;
+
+static CSOS_Semaphore_t             *sem_AVAccess = NULL;
+//static CSOS_MessageQueue_t      *CS_AV_MsgQid = NULL;
+
+#define     kCS_AV_MAX_MSG			20
+#define AV_TRACK_TASK_PRIORITY		14
+#define AV_TRACK_STACK_SIZE 		1024*2
+
+CSOS_TaskFlag_t             AV_TRACK_TASK_FLAG;
+U8	                                    AV_TRACK_TASK_STACK[AV_TRACK_STACK_SIZE];
+CSOS_Task_Handle_t 	AV_TRACK_TASK_HANDLE;
+CSOS_TaskDesc_t 		*AV_TRACK_TASK_DESC;
+
+static BOOL    video_set_show = FALSE;
+static CSVID_Rect       *video_window_rect = NULL;
+static CSVID_Rect       rect_buf;
+static CSVID_ASPECTRATIO        current_video_aspect = CSVID_UNKNOWN;
+
+
+#define VideoSizeOffset             20
+#define VideoSizeRange(x, y)    (((x >= y - VideoSizeOffset) && (x <= y + VideoSizeOffset)) ? 1:0)
+
+#define MAX_VOLUME_VALUE		80
+#define MIN_VOLUME_VALUE		1
+
+#define ORION_XPORT_REG_BASE    0x41400000 
+#define DDR_RW_DATA_ADDR0       ( ORION_XPORT_REG_BASE + (0x01b0<<2))
+#define DDR_RW_DATA_ADDR4       ( ORION_XPORT_REG_BASE + (0x01b4<<2))
+#define DDR_RW_DATA_ADDR8       ( ORION_XPORT_REG_BASE + (0x01b8<<2))
+#define DDR_RW_DATA_ADDR12      ( ORION_XPORT_REG_BASE + (0x01bc<<2))
+#define DDR_RW_DATA_ADDR16      ( ORION_XPORT_REG_BASE + (0x01c0<<2))
+#define DDR_RW_DATA_ADDR20      ( ORION_XPORT_REG_BASE + (0x01c4<<2))
+#define DDR_RW_DATA_ADDR24      ( ORION_XPORT_REG_BASE + (0x01c8<<2))
+#define DDR_RW_DATA_ADDR28      ( ORION_XPORT_REG_BASE + (0x01cc<<2))
+#define MIPS_RW_ADDR_ADDR       ( ORION_XPORT_REG_BASE + (0x01a0<<2))
+#define MIPS_RW_REQ_ADDR        ( ORION_XPORT_REG_BASE + (0x01a1<<2))
+
+#define OUT_CHL0_DIR_WP_ADDR    (0x41400000+(0x100<<2))
+#define OUT_CHL0_DIR_RP_ADDR    (0x41400000+(0x101<<2))
+#define OUT_CHL2_DIR_WP_ADDR    (0x41400000+(0x104<<2))
+#define OUT_CHL2_DIR_RP_ADDR    (0x41400000+(0x105<<2))
+
+#define div(x) (x /16)
+#define mod(x) (x % 16)
+
+
+#if 0
+#include <sys/mman.h>
+#define CACHED(x)  ( ( (x) >= (pa) ) && ( (x) < (pa + page_size) ) )
+static unsigned int page_size, page_size_shift, pa;
+static int fd = 0;
+static unsigned char * va = NULL;
+static pthread_mutex_t mutex_register = PTHREAD_MUTEX_INITIALIZER;
+
+#define CAB_SIZE    0x180008
+
+void video_print_CAB(void)
+
+{
+
+       U32 CAB_RP,CAB_WP, data;
+
+       ReadReg32(0x41211014, &(U32)data); CAB_RP = data;
+
+      printf("[AUDIO]audio CAB RP 0x41211014 0x%08x\n", data);  
+
+      ReadReg32(0x41211058, &(U32)data); CAB_WP = data;
+
+      printf("[AUDIO]audio CAB WP 0x41211058 0x%08x\n", data);
+
+ 
+
+      {
+
+             U32 cab_depth = CAB_SIZE;
+
+               U32 CAB_EMPTY_SIZE;
+
+               U32 rtog,wtog;
+
+               U32 rp,wp;
+
+               U32 len = 0;
+
+               U32 i;
+
+               
+
+               cab_depth = CAB_SIZE;
+
+ 
+
+               rtog = (CAB_RP>>24) & 0x1;
+
+               rp = CAB_RP & 0xffffff;
+
+               wtog = (CAB_WP>>24) & 0x1;
+
+               wp = CAB_WP & 0xffffff;
+
+ 
+
+               if( (wp > rp) && (rtog == wtog) )
+
+               {
+
+                      CAB_EMPTY_SIZE = cab_depth - (wp - rp);
+
+               }
+
+               else if( (wp < rp) && (rtog != wtog) )
+
+               {
+
+                      CAB_EMPTY_SIZE = rp - wp;
+
+               }
+
+               else if(rtog == wtog)
+
+               {
+
+                      CAB_EMPTY_SIZE = cab_depth;
+
+               }
+
+               else if(rtog != wtog)
+
+               {
+
+                      CAB_EMPTY_SIZE = 0;
+
+               }
+
+               else
+
+               {
+
+                      printf("[AUDIO] CPB pointer error !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
+               }
+
+ 
+
+               len = 78 * CAB_EMPTY_SIZE / cab_depth;
+
+               printf("[AUDIO] CAB status: ");
+
+               for(i=0; i<len; i++) printf(" ");
+
+               printf("*\n");
+
+               printf("[AUDIO] CAB status:                    |                    |                    |                    |\n");
+
+      }     
+
+}
+
+ 
+
+#define VIDEO_REG_BASE     0x41600000        // host access
+
+#define VID_CPBU0           (VIDEO_REG_BASE + (0x07<<2) )
+
+#define VID_CPBL0           (VIDEO_REG_BASE + (0x08<<2) )
+
+#define VID_PPBL0_ADDR           (VIDEO_REG_BASE + (0x3d<<2) )
+
+#define VID_PPBU0_ADDR          (VIDEO_REG_BASE + (0x3e<<2) )
+
+#define MAILBOX_0                  (VIDEO_REG_BASE + (0x20<<2) )
+
+#define MAILBOX_1                  (VIDEO_REG_BASE + (0x21<<2) )
+
+#define MAILBOX_2                  (VIDEO_REG_BASE + (0x22<<2) )
+
+#define MAILBOX_3                  (VIDEO_REG_BASE + (0x23<<2) )
+
+#define MAILBOX_4                  (VIDEO_REG_BASE + (0x24<<2) )
+
+#define MAILBOX_5                  (VIDEO_REG_BASE + (0x25<<2) )
+
+#define MAILBOX_6                  (VIDEO_REG_BASE + (0x26<<2) )
+
+#define MAILBOX_7                  (VIDEO_REG_BASE + (0x27<<2) )
+
+#define MAILBOX_8                  (VIDEO_REG_BASE + (0x28<<2) )
+
+#define MAILBOX_9                  (VIDEO_REG_BASE + (0x29<<2) )
+
+#define MAILBOX_10                (VIDEO_REG_BASE + (0x2a<<2) )
+
+#define MAILBOX_11                (VIDEO_REG_BASE + (0x2b<<2) )
+
+#define MAILBOX_12                (VIDEO_REG_BASE + (0x2c<<2) )
+
+#define MAILBOX_13                (VIDEO_REG_BASE + (0x2d<<2) )
+
+#define MAILBOX_14                (VIDEO_REG_BASE + (0x2e<<2) )
+
+#define MAILBOX_15                (VIDEO_REG_BASE + (0x2f<<2) )
+
+#define MIPS_STA0       (VIDEO_REG_BASE + (0x30<<2) )
+
+#define MIPS_STA1       (VIDEO_REG_BASE + (0x31<<2) )
+
+#define MIPS_STA2       (VIDEO_REG_BASE + (0x32<<2) )
+
+ 
+
+#define PLUTO_REG_BASE              0x41620000
+
+#define VID_PPBRP0_ADDR         (PLUTO_REG_BASE + (0x89<<2) )
+
+#define VID_PPBWP0_ADDR        (PLUTO_REG_BASE + (0x8b<<2) )
+
+ 
+
+#define PARSER_MAIL0        ( PLUTO_REG_BASE + (0xa0 << 2))
+
+#define PARSER_MAIL1        ( PLUTO_REG_BASE + (0xa1 << 2))
+
+#define PARSER_MAIL2        ( PLUTO_REG_BASE + (0xa2 << 2))
+
+#define PARSER_MAIL3        ( PLUTO_REG_BASE + (0xa3 << 2))
+
+#define PARSER_MAIL4        ( PLUTO_REG_BASE + (0xa4 << 2))
+
+#define PARSER_MAIL5        ( PLUTO_REG_BASE + (0xa5 << 2))
+
+#define PARSER_MAIL6        ( PLUTO_REG_BASE + (0xa6 << 2))
+
+#define PARSER_MAIL7        ( PLUTO_REG_BASE + (0xa7 << 2))
+
+ 
+
+ 
+
+ 
+
+void printf_h264_status(void)
+
+{
+
+    U32 CPB_DIR_RP,CPB_DIR_WP;
+
+       U32 data;
+
+       U32 audio_diff, video_diff;
+
+       U32 OneFieldOnlyFlag,StorePicMode,BotFieldFirst,DisplayFrmFldMode,FrameFetch;
+
+       float FrameRate;
+
+       
+
+       {
+
+       U32 CodeType,Year,Month,Day,Time;
+
+       U32 data1;
+
+       ReadReg32(MIPS_STA2, &(U32)data);     data1 = data;
+
+       Time = data&0xF; data = data>>4;
+
+       Day = data&0xFF; data = data>>8;
+
+       Month = data&0xFF; data = data>>8;
+
+       Year = data&0xFF; data = data>>8;
+
+       CodeType = data&0xF;
+
+       if(CodeType == 5)
+
+              printf("[VIDEO] video firmware version:    H264-20%02d-%02d-%02d-%02d\n",Year,Month,Day,Time);
+
+       else if(CodeType == 3)
+
+              printf("[VIDEO] video firmware version: MPEG2-20%02d-%02d-%02d-%02d\n",Year,Month,Day,Time);
+
+       else
+
+              printf("[VIDEO] video firmware version: error MIPS_STA2 = %08x\n",data1);
+
+       }
+
+ 
+
+       ReadReg32(MIPS_STA1, &(U32)data);     
+
+       printf("[VIDEO] Host configure: 0x%08x\n",data);
+
+       ReadReg32(MAILBOX_2, &(U32)data);   
+
+       printf("[VIDEO] Host command:               0x%08x\n",data);
+
+       ReadReg32(MAILBOX_12, &(U32)data); 
+
+       printf("[VIDEO] FW_Running_Sta:    0x%08x\n",data);
+
+       ReadReg32(MAILBOX_14, &(U32)data);
+
+       printf("[VIDEO] FW_Interrupt:           0x%08x\n",data);
+
+       ReadReg32(0x416000c0, &(U32)data);      
+
+       printf("[VIDEO] MIPS_STATUS:              0x%08x\n",data);
+
+       ReadReg32(MAILBOX_3, &(U32)data);
+
+       printf("[VIDEO] Has_Send_DfCmd: 0x%08x\n",data);
+
+ 
+
+       video_print_CAB();
+
+       
+
+       ReadReg32(0x41600024, &(U32)CPB_DIR_RP);   
+
+       ReadReg32(0x41600028, &(U32)CPB_DIR_WP);  
+
+       printf("[VIDEO] CPB_DIR RP 0x%08x       CPB_DIR WP 0x%08x\n", CPB_DIR_RP, CPB_DIR_WP); 
+
+       printf("[VIDEO] CPB_DIR RP 0x%08x\n", CPB_DIR_RP);       
+
+       printf("[VIDEO] CPB_DIR WP 0x%08x\n", CPB_DIR_WP);
+
+ 
+
+       // printf CPB status
+
+       {
+
+              U32 CPBU, CPBL;
+
+              U32 CPB_SIZE;
+
+              U32 CPB_EMPTY_SIZE;
+
+              U32 rtog,wtog;
+
+              U32 rp,wp;
+
+              U32 len = 0;
+
+              U32 i;
+
+ 
+
+              ReadReg32(VID_CPBU0, &CPBU);   
+
+              ReadReg32(VID_CPBL0, &CPBL);
+
+              CPB_SIZE = CPBU - CPBL;
+
+ 
+
+              rtog = (CPB_DIR_RP>>28) & 0x1;
+
+              rp = CPB_DIR_RP & 0xfffffff;
+
+              wtog = (CPB_DIR_WP>>28) & 0x1;
+
+              wp = CPB_DIR_WP & 0xfffffff;
+
+ 
+
+              if( (wp > rp) && (rtog == wtog) )
+
+              {
+
+                     CPB_EMPTY_SIZE = CPB_SIZE - (wp - rp);
+
+              }
+
+              else if( (wp < rp) && (rtog != wtog) )
+
+              {
+
+                     CPB_EMPTY_SIZE = rp - wp;
+
+              }
+
+              else if(rtog == wtog)
+
+              {
+
+                     CPB_EMPTY_SIZE = CPB_SIZE;
+
+              }
+
+              else if(rtog != wtog)
+
+              {
+
+                     CPB_EMPTY_SIZE = 0;
+
+              }
+
+              else
+
+              {
+
+                     printf("[VIDEO] CPB pointer error !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
+              }
+
+ 
+
+              len = 78 * CPB_EMPTY_SIZE / CPB_SIZE;
+
+              printf("[VIDEO] CPB status: ");
+
+              for(i=0; i<len; i++) printf(" ");
+
+              printf("@\n");
+
+              printf("[VIDEO] CPB status:                    |                   |                   |                   |\n");
+
+       }
+
+ 
+
+       // printf PPB status
+
+       {
+
+              U32 PPBU, PPBL ,PPB_DIR_RP, PPB_DIR_WP;
+
+              U32 PPB_SIZE;
+
+              U32 PPB_EMPTY_SIZE;
+
+              U32 rtog,wtog;
+
+              U32 rp,wp;
+
+              U32 len = 0;
+
+              U32 i;
+
+ 
+
+              ReadReg32(VID_PPBU0_ADDR, &PPBU);    
+
+              ReadReg32(VID_PPBL0_ADDR, &PPBL);
+
+              PPB_SIZE = PPBU - PPBL;
+
+ 
+
+              ReadReg32(VID_PPBRP0_ADDR, &PPB_DIR_RP);   
+
+              ReadReg32(VID_PPBWP0_ADDR, &PPB_DIR_WP);
+
+              printf("[VIDEO] PPB_DIR RP 0x%08x\n", PPB_DIR_RP); 
+
+              printf("[VIDEO] PPB_DIR WP 0x%08x\n", PPB_DIR_WP);
+
+              rtog = (PPB_DIR_RP>>28) & 0x1;
+
+              rp = PPB_DIR_RP & 0xfffffff;
+
+              wtog = (PPB_DIR_WP>>28) & 0x1;
+
+              wp = PPB_DIR_WP & 0xfffffff;
+
+ 
+
+              if( (wp > rp) && (rtog == wtog) )
+
+              {
+
+                     PPB_EMPTY_SIZE = PPB_SIZE - (wp - rp);
+
+              }
+
+              else if( (wp < rp) && (rtog != wtog) )
+
+              {
+
+                     PPB_EMPTY_SIZE = rp - wp;
+
+              }
+
+              else if(rtog == wtog)
+
+              {
+
+                     PPB_EMPTY_SIZE = PPB_SIZE;
+
+              }
+
+              else if(rtog != wtog)
+
+              {
+
+                     PPB_EMPTY_SIZE = 0;
+
+              }
+
+              else
+
+              {
+
+                     printf("[VIDEO] PPB pointer error !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
+              }
+
+ 
+
+              len = 78* PPB_EMPTY_SIZE / PPB_SIZE;
+
+              printf("[VIDEO] PPB status: ");
+
+              for(i=0; i<len; i++) printf(" ");
+
+              printf("#\n");
+
+              printf("[VIDEO] CPB status:                    |                   |                   |                   |\n");
+
+       }
+
+ 
+
+       ReadReg32(MAILBOX_9, &(U32)data);
+
+       printf("[VIDEO] First at STC:              0x%08x\n",data);
+
+       ReadReg32(PARSER_MAIL5, &(U32)data);
+
+       printf("[VIDEO] First at FrameOrder:         %d\n",data);
+
+       
+
+       ReadReg32(MAILBOX_15, &(U32)data);
+
+       printf("[VIDEO] Cur PTS:             0x%08x\n",data);
+
+ 
+
+       ReadReg32(MAILBOX_5, &(U32)data);   
+
+       printf("[VIDEO] Cur PTS:             0x%08x\n",data);       
+
+       ReadReg32(MAILBOX_6, &(U32)data);   
+
+       printf("[VIDEO] Cur STC:             0x%08x\n",data);       
+
+       ReadReg32(MAILBOX_7, &(U32)audio_diff);       
+
+       printf("[VIDEO] Audio diff: 0x%08x\n",audio_diff);    
+
+       ReadReg32(MAILBOX_8, &(U32)video_diff);       
+
+       printf("[VIDEO] Video diff: 0x%08x\n",video_diff);    
+
+       printf("[VIDEO] Video - Audio:    0x%08x (%d ms)--(A/V asynchronism time)\n",(video_diff - audio_diff), ((signed int)(video_diff - audio_diff))/45);  
+
+       ReadReg32(MAILBOX_10, &(U32)data); 
+
+       printf("[VIDEO] FrameSyncOrder: %d\n",data&0xffff); 
+
+       printf("[VIDEO] pts ctrl bit:   %d\n",data>>16);             
+
+       ReadReg32(MAILBOX_4, &(U32)data);          
+
+       OneFieldOnlyFlag = data>>24;
+
+       StorePicMode = (data>>16)&0xf;
+
+       BotFieldFirst = (data>>8)&0xf;
+
+       DisplayFrmFldMode = (data>>4)&0xf;
+
+       FrameFetch = data & 0xf;       
+
+       printf("[VIDEO] OneFieldFlag = %d, StorePicMode= %d, BotFieldFirst= %d, DisplayFrmFldMode = %d, FrameFetch = %d\n",OneFieldOnlyFlag,StorePicMode,BotFieldFirst,DisplayFrmFldMode,FrameFetch);
+
+       ReadReg32(MAILBOX_11, &(U32)data);        
+
+       printf("[VIDEO] First Diff:     0x%08x (%d ms)\n",(data), ((signed int)(data))/45);  
+
+ 
+
+       {
+
+              U32 skip_num,wait_num;
+
+              static U32 prev_skip_num=0;
+
+              static U32 prev_wait_num=0;
+
+              U32 delta_skip_num,delta_wait_num;
+
+              U32 len = 0;
+
+              U32 i;
+
+              ReadReg32(PARSER_MAIL7, &(U32)data);
+
+              skip_num = data>>16;
+
+              wait_num = data&0xFFFF;
+
+              if(skip_num < prev_skip_num)       
+
+                     delta_skip_num = 65536 + skip_num - prev_skip_num;
+
+              else
+
+                     delta_skip_num = skip_num - prev_skip_num;
+
+              if(delta_skip_num>=40)   delta_skip_num = 40;
+
+              if(wait_num < prev_wait_num)      
+
+                     delta_wait_num = 65536 + wait_num - prev_wait_num;
+
+              else
+
+                     delta_wait_num = wait_num - prev_wait_num;
+
+              if(delta_wait_num>=40)   delta_wait_num = 40;
+
+              
+
+              printf("[VIDEO] SYNC Skip: %d",skip_num);
+
+              len = 75 * delta_skip_num / 40;
+
+              for(i=0; i<len; i++)printf(" ");
+
+              printf("S\n");
+
+              printf("[VIDEO] SYNC Wait:       %d",wait_num);
+
+              len = 75 * delta_wait_num / 40;
+
+              for(i=0; i<len; i++)printf(" ");
+
+              printf("W\n");
+
+ 
+
+              prev_skip_num = skip_num;
+
+              prev_wait_num = wait_num;
+
+       }
+
+       
+
+//     ReadReg32(MAILBOX_14, &(U32)data); 
+
+//     printf("[VIDEO] CPB PTS NUM: %d  PARSER PTS NUM: %d\n",data>>16, data&0xFFFF);
+
+//     printf("[VIDEO] MAX DELAY TIME: %d       EXCEED 30ms CNT:       %d\n",(data>>16)/45, data&0xFFFF);
+
+//     printf("[VIDEO] CPB OVERFLOW CNT: %d  \n", data);
+
+//     printf("[VIDEO] MustOutputNum:      %d  \n", data);
+
+//     printf("[VIDEO] First PTS:     0x%08x \n", data);
+
+//     printf("[VIDEO] ReSendDFNUM:      %d  DFRepeatNum: %d\n",data>>16, data&0xFFFF);
+
+//     printf("[VIDEO] PPB OVERFLOW:   %d  CPB OVERFLOW: %d\n",data>>16, data&0xFFFF);
+
+//     printf("[VIDEO] Pipe Err: (%d)     Pipe Tout: (%d) Parser Err: (%d)    Parser Tout: (%d)\n",(data>>24)&0xFF,(data>>16)&0xFF,(data>>8)&0xFF,data&0xFF );
+
+//     printf("[VIDEO] flag: (%d)     BufIdx: (%d)      IsIPic: (%d)  DfFlag: (%d)\n",(data>>24)&0xFF,(data>>16)&0xFF,(data>>8)&0xFF,data&0xFF );
+
+//     printf("[VIDEO] DF Size:       %d  x     %d\n",data>>16, data&0xFFFF);
+
+ 
+
+//     ReadReg32(MAILBOX_15, &(U32)data);        
+
+//     parser_timout = data & 0xFF;
+
+//     parser_err = (data>>8) & 0xFF;
+
+//     pipe_timeout = (data>>16) & 0xFF;
+
+//     pipe_err = (data>>24) & 0xFF;
+
+//     printf("[VIDEO] parser_timout:     %d  parser_err: %d     pipe_timeout:      %d  pipe_err:       %d\n",parser_timout,parser_err,pipe_timeout,pipe_err);
+
+//     printf("[VIDEO] ref miss num:      %d  slice miss num: %d\n",data>>16, data&0xffff);
+
+ 
+
+       {
+
+              //U32 parser_timout,parser_err;
+
+              //U32 pipe_timeout,pipe_err;
+
+              U32 pic_width, pic_heigth, SrcFrameRate;
+
+              ReadReg32(MAILBOX_13, &(U32)data);
+
+              pic_heigth = data & 0x3fff; 
+
+              data = data >> 14;
+
+              pic_width = data & 0x3fff;
+
+              SrcFrameRate = data >> 14;
+
+        printf("[VIDEO] video source format is : (%d x %d) @ (%d)\n",pic_width,pic_heigth,SrcFrameRate );
+
+              ReadReg32(MAILBOX_0, &(U32)data);
+
+              printf("[VIDEO] Aspect Ratio 0: (%d, %d)\n", (data>>14)&0x3fff, data&0x3fff);
+
+              ReadReg32(MAILBOX_1, &(U32)data);
+
+              printf("[VIDEO] Aspect Ratio 1: (%d, %d)\n", (data>>14)&0x3fff, data&0x3fff);
+
+       }
+
+ 
+
+/*           
+
+       ReadReg32(PARSER_MAIL0, &(U32)data);   
+
+       printf("[VIDEO] PARSER_MAIL0:    %08x\n",data);
+
+       ReadReg32(PARSER_MAIL1, &(U32)data);   
+
+       printf("[VIDEO] PARSER_MAIL1:    %08x\n",data);
+
+       
+
+       ReadReg32(PARSER_MAIL4, &(U32)data);   
+
+       printf("[VIDEO] PARSER_MAIL4:    %08x\n",data);
+
+       ReadReg32(PARSER_MAIL5, &(U32)data);   
+
+       printf("[VIDEO] PARSER_MAIL5:    %08x\n",data);
+
+ 
+
+       ReadReg32(PARSER_MAIL2, &(U32)data);   
+
+       printf("[VIDEO] PARSER_MAIL2 (pts=0):      %08x\n",data);
+
+*/    
+
+       ReadReg32(PARSER_MAIL4, &(U32)data);   
+
+       printf("[VIDEO] PARSER_MAIL4:    (%d, %d)\n",data>>16, data&0xffff);
+
+ 
+
+       ReadReg32(PARSER_MAIL3, &(U32)data);          
+
+       printf("[VIDEO] PARSER_MAIL3 (no pts cnt):      %08x\n",data);
+
+       ReadReg32(PARSER_MAIL6, &(U32)data);   
+
+       printf("[VIDEO] PARSER_MAIL6:    %08x\n",data);
+
+ 
+
+       ReadReg32(PARSER_MAIL7, &(U32)data);   
+
+       printf("[VIDEO] PARSER_MAIL7:    %08x\n",data);
+
+ 
+
+       {
+
+              float Ndiv,Mmtu,freq;
+
+              U32 od;
+
+              ReadReg32(0x10171100, &(U32)data);      
+
+              Mmtu = data&0xff;
+
+              Ndiv = (data>>9)&0x1f;
+
+              od   = (data>>14)&0x3;
+
+              freq = 27 * Mmtu / Ndiv /(1<<od);
+
+              printf("[VIDEO] DDR Freq:   %6.2f MHz (%08x)\n",freq,data);
+
+              ReadReg32(0x10171408, &(U32)data);
+
+              Mmtu = data&0xff;
+
+              Ndiv = (data>>9)&0x1f;
+
+              od   = (data>>14)&0x3;
+
+              freq = 27 * Mmtu / Ndiv / (1<<od) / 2;
+
+              printf("[VIDEO] VID Freq:    %6.2f MHz (%08x)\n",freq,data);
+
+       }
+
+ 
+
+//     printf("[VIDEO] CPB0_REGION = 0x%08x (size = %08x)\n", CPB0_REGION, CPB0_SIZE);
+
+//     printf("[VIDEO] CPB0_DIR_REGION = 0x%08x (size = %08x)\n", CPB0_DIR_REGION, CPB0_DIR_SIZE);
+
+//     printf("[VIDEO] DPB0_REGION = 0x%08x (size = %08x)\n", DPB0_REGION, DPB0_SIZE);
+
+       //printf("[VIDEO] AUD_PTS_REGION = 0x%08x \n", AUD_PTS_REGION);
+
+}
+
+ 
+
+void printf_mpge2_status(void)
+
+{
+
+    U32 data,data2;
+
+       U32 CPB_DIR_RP,CPB_DIR_WP;
+
+       
+
+       {
+
+       U32 CodeType,Year,Month,Day,Time;
+
+       U32 data1;
+
+       ReadReg32(MIPS_STA2, &(U32)data);     data1 = data;
+
+       Time = data&0xF; data = data>>4;
+
+       Day = data&0xFF; data = data>>8;
+
+       Month = data&0xFF; data = data>>8;
+
+       Year = data&0xFF; data = data>>8;
+
+       CodeType = data&0xF;
+
+       if(CodeType == 5)
+
+              printf("[VIDEO] video firmware version:    H264-20%02d-%02d-%02d-%02d\n",Year,Month,Day,Time);
+
+       else if(CodeType == 3)
+
+              printf("[VIDEO] video firmware version: MPEG2-20%02d-%02d-%02d-%02d\n",Year,Month,Day,Time);
+
+       else
+
+              printf("[VIDEO] video firmware version: error MIPS_STA2 = %08x\n",data1);
+
+       }
+
+       ReadReg32(0x41600024, &(U32)CPB_DIR_RP);
+
+       ReadReg32(0x41600028, &(U32)CPB_DIR_WP);
+
+       printf("[VIDEO] CPB_DIR RP            0x%08x\n", CPB_DIR_RP);
+
+       printf("[VIDEO] CPB_DIR WP           0x%08x\n", CPB_DIR_WP);
+
+       ReadReg32(0x416000c0,&(U32)data);       
+
+       printf("[VIDEO] MIPS_STATUS: %08x \n", data);
+
+ 
+
+       ReadReg32(0x416000c4,&(U32)data);       
+
+       printf("[VIDEO] Host_config:       %08x \n", data);
+
+       // printf CPB status
+
+       {
+
+              U32 CPBU, CPBL;
+
+              U32 CPB_SIZE;
+
+              U32 CPB_EMPTY_SIZE;
+
+              U32 rtog,wtog;
+
+              U32 rp,wp;
+
+              U32 len = 0;
+
+              U32 i;
+
+ 
+
+              ReadReg32(VID_CPBU0, &CPBU);   
+
+              ReadReg32(VID_CPBL0, &CPBL);
+
+              CPB_SIZE = CPBU - CPBL;
+
+ 
+
+              rtog = (CPB_DIR_RP>>28) & 0x1;
+
+              rp = CPB_DIR_RP & 0xfffffff;
+
+              wtog = (CPB_DIR_WP>>28) & 0x1;
+
+              wp = CPB_DIR_WP & 0xfffffff;
+
+ 
+
+              if( (wp > rp) && (rtog == wtog) )
+
+              {
+
+                     CPB_EMPTY_SIZE = CPB_SIZE - (wp - rp);
+
+              }
+
+              else if( (wp < rp) && (rtog != wtog) )
+
+              {
+
+                     CPB_EMPTY_SIZE = rp - wp;
+
+              }
+
+              else if(rtog == wtog)
+
+              {
+
+                     CPB_EMPTY_SIZE = CPB_SIZE;
+
+              }
+
+              else if(rtog != wtog)
+
+              {
+
+                     CPB_EMPTY_SIZE = 0;
+
+              }
+
+              else
+
+              {
+
+                     printf("[VIDEO] CPB pointer error !!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+
+              }
+
+ 
+
+              len = 78 * CPB_EMPTY_SIZE / CPB_SIZE;
+
+              printf("[VIDEO] CPB status: ");
+
+              for(i=0; i<len; i++) printf(" ");
+
+              printf("@\n");
+
+              printf("[VIDEO] CPB status:                    |                   |                   |                   |\n");
+
+       }
+
+ 
+
+       ReadReg32(MAILBOX_0,&(U32)data);
+
+       printf("[VIDEO] mailbox_0 (firmware version): %d-%d-%d-%d\n", (data>>16)&0xf,(data>>12)&0xf,(data>>4)&0x1f,data&0xf);
+
+       ReadReg32(MAILBOX_13,&(U32)data);  //3
+
+       printf("[VIDEO] mailbox_13 (video format):     %d x %d @ %d\n", (data>>14)&0x3fff,data&0x3fff, data>>28);
+
+       ReadReg32(MAILBOX_2,&(U32)data);    //3
+
+       printf("[VIDEO] mailbox_2 (host command):    %08x \n", data);
+
+       ReadReg32(MAILBOX_3,&(U32)data);    //3
+
+       printf("[VIDEO] mailbox_3 (has send DF): %08x \n", data);
+
+       
+
+       ReadReg32(MAILBOX_5,&(U32)data);    //5
+
+       printf("[VIDEO] mailbox_5 (M2VD IRQ): %08x \n", data);
+
+       ReadReg32(MAILBOX_6,&(U32)data);    //6
+
+       printf("[VIDEO] mailbox_6 (m2vd VBV_RP):  %08x \n", data);  
+
+       ReadReg32(MAILBOX_7,&(U32)data);    //7
+
+       printf("[VIDEO] mailbox_7 (m2vd VBV_WP): %08x \n", data);
+
+       
+
+       ReadReg32(MAILBOX_4,&(U32)data);    //3
+
+       printf("[VIDEO] mailbox_4 (parser pic num):    %d \n", data);      
+
+ 
+
+       ReadReg32(MAILBOX_8,&(U32)data);    //8
+
+       printf("[VIDEO] Audio Diff:  %08x \n", data);
+
+       ReadReg32(MAILBOX_9,&(U32)data2);  //9
+
+       printf("[VIDEO] Video Diff:  %08x \n", data2);
+
+       printf("[VIDEO] Video - Audio:    %08x (%d)\n", (data2-data), (signed int)(data2-data)/45);
+
+       ReadReg32(MAILBOX_10,&(U32)data);  //10
+
+//     printf("[VIDEO] mailbox_10 (error number):     %d \n", data);
+
+       printf("[VIDEO] STC - PTS:   %08x (%d) \n", data, (signed int)data/45);
+
+       
+
+       ReadReg32(MAILBOX_11,&(U32)data);  //11
+
+       printf("[VIDEO] mailbox_11 (timeout number): %d \n", data);
+
+       ReadReg32(MAILBOX_15,&(U32)data);  //3
+
+       printf("[VIDEO] MAILBOX_15 (current PTS):              %08x \n", data);
+
+ 
+
+       ReadReg32(MAILBOX_12,&(U32)data);  //11
+
+       printf("[VIDEO] CPB PTS: %d     FIFO PTS %d\n", data>>16, data&0xFFFF);
+
+ 
+
+       //printf("[VIDEO] CPB0_REGION = 0x%08x (size = %08x)\n", CPB0_REGION, CPB0_SIZE);
+
+       //printf("[VIDEO] CPB0_DIR_REGION = 0x%08x (size = %08x)\n", CPB0_DIR_REGION, CPB0_DIR_SIZE);
+
+       
+
+}
+
+ 
+#if 0
+void printf_video_status(U32 uiVideoCodec)
+{
+
+    U32 type;
+
+ 
+
+    type = (uiVideoCodec & VIDEO_CODEC_MASK) >> VIDEO_CODEC_OFFSET;
+
+ 
+
+    if (type == VIDEO_CODEC_H264)
+
+        printf_h264_status();
+
+    else if (type == VIDEO_CODEC_MPEG2)
+
+        printf_mpge2_status();
+
+ 
+
+    return;
+
+}
+#endif
+
+ 
+
+
+int  InitReadWriteReg(void)
+{
+    fd = open("/dev/mem", O_RDWR);
+    if (fd == -1)
+    {
+        printf("can not open mem device map\n");
+        return CSAPI_FAILED;
+    }
+    
+    page_size = getpagesize();
+    page_size_shift = 0;
+    while ((page_size >> page_size_shift) != 0)
+        page_size_shift++;
+    page_size_shift--;
+
+    pa = 0xffffffff << page_size_shift;
+    va = (unsigned char *)mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, pa);
+    if (va == MAP_FAILED)
+    {
+        printf("map physical memory failed\n");
+        close(fd);
+        fd = 0;
+        return CSAPI_FAILED;
+    }
+ 
+    printf("page_size %d shift %d pa 0x%08x  va 0x%08x\n", page_size, page_size_shift, pa, (unsigned int)va);   
+    return CSAPI_SUCCEED;
+}
+
+int	ReadReg32( unsigned int address, unsigned int * pVal32 )
+{
+    pthread_mutex_lock(&mutex_register);
+
+    if (fd == 0)
+	InitReadWriteReg();
+
+    if (!CACHED(address))
+    {
+        munmap(va, page_size);
+        pa = address & (0xffffffff << page_size_shift);
+        va = (unsigned char *)mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, pa);
+        if (va == MAP_FAILED)
+        {
+            printf("map physical memory failed: shift %d  address 0x%08x  pa 0x%08x page_size %d  va 0x%08x\n", page_size_shift, address, pa, page_size, (unsigned int)va);
+            pthread_mutex_unlock(&mutex_register);
+            return CSAPI_FAILED;
+        }
+    }  
+
+    *pVal32 = *( (volatile unsigned int *)(va + (address & (page_size - 1))) );
+
+    pthread_mutex_unlock(&mutex_register);
+
+    return  CSAPI_SUCCEED;
+}
+
+int	WriteReg32( unsigned int address, unsigned int  Val32 )
+{
+    pthread_mutex_lock(&mutex_register);
+
+    if (fd == 0)
+	InitReadWriteReg();
+
+    if (!CACHED(address))
+    {
+        munmap(va, page_size);
+        pa = address & (0xffffffff << page_size_shift);
+        va = (unsigned char *)mmap(NULL, page_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, pa);
+        if (va == MAP_FAILED)
+        {
+            printf("map physical memory failed: shift %d  address 0x%08x  pa 0x%08x page_size %d  va 0x%08x\n", page_size_shift, address, pa, page_size, (unsigned int)va);
+            pthread_mutex_unlock(&mutex_register);
+            return CSAPI_FAILED;
+        }
+    }  
+
+    *( (volatile unsigned int *)(va + (address & (page_size - 1))) ) = Val32;
+
+    pthread_mutex_unlock(&mutex_register);
+
+    return  CSAPI_SUCCEED;
+}
+
+S32 ClearChipMem( U32 address, U32 size )
+{
+
+    INT32 fd, i;
+
+    U32 page_size, page_size_shift = 0;
+
+    PU8 buf;
+
+    U32 phy_addr_page, phy_addr_offset, map_mem_size;
+
+ 
+
+    fd = open("/dev/mem", O_RDWR);
+
+    if (fd == -1)
+    {
+
+        printf("can not open mem device map\n");
+
+        return 0;
+
+    }
+
+ 
+
+    /* if there is initialization part for this operation,
+
+       we can move following part to there */
+
+    page_size = getpagesize();
+
+    while ((page_size >> page_size_shift) != 0)
+
+        page_size_shift++;
+
+    page_size_shift --;
+
+ 
+
+    phy_addr_page = (address >> page_size_shift) << page_size_shift;
+
+    phy_addr_offset = address - phy_addr_page;
+
+    map_mem_size = ( ( size + page_size - 1 ) >> page_size_shift ) <<page_size_shift;
+
+    /* map page_size physical memory to logical memory space */
+
+    buf = (PU8)mmap(NULL, map_mem_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, phy_addr_page);
+
+    if (buf == MAP_FAILED)
+    {
+
+        printf("map physical memory failed phy_addr_page=0x%08x map_mem_size=0x%08x\n",phy_addr_page, map_mem_size );
+
+        close(fd);
+
+        return 0;
+
+    }
+ 
+
+    /* memory copy */
+    for (i = 0; i < size; i++)
+    {
+
+        *((volatile PU8)(buf + phy_addr_offset + i)) = 0;
+
+    }
+   
+
+    munmap(buf, map_mem_size);
+
+    close(fd);
+
+    return 1;      
+
+}
+
+static void EXAPI_SetAspectRatio(tCS_AV_VideoAspect ratio)
+{
+	int tempcrop = 0;
+	CSTVOUT_MODE tvmode = TVOUT_MODE_576I;
+	CSVID_Rect src, dst;
+	CSVID_SequenceHeader hdr;
+
+	CSTVOUT_GetMode(tve_handle, &tvmode);
+
+	CSVID_GetSequenceHeader(vid_handle, &hdr);
+
+	if (eCS_AV_VIDEO_ASPECT_4_3 == ratio) {
+		switch (tvmode) {
+		case TVOUT_MODE_480I:
+		case TVOUT_MODE_480P:
+			tempcrop = (720 - (480 * 4 / 3)) / 2;
+			if (mod(tempcrop) > 10) {
+				dst.left = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				dst.left = 16 * div(tempcrop);
+			}
+			dst.right = 720 - dst.left;
+			dst.top = 0;
+			dst.bottom = 480;
+			break;
+
+		case TVOUT_MODE_576I:
+		case TVOUT_MODE_576P:
+			tempcrop = (576 - (720 * 3 / 4)) / 2;
+			if (mod(tempcrop) > 10) {
+				dst.top = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				dst.top = 16 * div(tempcrop);
+			}
+			dst.bottom = 576 - dst.top;
+			dst.left = 0;
+			dst.right = 720;
+			break;
+
+		case TVOUT_MODE_720P50:
+		case TVOUT_MODE_720P60:
+			tempcrop = (1280 - (720 * 4 / 3)) / 2;
+			if (mod(tempcrop) > 10) {
+				dst.left = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				dst.left = 16 * div(tempcrop);
+			}
+			dst.right = 1280 - dst.left;
+			dst.top = 0;
+			dst.bottom = 720;
+			break;
+
+		case TVOUT_MODE_1080I25:
+		case TVOUT_MODE_1080I30:
+			tempcrop = (1920 - (1080 * 4 / 3)) / 2;
+			if (mod(tempcrop) > 10) {
+				dst.left = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				dst.left = 16 * div(tempcrop);
+			}
+			dst.right = 1920 - dst.left;
+			dst.top = 0;
+			dst.bottom = 1080;
+			break;
+
+		default:
+			return;
+		}
+	}
+	else if (eCS_AV_VIDEO_ASPECT_16_9 == ratio) {
+		switch (tvmode) {
+		case TVOUT_MODE_480I:
+		case TVOUT_MODE_480P:
+			tempcrop = (480 - (720 * 9 / 16)) / 2;
+			if (mod(tempcrop) > 10) {
+				dst.top = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				dst.top = 16 * div(tempcrop);
+			}
+			dst.bottom = 480 - dst.top;
+			dst.left = 0;
+			dst.right = 720;
+			break;
+
+		case TVOUT_MODE_576I:
+		case TVOUT_MODE_576P:
+			tempcrop = (576 - (720 * 9 / 16)) / 2;
+			if (mod(tempcrop) > 10) {
+				dst.top = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				dst.top = 16 * div(tempcrop);
+			}
+			dst.bottom = 576 - dst.top;
+			dst.left = 0;
+			dst.right = 720;
+			break;
+
+		case TVOUT_MODE_720P50:
+		case TVOUT_MODE_720P60:
+			dst.left = dst.top = 0;
+			dst.right = 1280;
+			dst.bottom = 720;
+			break;
+
+		case TVOUT_MODE_1080I25:
+		case TVOUT_MODE_1080I30:
+			dst.left = dst.top = 0;
+			dst.right = 1920;
+			dst.bottom = 1080;
+			break;
+
+		default:
+			return;
+		}
+	}
+	else {
+		return;
+	}
+	src.left = src.top = 0;
+	src.right = hdr.w;
+	src.bottom = hdr.h;
+
+	CSVID_SetOutputPostion(vid_handle, &src, &dst);
+}
+#endif
+
+tCS_AV_Error Audio_SetMuteStatus( BOOL enable )
+{
+    tCS_AV_Error    err = eCS_AV_OK;
+
+    if( aud_handle == NULL ) 
+        {
+                return eCS_AV_ERROR;
+        }
+
+    if( enable )
+        {
+            CSAUD_EnableMute( aud_handle );
+        }
+        else
+        {
+            CSAUD_DisableMute( aud_handle );
+        }
+
+    return(err);
+}
+#if 1
+tCS_AV_Error    SetVideoScalor(CSSQC_VIDEO_ASPECTRATIO aspect_ratio, CSSQC_VIDEO_ASPECTMODE aspectmode, CSVID_Rect * window_rect)
+{
+    int tempcrop = 0;
+    CSVID_SequenceHeader hdr;
+    CSVID_Rect src, dst;
+    CSTVOUT_MODE tvmode = TVOUT_MODE_576I;
+    CSSQC_VIDEO_ASPECTRATIO valid_aspect_ratio = RATIO_4_3_ON_16_9;
+
+    if( vid_handle == NULL ) 
+    {
+            return eCS_AV_ERROR;
+    }
+
+    CSVID_GetSequenceHeader(vid_handle, &hdr);
+    CSTVOUT_GetMode(tve_handle, &tvmode);
+
+    switch (tvmode) {
+	    
+             case TVOUT_MODE_720P50:
+	    case TVOUT_MODE_720P60:
+             case TVOUT_MODE_1080I25:
+	    case TVOUT_MODE_1080I30:
+                {
+                    valid_aspect_ratio = aspect_ratio;
+                    /*if(aspect_ratio == RATIO_16_9_ON_4_3)
+                        valid_aspect_ratio = RATIO_16_9_ON_16_9;
+                    else if(aspect_ratio == RATIO_4_3_ON_4_3)
+                        valid_aspect_ratio = RATIO_4_3_ON_16_9;*/
+                  }
+                    break;
+            case TVOUT_MODE_480I:
+	   case TVOUT_MODE_480P:
+            case TVOUT_MODE_576I:
+	   case TVOUT_MODE_576P:        
+            default:
+                valid_aspect_ratio = aspect_ratio;
+                break;
+        }
+    
+    src.top = 0;
+    src.left  = 0;
+    src.right = hdr.w;
+    src.bottom = hdr.h;
+    
+    if(window_rect == NULL)
+        {
+	int tempcrop = 0;
+    
+
+	/* set src input rectangle */
+	if((PAN_SCAN == aspectmode) && (valid_aspect_ratio == RATIO_16_9_ON_4_3)) {
+
+	    /* a little wider, so cut from left and right to fit 4:3 */
+	    tempcrop = (hdr.w - (hdr.w* (4 *9)/ (3*16))) / 2;
+	    if (mod(tempcrop) > 10) {
+		src.left = 16 * (div(tempcrop) + 1);
+	    }
+	    else {
+		src.left = 16 * div(tempcrop);
+	    }
+	    src.right = hdr.w - src.left;
+	    src.top = 0;
+	    src.bottom = hdr.h;
+
+	    //cur_mode = PAN_SCAN;
+	}
+	else if((PAN_SCAN == aspectmode) && (valid_aspect_ratio == RATIO_4_3_ON_16_9)) {
+
+	    /* a little higher, so cut from top and bottom to fit 16:9*/
+	    tempcrop = (hdr.h - (hdr.h * (4 *9)/ (3*16))) / 2;
+	    if (mod(tempcrop) > 10) {
+		src.top = 16 * (div(tempcrop) + 1);
+	    }
+	    else {
+		src.top = 16 * div(tempcrop);
+	    }
+	    src.bottom = hdr.h - src.top;
+	    src.left = 0;
+	    src.right = hdr.w;
+
+	    //cur_mode = PAN_SCAN;
+	}
+	else 
+	{
+	    src.left = 0;
+	    src.right = hdr.w;
+	    src.top = 0;
+	    src.bottom = hdr.h;
+
+	    //cur_mode = NORMAL;	/* restore mode, maybe modified later if LETTERBOX */
+	}
+
+	/* set dst output rectangle */
+	switch (tvmode) {
+	    case TVOUT_MODE_480I:
+	    case TVOUT_MODE_480P:
+		dst.left = 0;
+		dst.right = 720;
+		dst.top = 0;
+		dst.bottom = 480;
+		if((LETTERBOX == aspectmode) && (valid_aspect_ratio == RATIO_16_9_ON_4_3)) {
+
+		    tempcrop = (480 - (480* (4 *9)/ (3*16))) / 2;
+		    if (mod(tempcrop) > 10) {
+			dst.top = 16 * (div(tempcrop) + 1);
+		    }
+		    else {
+			dst.top = 16 * div(tempcrop);
+		    }
+		    dst.bottom = 480 - dst.top;
+
+		    //cur_mode = LETTERBOX;
+		}
+                else if((LETTERBOX == aspectmode) && (valid_aspect_ratio == RATIO_4_3_ON_16_9))
+                    {
+                        tempcrop = (720 - (720* (4 *9)/ (3*16))) / 2;
+                        if (mod(tempcrop) > 10) {
+                            dst.left = 16 * (div(tempcrop) + 1);
+                        }
+                        else {
+                            dst.left = 16 * div(tempcrop);
+                        }
+                        dst.right = 720 - dst.left;
+                    }
+
+		break;
+
+	    case TVOUT_MODE_576I:
+	    case TVOUT_MODE_576P:
+		dst.left = 0;
+		dst.right = 720;
+		dst.top = 0;
+		dst.bottom = 576;
+		if((LETTERBOX == aspectmode) && (valid_aspect_ratio == RATIO_16_9_ON_4_3)) {
+
+		    tempcrop = (576 - (576* (4 *9)/ (3*16))) / 2;
+		    if (mod(tempcrop) > 10) {
+			dst.top = 16 * (div(tempcrop) + 1);
+		    }
+		    else {
+			dst.top = 16 * div(tempcrop);
+		    }
+		    dst.bottom = 576 - dst.top;
+
+		    //cur_mode = LETTERBOX;
+		}
+                else if((LETTERBOX == aspectmode) && (valid_aspect_ratio == RATIO_4_3_ON_16_9))
+                    {
+                        tempcrop = (720 - (720* (4 *9)/ (3*16))) / 2;
+                        if (mod(tempcrop) > 10) {
+                            dst.left = 16 * (div(tempcrop) + 1);
+                        }
+                        else {
+                            dst.left = 16 * div(tempcrop);
+                        }
+                        dst.right = 720 - dst.left;
+                    }
+
+		break;
+
+	    case TVOUT_MODE_720P50:
+	    case TVOUT_MODE_720P60:
+		dst.left = 0;
+		dst.right = 1280;
+		dst.top = 0;
+		dst.bottom = 720;
+		if((LETTERBOX == aspectmode) && (valid_aspect_ratio == RATIO_4_3_ON_16_9)) {
+
+		    tempcrop = (1280 - (1280* (4 *9)/ (3*16))) / 2;
+		    if (mod(tempcrop) > 10) {
+			dst.left = 16 * (div(tempcrop) + 1);
+		    }
+		    else {
+			dst.left = 16 * div(tempcrop);
+		    }
+		    dst.right = 1280 - dst.left;
+
+		    //cur_mode = LETTERBOX;
+		}
+                  else if((LETTERBOX == aspectmode) && (valid_aspect_ratio == RATIO_16_9_ON_4_3)) {
+
+		    tempcrop = (720 - (720* (4 *9)/ (3*16))) / 2;
+		    if (mod(tempcrop) > 10) {
+			dst.top = 16 * (div(tempcrop) + 1);
+		    }
+		    else {
+			dst.top = 16 * div(tempcrop);
+		    }
+		    dst.bottom = 720 - dst.top;
+
+		    //cur_mode = LETTERBOX;
+		}
+
+		break;
+
+	    case TVOUT_MODE_1080I25:
+	    case TVOUT_MODE_1080I30:
+		dst.left = 0;
+		dst.right = 1920;
+		dst.top = 0;
+		dst.bottom = 1080;
+		if((LETTERBOX == aspectmode) && (valid_aspect_ratio == RATIO_4_3_ON_16_9)) {
+
+		    tempcrop = (1920 - (1920* (4 *9)/ (3*16))) / 2;
+		    if (mod(tempcrop) > 10) {
+			dst.left = 16 * (div(tempcrop) + 1);
+		    }
+		    else {
+			dst.left = 16 * div(tempcrop);
+		    }
+		    dst.right = 1920 - dst.left;
+
+		    //cur_mode = LETTERBOX;
+		}
+                else if((LETTERBOX == aspectmode) && (valid_aspect_ratio == RATIO_16_9_ON_4_3)) {
+
+		    tempcrop = (1080 - (1080* (4 *9)/ (3*16))) / 2;
+		    if (mod(tempcrop) > 10) {
+			dst.top = 16 * (div(tempcrop) + 1);
+		    }
+		    else {
+			dst.top = 16 * div(tempcrop);
+		    }
+		    dst.bottom = 1080 - dst.top;
+
+		    //cur_mode = LETTERBOX;
+		}
+
+		break;
+
+	    default:
+		//printf("%s tvmode [%d] not support!\n", __FUNCTION__, aim_tvmode);
+		return CSAPI_FAILED;
+	}
+
+}
+    else
+        {
+             U16    uleft, uright, utop, ubottom;
+
+            switch (tvmode) 
+                {
+		case TVOUT_MODE_480I:
+		case TVOUT_MODE_480P:
+                        uleft = window_rect->left;
+                        uright = window_rect->right;
+                        utop = window_rect->top*480/576;
+                        ubottom = window_rect->bottom*480/576;
+			break;
+
+		case TVOUT_MODE_720P50:
+		case TVOUT_MODE_720P60:
+                        uleft = window_rect->left*1280/720;
+                        uright = window_rect->right*1280/720;
+                        utop = window_rect->top*720/576;
+                        ubottom = window_rect->bottom*720/576;
+			break;
+
+		case TVOUT_MODE_1080I25:
+		case TVOUT_MODE_1080I30:
+                        uleft = window_rect->left*1920/720;
+                        uright = window_rect->right*1920/720;
+                        utop = window_rect->top*1080/576;
+                        ubottom = window_rect->bottom*1080/576;
+			break;
+            
+                  case TVOUT_MODE_576I:
+		case TVOUT_MODE_576P:
+		default:
+                        uleft = window_rect->left;
+                        uright = window_rect->right;
+                        utop = window_rect->top;
+                        ubottom = window_rect->bottom;
+			break;
+		}
+
+            /*if (mod(uleft) > 10) {
+            		uleft = 16 * (div(uleft) + 1);
+            	}
+            	else {
+            		uleft = 16 * div(uleft);
+            	}
+
+                if (mod(uright) > 10) {
+            		uright = 16 * (div(uright) + 1);
+            	}
+            	else {
+            		uright = 16 * div(uright);
+            	}*/
+    
+            if ((aspect_ratio == RATIO_4_3_ON_4_3)||(aspect_ratio == RATIO_16_9_ON_4_3))
+                {
+                    tempcrop = ((uright - uleft) - ((ubottom - utop)* 4 / 3)) / 2;
+			if (mod(tempcrop) > 10) {
+				tempcrop = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				tempcrop = 16 * div(tempcrop);
+			}
+                            
+			dst.top = utop;
+			dst.bottom = ubottom;
+                           dst.left = uleft + tempcrop;
+			dst.right = uright  - tempcrop;
+                }
+            else if ((aspect_ratio == RATIO_4_3_ON_16_9)||(aspect_ratio == RATIO_16_9_ON_16_9))
+                {
+                        tempcrop = ((ubottom - utop) - ((uright - uleft) * 9 / 16)) / 2;
+			if (mod(tempcrop) > 10) {
+				tempcrop = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				tempcrop = 16 * div(tempcrop);
+			}
+                           dst.top = utop + tempcrop;
+			dst.bottom = ubottom - tempcrop;
+			dst.left = uleft;
+			dst.right = uright;
+                }
+            else 
+                {
+		        return eCS_AV_ERROR;
+	        }
+        }
+
+    //printf("****************src[%d, %d, %d, %d]**************\n", src.left, src.right, src.top, src.bottom);
+    //printf("****************dst[%d, %d, %d, %d]**************\n", dst.left, dst.right, dst.top, dst.bottom);
+
+        CSVID_SetOutputPostion(vid_handle, &src, &dst);
+
+        return eCS_AV_OK;
+}
+
+#else
+
+tCS_AV_Error    SetVideoScalor(tCS_AV_VideoAspect ratio, CSVID_Rect * window_rect)
+{
+    int tempcrop = 0;
+    CSVID_SequenceHeader hdr;
+    CSVID_Rect src, dst;
+
+    if( vid_handle == NULL ) 
+    {
+            return eCS_AV_ERROR;
+    }
+
+    CSVID_GetSequenceHeader(vid_handle, &hdr);
+
+    src.left = src.top = 0;
+    src.right = hdr.w;
+    src.bottom = hdr.h;
+    
+    if(window_rect == NULL)
+        {
+	
+	CSTVOUT_MODE tvmode = TVOUT_MODE_576I;
+	CSVID_SequenceHeader hdr;
+
+	CSTVOUT_GetMode(tve_handle, &tvmode);
+
+	if (eCS_AV_VIDEO_ASPECT_4_3 == ratio) {
+		switch (tvmode) {
+		case TVOUT_MODE_480I:
+		case TVOUT_MODE_480P:
+                        #if 1
+			tempcrop = (720 - (480 * 4 / 3)) / 2;
+			if (mod(tempcrop) > 10) {
+				dst.left = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				dst.left = 16 * div(tempcrop);
+			}
+			dst.right = 720 - dst.left;
+			dst.top = 0;
+			dst.bottom = 480;
+                        #else
+                            dst.top = 0;
+                            dst.bottom = 480;
+                             dst.left = 0;
+                             dst.right = 720;
+                        #endif
+			break;		
+
+		case TVOUT_MODE_720P50:
+		case TVOUT_MODE_720P60:
+			tempcrop = (1280 - (720 * 4 / 3)) / 2;
+			if (mod(tempcrop) > 10) {
+				dst.left = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				dst.left = 16 * div(tempcrop);
+			}
+			dst.right = 1280 - dst.left;
+			dst.top = 0;
+			dst.bottom = 720;
+			break;
+
+		case TVOUT_MODE_1080I25:
+		case TVOUT_MODE_1080I30:
+			tempcrop = (1920 - (1080 * 4 / 3)) / 2;
+			if (mod(tempcrop) > 10) {
+				dst.left = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				dst.left = 16 * div(tempcrop);
+			}
+			dst.right = 1920 - dst.left;
+			dst.top = 0;
+			dst.bottom = 1080;
+			break;
+
+		
+                case TVOUT_MODE_576I:
+                case TVOUT_MODE_576P:
+                default:
+            #if 1
+                        tempcrop = (576 - (720 * 3 / 4)) / 2;
+                        if (mod(tempcrop) > 10) {
+                            dst.top = 16 * (div(tempcrop) + 1);
+                        }
+                        else {
+                            dst.top = 16 * div(tempcrop);
+                        }
+                        dst.bottom = 576 - dst.top;
+                        dst.left = 0;
+                        dst.right = 720;
+            #else
+                        dst.top = 0;
+                        dst.bottom = 576;
+                         dst.left = 0;
+                         dst.right = 720;
+            #endif
+                        break;
+		}
+	}
+	else if (eCS_AV_VIDEO_ASPECT_16_9 == ratio) {
+		switch (tvmode) {
+		case TVOUT_MODE_480I:
+		case TVOUT_MODE_480P:
+			tempcrop = (480 - (720 * 9 / 16)) / 2;
+			if (mod(tempcrop) > 10) {
+				dst.top = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				dst.top = 16 * div(tempcrop);
+			}
+			dst.bottom = 480 - dst.top;
+			dst.left = 0;
+			dst.right = 720;
+			break;
+
+		case TVOUT_MODE_720P50:
+		case TVOUT_MODE_720P60:
+			dst.left = dst.top = 0;
+			dst.right = 1280;
+			dst.bottom = 720;
+			break;
+
+		case TVOUT_MODE_1080I25:
+		case TVOUT_MODE_1080I30:
+			dst.left = dst.top = 0;
+			dst.right = 1920;
+			dst.bottom = 1080;
+			break;
+
+                  case TVOUT_MODE_576I:
+		case TVOUT_MODE_576P:
+                  default:
+			tempcrop = (576 - (720 * 9 / 16)) / 2;
+			if (mod(tempcrop) > 10) {
+				dst.top = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				dst.top = 16 * div(tempcrop);
+			}
+			dst.bottom = 576 - dst.top;
+			dst.left = 0;
+			dst.right = 720;
+			break;
+		}
+	}
+	else {
+		return eCS_AV_ERROR;
+	}
+		
+        }
+    else
+        {
+            CSTVOUT_MODE tvmode = TVOUT_MODE_576I;
+        	    CSVID_SequenceHeader hdr;
+             U16    uleft, uright, utop, ubottom;
+
+        	    CSTVOUT_GetMode(tve_handle, &tvmode);
+
+            switch (tvmode) 
+                {
+		case TVOUT_MODE_480I:
+		case TVOUT_MODE_480P:
+                        uleft = window_rect->left;
+                        uright = window_rect->right;
+                        utop = window_rect->top*480/576;
+                        ubottom = window_rect->bottom*480/576;
+			break;
+
+		case TVOUT_MODE_720P50:
+		case TVOUT_MODE_720P60:
+                        uleft = window_rect->left*1280/720;
+                        uright = window_rect->right*1280/720;
+                        utop = window_rect->top*720/576;
+                        ubottom = window_rect->bottom*720/576;
+			break;
+
+		case TVOUT_MODE_1080I25:
+		case TVOUT_MODE_1080I30:
+                        uleft = window_rect->left*1920/720;
+                        uright = window_rect->right*1920/720;
+                        utop = window_rect->top*1080/576;
+                        ubottom = window_rect->bottom*1080/576;
+			break;
+            
+                  case TVOUT_MODE_576I:
+		case TVOUT_MODE_576P:
+		default:
+                        uleft = window_rect->left;
+                        uright = window_rect->right;
+                        utop = window_rect->top;
+                        ubottom = window_rect->bottom;
+			break;
+		}
+    
+            if (eCS_AV_VIDEO_ASPECT_4_3 == ratio)
+                {
+                    tempcrop = ((uright - uleft) - ((ubottom - utop)* 4 / 3)) / 2;
+			if (mod(tempcrop) > 10) {
+				tempcrop = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				tempcrop = 16 * div(tempcrop);
+			}
+                            
+			dst.top = utop;
+			dst.bottom = ubottom;
+                           dst.left = uleft + tempcrop;
+			dst.right = uright  - tempcrop;
+                }
+            else if (eCS_AV_VIDEO_ASPECT_16_9 == ratio)
+                {
+                        tempcrop = ((ubottom - utop) - ((uright - uleft) * 9 / 16)) / 2;
+			if (mod(tempcrop) > 10) {
+				tempcrop = 16 * (div(tempcrop) + 1);
+			}
+			else {
+				tempcrop = 16 * div(tempcrop);
+			}
+                           dst.top = utop + tempcrop;
+			dst.bottom = ubottom - tempcrop;
+			dst.left = uleft;
+			dst.right = uright;
+                }
+            else 
+                {
+		        return eCS_AV_ERROR;
+	        }
+        }
+
+        CSVID_SetOutputPostion(vid_handle, &src, &dst);
+
+        return eCS_AV_OK;
+}
+
+#endif
+
+tCS_AV_Error GetVideoOriginalInfo( tCS_AV_VideoOriginalInfo* pOri_Size )
+{
+    CSVID_SequenceHeader VideoMode;
+
+    if( vid_handle == NULL ) 
+    {
+            return eCS_AV_ERROR;
+    }
+    
+    memset( &VideoMode, 0, sizeof(CSVID_SequenceHeader));
+    CSVID_GetSequenceHeader( vid_handle, &VideoMode );
+
+    
+    pOri_Size->Width                = VideoMode.w;
+    pOri_Size->Height               = VideoMode.h;
+    pOri_Size->FrameRate    = VideoMode.frame_rate;
+
+    if(VideoSizeRange( pOri_Size->Width, 720 ) && VideoSizeRange( pOri_Size->Height, 576 ))
+    {
+        if( pOri_Size->FrameRate == 25 )
+        {
+            pOri_Size->Video_Definition = eCS_AV_VIDEO_FORMAT_PAL;
+        }
+        else
+        {
+            pOri_Size->Video_Definition = eCS_AV_VIDEO_FORMAT_576P50;
+        }
+    }
+    else if(VideoSizeRange( pOri_Size->Width, 720 ) && VideoSizeRange( pOri_Size->Height, 480 ))
+    {
+        if( pOri_Size->FrameRate == 30 )
+        {
+            pOri_Size->Video_Definition = eCS_AV_VIDEO_FORMAT_NTSC;
+        }
+        else
+        {
+            pOri_Size->Video_Definition = eCS_AV_VIDEO_FORMAT_480P60;
+        }
+    }
+    else if(VideoSizeRange( pOri_Size->Width, 1280 ) && VideoSizeRange( pOri_Size->Height, 720 ))
+    {
+        if( pOri_Size->FrameRate == 50 )
+        {
+            pOri_Size->Video_Definition = eCS_AV_VIDEO_FORMAT_720P50;
+        }
+        else
+        {
+            pOri_Size->Video_Definition = eCS_AV_VIDEO_FORMAT_720P60;
+        }
+    }
+    else if(VideoSizeRange( pOri_Size->Width, 1920 ) &&VideoSizeRange(  pOri_Size->Height,1080 ))
+    {
+        if( pOri_Size->FrameRate == 50 )
+        {
+            pOri_Size->Video_Definition = eCS_AV_VIDEO_FORMAT_1080I50;
+        }
+        else
+        {
+            pOri_Size->Video_Definition = eCS_AV_VIDEO_FORMAT_1080I60;
+        }
+    }
+    else
+    {
+         pOri_Size->Video_Definition = eCS_AV_VIDEO_FORMAT_UNKNOWN;
+         //return FALSE;
+    }
+
+    printf( "Current Video Format = %d FrameRate = %d \n",
+                     pOri_Size->Video_Definition,
+                     pOri_Size->FrameRate );
+    printf( "              Width  = %d Height = %d\n",            
+                     pOri_Size->Width,
+                     pOri_Size->Height );
+
+     return eCS_AV_OK;
+}
+
+void AdjustVideoWindows(void)
+{
+        CSSQC_VIDEO_ASPECTRATIO aspect_ratio = RATIO_4_3_ON_4_3;
+        CSSQC_VIDEO_OUTPUTMODE output_mode;
+        CSSQC_VIDEO_ASPECTMODE aspect_mode;
+
+        tCS_DBU_AspectRatioMode         current_aspect_mode;
+        tCS_DBU_VideoDefinition             current_output_mode;
+        tCS_DBU_VideoAspectRatio        current_aspect_ratio;
+
+        current_aspect_ratio = CS_DBU_GetVideoAspectRatio();
+
+        switch(current_video_aspect)
+            {
+                case    CSVID_4TO3:
+                        if(current_aspect_ratio == eCS_DBU_ASPECT_RATIO_16_9)
+                            {
+                                aspect_ratio = RATIO_4_3_ON_16_9;
+                            }
+                        else
+                            {
+                                aspect_ratio = RATIO_4_3_ON_4_3;
+                            }
+                        break;
+
+                  case    CSVID_16TO9:
+                  default:
+                        if(current_aspect_ratio == eCS_DBU_ASPECT_RATIO_16_9)
+                            {
+                                aspect_ratio = RATIO_16_9_ON_16_9;
+                            }
+                        else
+                            {
+                                aspect_ratio = RATIO_16_9_ON_4_3;
+                            }
+                        break;
+            }
+
+            current_aspect_mode = CS_DBU_GetAspectRatioMode();
+            switch(current_aspect_mode)
+                {
+                    case eCS_DBU_ARM_PANSCAN:
+                        aspect_mode = PAN_SCAN;
+                        break;
+                    case eCS_DBU_ARM_LETTER_BOX:
+                        aspect_mode = LETTERBOX;
+                        break;
+                    case eCS_DBU_ARM_COMBINED:
+                    default:
+                        aspect_mode = NORMAL;
+                        break;
+                }
+
+            current_output_mode = CS_DBU_GetVideoDefinition();
+            switch(current_output_mode)
+                {
+                    case eCS_DBU_DEFINITION_480P:
+                        output_mode = CSSQC_MODE_480P;
+                        break;
+                    case eCS_DBU_DEFINITION_576P:
+                        output_mode = CSSQC_MODE_576P;
+                        break;
+                    case eCS_DBU_DEFINITION_720P:
+                        output_mode = CSSQC_MODE_720P50;
+                        break;
+                    case eCS_DBU_DEFINITION_1080I:
+                        output_mode = CSSQC_MODE_1080I25;
+                        break;
+                    case eCS_DBU_DEFINITION_576I:
+                    default:
+                        output_mode = CSSQC_MODE_PAL;
+                        break;
+                }
+
+            //printf("*******************aspect_ratio = %d, output_mode = %d, aspect_mode = %d**************************\n", aspect_ratio, output_mode, aspect_mode);
+                SetVideoScalor(aspect_ratio, aspect_mode, video_window_rect);
+}
+
+
+void AV_TrackTask(void * arg)
+{
+     //tCS_AV_Msg_t               *msgReceived;
+     static int reg_val = 0;
+     static CSTVOUT_MODE        predef = TVOUT_MODE_576I;
+        
+    while(1)
+        {
+            
+	    CSOS_DelayTaskMs(150);
+
+            //printf("%d\n", CS_OS_time_now());
+#if 1
+            CSOS_WaitSemaphore(sem_AVAccess); 
+
+            if(!video_set_show)
+                    CSVID_SetOutputAlpha( vid_handle, 0 );
+
+            AdjustVideoWindows();
+
+            CSOS_SignalSemaphore(sem_AVAccess);
+ #endif
+        }
+}
+
+void Sycro_call_back(CSVID_HANDLE *handle, signed char * temp)
+{
+        printf("Sycro_call_back %d\n", CS_OS_time_now());
+        if(video_set_show && (*temp==1))
+            {
+                CS_AV_VideoUnblank();
+                Audio_SetMuteStatus(CS_AV_Audio_GetMuteStatus());
+            }
+}
+
+
+void AspectRatio_call_back(CSVID_HANDLE *handle, CSVID_ASPECTRATIO * ratio)
+{
+        //tCS_AV_VideoOriginalInfo    pOri_Size;
+        printf("AspectRatio = %d\n", * ratio);
+
+        current_video_aspect = * ratio;
+
+         CSOS_WaitSemaphore(sem_AVAccess); 
+
+
+            AdjustVideoWindows();  
+
+
+            CSOS_SignalSemaphore(sem_AVAccess);
+
+        //GetVideoOriginalInfo( &pOri_Size );
+        #if 0
+        {
+                        CSSQC_VIDEO_ASPECTRATIO aspect_ratio = RATIO_4_3_ON_4_3;
+		        CSSQC_VIDEO_OUTPUTMODE output_mode;
+			CSSQC_VIDEO_ASPECTMODE aspect_mode;
+
+                    tCS_DBU_AspectRatioMode         current_aspect_mode;
+                    tCS_DBU_VideoDefinition             current_output_mode;
+                    tCS_DBU_VideoAspectRatio        current_aspect_ratio;
+
+                    current_aspect_ratio = CS_DBU_GetVideoAspectRatio();
+
+                    switch(* ratio)
+                        {
+                            case    CSVID_16TO9:
+                                    if(current_aspect_ratio == eCS_DBU_ASPECT_RATIO_16_9)
+                                        {
+                                            aspect_ratio == RATIO_16_9_ON_16_9;
+                                        }
+                                    else
+                                        {
+                                            aspect_ratio == RATIO_16_9_ON_4_3;
+                                        }
+                                    break;
+                            case    CSVID_4TO3:
+                            default:
+                                    if(current_aspect_ratio == eCS_DBU_ASPECT_RATIO_16_9)
+                                        {
+                                            aspect_ratio == RATIO_4_3_ON_16_9;
+                                        }
+                                    else
+                                        {
+                                            aspect_ratio == RATIO_4_3_ON_4_3;
+                                        }
+                                    break;
+                        }
+
+                        current_aspect_mode = CS_DBU_GetAspectRatioMode();
+                        switch(current_aspect_mode)
+                            {
+                                case eCS_DBU_ARM_PANSCAN:
+                                    aspect_mode = PAN_SCAN;
+                                    break;
+                                case eCS_DBU_ARM_LETTER_BOX:
+                                    aspect_mode = LETTERBOX;
+                                    break;
+                                case eCS_DBU_ARM_COMBINED:
+                                default:
+                                    aspect_mode = NORMAL;
+                                    break;
+                            }
+
+                        current_output_mode = CS_DBU_GetVideoDefinition();
+                        switch(current_output_mode)
+                            {
+                                case eCS_DBU_DEFINITION_480P:
+                                    output_mode = CSSQC_MODE_480P;
+                                    break;
+                                case eCS_DBU_DEFINITION_576P:
+                                    output_mode = CSSQC_MODE_576P;
+                                    break;
+                                case eCS_DBU_DEFINITION_720P:
+                                    output_mode = CSSQC_MODE_720P50;
+                                    break;
+                                case eCS_DBU_DEFINITION_1080I:
+                                    output_mode = CSSQC_MODE_1080I25;
+                                    break;
+                                case eCS_DBU_DEFINITION_576I:
+                                default:
+                                    output_mode = CSSQC_MODE_PAL;
+                                    break;
+                            }
+
+                        if( vid_handle != NULL ) 
+                            CSVID_SetOutputAlpha( vid_handle, 0xff );
+
+                        printf("*******************aspect_ratio = %d, output_mode = %d, aspect_mode = %d**************************\n", aspect_ratio, output_mode, aspect_mode);
+                        
+                        CSSQC_VIDEO_SysSet(vid_handle, df_handle, tve_handle, aspect_ratio, output_mode, aspect_mode);
+                    }
+        #endif
+}
+
+BOOL CS_AV_Init(void)
+{
+
+    sem_AVAccess  = CSOS_CreateSemaphoreFifo (NULL, 1 );
+
+    /*if((CS_AV_MsgQid = CSOS_CreateMessageQueue("/AV_TRACK_MsgQid",sizeof(tCS_AV_Msg_t), kCS_AV_MAX_MSG )) == NULL)
+	{
+	        printf("create CS_AV_MsgQid error\n");
+		return(eCS_AV_ERROR);
+	}*/
+    
+    tve_handle = CSTVOUT_Open();
+    if( tve_handle == NULL )
+    {   
+        return FALSE;
+    }
+
+    CSTVOUT_Enable(tve_handle);
+    
+    osd_handle = CSOSD_Open(OSD_LAYER_0);
+    if( osd_handle == NULL )
+    {   
+        return FALSE;
+    }
+    CSOSD_Enable( osd_handle );
+
+
+    vid_handle = CSVID_Open(VID_DEV_0);
+    if( vid_handle == NULL )
+    {   
+        return FALSE;
+    }
+
+    aud_handle = CSAUD_Open(AUD_DEV_0);
+    if( aud_handle == NULL )
+    { 
+        return FALSE;
+    }
+
+    df_handle = CSDF_Open();
+    if( df_handle == NULL )
+    { 
+        return FALSE;
+    }
+
+    CSDF_Enable(df_handle);
+
+    xport_pid_filter0_handle = CSDEMUX_PIDFT_Open(DEMUX_PIDFT_ID0);
+    if( xport_pid_filter0_handle == CSDEMUX_UNVALID_HANDLE)
+    {
+        return FALSE;
+    }
+
+    xport_pid_filter1_handle = CSDEMUX_PIDFT_Open(DEMUX_PIDFT_ID1);
+    if( xport_pid_filter1_handle == CSDEMUX_UNVALID_HANDLE)
+    {
+        return FALSE;
+    }
+
+    xport_vidout_handle = CSDEMUX_VID_Open(DEMUX_VIDOUT_ID0);
+    if( xport_vidout_handle == CSDEMUX_UNVALID_HANDLE )
+    {
+        return FALSE;
+    }
+
+    xport_audout_handle = CSDEMUX_AUD_Open(DEMUX_AUDOUT_ID0);
+    if( xport_audout_handle == CSDEMUX_UNVALID_HANDLE )
+    {
+        return FALSE;
+    }
+
+    CSVID_AspectRatioChangeNotify(vid_handle, AspectRatio_call_back, 1);
+
+
+#if 1
+    if (CSOS_CreateTask(AV_TrackTask,					/* thread entry point */
+						NULL, 						/* entry point argument */
+						NULL,
+						AV_TRACK_STACK_SIZE,				/* size of stack in bytes */
+						AV_TRACK_TASK_STACK, 				/* pointer to stack base */
+						NULL,
+						&AV_TRACK_TASK_HANDLE,			/* return thread handle */
+						&AV_TRACK_TASK_DESC, 			/* space to store thread data */ 
+						AV_TRACK_TASK_PRIORITY,
+						"av_tracking", 				/* name of thread */
+						AV_TRACK_TASK_FLAG) != CS_NO_ERROR)
+	{
+		printf ( "Failed to create the av_tracking \n" );
+		return(FALSE);
+	}
+
+	CSOS_StartTask(AV_TRACK_TASK_HANDLE);
+ #endif   
+    return TRUE;
+}
+
+tCS_AV_Error CS_AV_Close(void)
+{
+        if( vid_handle != NULL )
+        {
+            CSVID_Close  ( vid_handle );
+        }
+        if( aud_handle != NULL )
+        {
+            CSAUD_Close( aud_handle );
+        }
+        if( tve_handle != NULL )
+        {
+            CSTVOUT_Close( tve_handle );
+        }
+        if( osd_handle != NULL )
+        {
+            CSOSD_Close  ( osd_handle );
+        }
+    return eCS_AV_OK;
+}
+
+tCS_AV_Error CS_AV_Audio_SetMuteStatus( BOOL enable )
+{
+        tCS_AV_Error    err = eCS_AV_OK;
+        
+        CSOS_WaitSemaphore(sem_AVAccess);        
+
+        if( enable )
+        {
+            CS_DBU_SetMuteStatus( eCS_DBU_ON );
+        }
+        else
+        {
+            CS_DBU_SetMuteStatus( eCS_DBU_OFF );
+        }
+
+        err = Audio_SetMuteStatus(enable);
+
+        CSOS_SignalSemaphore(sem_AVAccess);
+
+        return(err);
+}
+
+
+BOOL CS_AV_Audio_GetMuteStatus(void)
+{
+    tCS_DBU_Status  status;
+    
+    status = CS_DBU_GetMuteStatus();
+    if( status == eCS_DBU_ON )
+    {
+        return(TRUE);
+    }
+    else
+    {
+        return(FALSE);
+    }
+}
+
+tCS_AV_Error AV_AudioSetVolume( U8 Volume )
+{
+    tCS_AV_Error    err = eCS_AV_OK;
+    CSAPI_RESULT csResult = CSAPI_SUCCEED;
+    CSAUD_Volume aud_Volume;
+    U8      set_value = 0;
+    float   temp;
+
+    if( aud_handle == NULL ) 
+        {
+            return eCS_AV_ERROR;
+        }
+
+    //set_value = Volume * 3 / 2;
+
+    temp = ( MAX_VOLUME_VALUE - MIN_VOLUME_VALUE ) 
+		   * log10f( Volume + 1 ) / log10f( kCS_DBU_MAX_VOLUME + 1 );
+    /*temp = ( MAX_VOLUME_VALUE - MIN_VOLUME_VALUE ) 
+		   * ( Volume + 1 ) / ( kCS_DBU_MAX_VOLUME + 1 );*/
+    set_value = temp;
+
+    //printf("set_value  = %d\n", set_value);
+
+    aud_Volume.front_left  = set_value;
+    aud_Volume.front_right = set_value;
+    aud_Volume.rear_left   = set_value;
+    aud_Volume.rear_right  = set_value;
+    aud_Volume.center      = set_value;
+    aud_Volume.lfe         = set_value;
+    csResult = CSAUD_SetVolume( aud_handle, &aud_Volume );
+
+    if( csResult != CSAPI_SUCCEED )
+    {
+        err = eCS_AV_ERROR;
+    }
+
+    return(err);
+    
+}
+
+tCS_AV_Error CS_AV_AudioSetVolume( U8 Volume )
+{
+        tCS_AV_Error    err = eCS_AV_OK;
+
+	CSOS_WaitSemaphore(sem_AVAccess);        
+
+        CS_DBU_SetVolume( Volume );
+        err = AV_AudioSetVolume(Volume);
+
+        CSOS_SignalSemaphore(sem_AVAccess);
+
+        return(err);
+
+}
+
+
+U8 CS_AV_AudioGetVolume(void)
+{
+    U8 csDBVolume = 0; 
+    
+    csDBVolume = (U8)CS_DBU_GetVolume(); 
+
+    return csDBVolume;
+}
+
+tCS_AV_Error AV_AudioSetStereoMode( tCS_AV_StereoMode StereoMode )
+{
+    tCS_AV_Error    err = eCS_AV_OK;
+    CSAPI_RESULT csResult = CSAPI_SUCCEED;
+    CSAUD_PCM_CHANNEL audStereoMode;
+
+    if( aud_handle == NULL ) 
+        {
+                return eCS_AV_ERROR;
+        }
+
+    switch( StereoMode )
+    {
+        case eCS_AV_STEREO_MODE_STEREO:
+            audStereoMode = AUD_PCM_STEREO;
+            break;
+            
+        case eCS_AV_STEREO_MODE_LEFT:
+            audStereoMode = AUD_PCM_LEFT_MONO;
+            break;
+            
+        case eCS_AV_STEREO_MODE_RIGHT:
+            audStereoMode = AUD_PCM_RIGHT_MONO;
+            break;
+
+        default:
+            audStereoMode = AUD_PCM_STEREO;
+            break;
+    }
+
+    csResult = CSAUD_SetOutputChannel( aud_handle, audStereoMode );
+    if( csResult != CSAPI_SUCCEED )
+    {
+        err = eCS_AV_ERROR;
+    }
+
+    return(err);
+
+}
+
+
+tCS_AV_Error CS_AV_AudioSetStereoMode( tCS_AV_StereoMode StereoMode )
+{
+    tCS_AV_Error    err = eCS_AV_OK;
+
+    CSOS_WaitSemaphore(sem_AVAccess);        
+    err = AV_AudioSetStereoMode(StereoMode);
+
+    CSOS_SignalSemaphore(sem_AVAccess);
+
+    return(err);
+
+}
+
+
+
+tCS_AV_Error CS_AV_VideoFreeze(void)
+{
+     tCS_AV_Error    err = eCS_AV_OK;
+    CSAPI_RESULT csResult = CSAPI_SUCCEED;
+
+	CSOS_WaitSemaphore(sem_AVAccess);        
+	if( vid_handle == NULL ) 
+        {
+                CSOS_SignalSemaphore(sem_AVAccess);
+                return eCS_AV_ERROR;
+        }
+	
+    csResult = CSVID_Pause( vid_handle );
+    if( csResult != CSAPI_SUCCEED )
+    {
+        err = eCS_AV_ERROR;
+    }
+
+    CSOS_SignalSemaphore(sem_AVAccess);
+
+    return(err);
+
+}
+
+
+tCS_AV_Error CS_AV_AudioFreeze(void)
+{
+     tCS_AV_Error    err = eCS_AV_OK;
+    CSAPI_RESULT csResult = CSAPI_SUCCEED;
+
+	CSOS_WaitSemaphore(sem_AVAccess);        
+	if( aud_handle == NULL ) 
+    {
+            CSOS_SignalSemaphore(sem_AVAccess);
+            return eCS_AV_ERROR;
+    }
+	
+    csResult = CSAUD_Pause( aud_handle );
+    if( csResult != CSAPI_SUCCEED )
+    {
+        err = eCS_AV_ERROR;
+    }
+
+    CSOS_SignalSemaphore(sem_AVAccess);
+
+    return(err);
+
+}
+
+
+
+tCS_AV_Error CS_AV_VideoUnfreeze(void)
+{
+     tCS_AV_Error    err = eCS_AV_OK;
+    CSAPI_RESULT csResult = CSAPI_SUCCEED;
+
+	CSOS_WaitSemaphore(sem_AVAccess);        
+	if( vid_handle == NULL ) 
+        {
+                CSOS_SignalSemaphore(sem_AVAccess);
+                return eCS_AV_ERROR;
+        }
+
+    csResult = CSVID_Resume( vid_handle );
+    if( csResult != CSAPI_SUCCEED )
+    {
+        err = eCS_AV_ERROR;
+    }
+
+    CSOS_SignalSemaphore(sem_AVAccess);
+
+   return(err);
+
+}
+
+
+tCS_AV_Error CS_AV_AudioUnfreeze(void)
+{
+     tCS_AV_Error    err = eCS_AV_OK;
+    CSAPI_RESULT csResult = CSAPI_SUCCEED;
+
+	CSOS_WaitSemaphore(sem_AVAccess);        
+	if( aud_handle == NULL ) 
+    {
+            CSOS_SignalSemaphore(sem_AVAccess);
+            return eCS_AV_ERROR;
+    }
+
+    csResult = CSAUD_Resume( aud_handle );
+    if( csResult != CSAPI_SUCCEED )
+    {
+        err = eCS_AV_ERROR;
+    }
+
+    CSOS_SignalSemaphore(sem_AVAccess);
+
+   return(err);
+
+}
+
+
+tCS_AV_Error CS_AV_VideoBlank(void)
+{
+     tCS_AV_Error    err = eCS_AV_OK;
+    CSAPI_RESULT csResult = CSAPI_SUCCEED;
+
+	CSOS_WaitSemaphore(sem_AVAccess);        
+	if( vid_handle == NULL ) 
+        {
+                CSOS_SignalSemaphore(sem_AVAccess);
+                return eCS_AV_ERROR;
+        }
+
+    //CSVID_DisableTV(vid_handle);
+    csResult = CSVID_SetOutputAlpha( vid_handle, 0 );
+    if( csResult != CSAPI_SUCCEED )
+    {
+        err = eCS_AV_ERROR;
+    }
+
+    CSOS_SignalSemaphore(sem_AVAccess);
+
+    return(err);
+}
+
+
+tCS_AV_Error CS_AV_VideoUnblank(void)
+{
+         tCS_AV_Error    err = eCS_AV_OK;
+        CSAPI_RESULT csResult = CSAPI_SUCCEED;
+
+	CSOS_WaitSemaphore(sem_AVAccess);        
+	if( vid_handle == NULL ) 
+        {
+                CSOS_SignalSemaphore(sem_AVAccess);
+                return eCS_AV_ERROR;
+        }
+
+        csResult = CSVID_SetOutputAlpha( vid_handle, 0xff );
+	if( csResult != CSAPI_SUCCEED )
+        {
+            err = eCS_AV_ERROR;
+        }
+
+        CSOS_SignalSemaphore(sem_AVAccess);
+    
+        return(err);
+}
+
+tCS_AV_Error CS_AV_SetOSDAlpha( int Alpha )
+{
+         tCS_AV_Error    err = eCS_AV_OK;
+	CSAPI_RESULT csResult = CSAPI_SUCCEED;
+#if 1
+	//CSOS_WaitSemaphore(sem_AVAccess);        
+	if( osd_handle == NULL ) 
+        {
+                //CSOS_SignalSemaphore(sem_AVAccess);
+                return eCS_AV_ERROR;
+        }
+	
+	csResult = CSOSD_SetAlpha( osd_handle, Alpha );
+	if( csResult != CSAPI_SUCCEED )
+	{
+		err = eCS_AV_ERROR;
+	}
+#endif
+        //CSOS_SignalSemaphore(sem_AVAccess);
+
+	return(err);
+}
+
+tCS_AV_Error CS_AV_GetVideoOriginalInfo( tCS_AV_VideoOriginalInfo* pOri_Size )
+{
+     tCS_AV_Error    err = eCS_AV_OK;
+     
+    CSOS_WaitSemaphore(sem_AVAccess);
+
+    err = GetVideoOriginalInfo(pOri_Size);
+
+    CSOS_SignalSemaphore(sem_AVAccess);
+
+    return(err);
+}
+
+tCS_AV_Error CS_AV_VideoScalor( tCS_AV_VideoRect * vid_rect)
+{
+     tCS_AV_Error    err = eCS_AV_OK;
+
+     CSOS_WaitSemaphore(sem_AVAccess);
+
+     if(vid_rect == NULL)
+        {
+            video_window_rect = NULL;
+        }
+     else
+        {
+            rect_buf.left         = vid_rect->x;
+            rect_buf.right      = vid_rect->x + vid_rect->w;
+            rect_buf.top        = vid_rect->y;
+            rect_buf.bottom = vid_rect->y + vid_rect->h;
+            
+            video_window_rect = &rect_buf;
+        }
+
+     AdjustVideoWindows();  
+
+     CSOS_SignalSemaphore(sem_AVAccess);
+     
+    return(err);
+}
+
+tCS_AV_Error CS_AV_SetTVOutDefinition( tCS_AV_VideoDefinition definition )
+{
+     tCS_AV_Error    err = eCS_AV_OK;
+     
+    CSOS_WaitSemaphore(sem_AVAccess);        
+	if( tve_handle == NULL ) 
+        {
+                CSOS_SignalSemaphore(sem_AVAccess);
+                return eCS_AV_ERROR;
+        }
+
+    switch( definition )
+    {
+        case eCS_AV_VIDEO_FORMAT_NTSC:        /* NTSC 480I 60Hz */
+            CSTVOUT_SetMode( tve_handle, TVOUT_MODE_480I );
+            break;
+            
+        case eCS_AV_VIDEO_FORMAT_PAL:         /* PAL 576I 50Hz*/
+            CSTVOUT_SetMode( tve_handle, TVOUT_MODE_576I );
+            break;
+        
+        case eCS_AV_VIDEO_FORMAT_480P60:      /* 480p 60HZ*/
+            CSTVOUT_SetMode( tve_handle, TVOUT_MODE_480P );
+            break;
+            
+        case eCS_AV_VIDEO_FORMAT_576P50:      /* 576P 50Hz */
+            CSTVOUT_SetMode( tve_handle, TVOUT_MODE_576P );
+            break;
+            
+        case eCS_AV_VIDEO_FORMAT_720P50:      /* 720P 50Hz */
+            CSTVOUT_SetMode( tve_handle, TVOUT_MODE_720P50 );
+            break;
+            
+        case eCS_AV_VIDEO_FORMAT_720P60:      /* 720P 60Hz */
+            CSTVOUT_SetMode( tve_handle, TVOUT_MODE_720P60 );
+            break;
+            
+        case eCS_AV_VIDEO_FORMAT_1080I50:     /* 1080I 50HZ*/
+            CSTVOUT_SetMode( tve_handle, TVOUT_MODE_1080I25 );
+            break;
+            
+        case eCS_AV_VIDEO_FORMAT_1080I60:     /* 1080I 60HZ*/
+            CSTVOUT_SetMode( tve_handle, TVOUT_MODE_1080I30 );
+            break;
+
+        case eCS_AV_VIDEO_FORMAT_AUTO:
+            break;
+        case eCS_AV_VIDEO_FORMAT_UNKNOWN:
+        default:
+                    CSTVOUT_SetMode( tve_handle, TVOUT_MODE_576I );
+            break;
+
+    }
+
+    CSOS_SignalSemaphore(sem_AVAccess);
+   
+    return(err);
+    
+}	
+
+
+BOOL CS_AV_VideoSwitchCVBS( BOOL CVBSEnable ) 
+{ 
+     return  TRUE;                
+}
+
+tCS_AV_Error CS_AV_ProgramStop(void)
+{
+     tCS_AV_Error    err = eCS_AV_OK;
+
+     CSOS_WaitSemaphore(sem_AVAccess);
+     video_set_show = FALSE;
+    if( vid_handle != NULL )
+    {
+        CSVID_Stop(vid_handle);       
+        //CSVID_Close(vid_handle);
+        //vid_handle = NULL; 
+    }
+
+    if( aud_handle != NULL )
+    {
+        CSAUD_Stop(aud_handle);       
+        //CSAUD_Close(aud_handle);
+        //aud_handle = NULL; 
+    }
+
+    if( xport_pid_filter0_handle != CSDEMUX_UNVALID_HANDLE )
+        {
+            CSDEMUX_PIDFT_Disable(xport_pid_filter0_handle);
+        }
+
+    if( xport_pid_filter1_handle != CSDEMUX_UNVALID_HANDLE )
+        {
+            CSDEMUX_PIDFT_Disable(xport_pid_filter1_handle);
+        }
+#if 0
+
+    if( xport_vidout_handle != CSDEMUX_UNVALID_HANDLE )
+    {
+       CSDEMUX_VID_Disable(xport_vidout_handle);
+       //CSDEMUX_VID_Close(xport_vidout_handle);
+    }
+      
+    if( xport_audout_handle != CSDEMUX_UNVALID_HANDLE )
+    {
+       CSDEMUX_AUD_Disable(xport_audout_handle);
+       //CSDEMUX_AUD_Close(xport_audout_handle);
+    }
+
+     DB_DemuxResetChannel();
+#endif
+
+    CSOS_SignalSemaphore(sem_AVAccess);
+
+	return(err);
+
+}
+
+tCS_AV_Error Play_Video(tCS_AV_PlayParams ProgramInfo)
+{
+    tCS_AV_Error    err = eCS_AV_OK;
+    CSAPI_RESULT    sdk_err;
+    
+    if(( vid_handle == NULL )||( xport_pid_filter0_handle == CSDEMUX_UNVALID_HANDLE )||( xport_vidout_handle == CSDEMUX_UNVALID_HANDLE ))
+	{
+		return eCS_AV_ERROR;
+	}
+
+    if((ProgramInfo.Video_PID == kDB_DEMUX_INVAILD_PID)&&(ProgramInfo.Audio_PID != kDB_DEMUX_INVAILD_PID))
+        {
+                err = Audio_SetMuteStatus(CS_AV_Audio_GetMuteStatus());
+                return eCS_AV_ERROR;
+        }
+
+    CSVID_SetOutputAlpha( vid_handle, 0 );
+    CSVID_Stop(vid_handle);       
+
+    CSDEMUX_PIDFT_Disable(xport_pid_filter0_handle);
+
+    CSDEMUX_VID_Disable(xport_vidout_handle);
+
+    CSDEMUX_PIDFT_SetChannel(xport_pid_filter0_handle,DEMUX_CHL_ID0);
+    CSDEMUX_PIDFT_SetPID(xport_pid_filter0_handle,ProgramInfo.Video_PID);  
+
+    DB_DemuxSetVidPid(xport_pid_filter0_handle, ProgramInfo.Video_PID);
+
+    if( CS_PVR_GetExecStatus() == CS_PVR_STATUS_PLAYER )
+	{
+		CSVID_SetInputMode( vid_handle, VID_INPUT_STILLPIC );
+		CSDEMUX_VID_SetOutputMode( xport_vidout_handle, DEMUX_OUTPUT_MOD_BLOCK );
+		printf("CSDEMUX_VID_SetOutputMode: DEMUX_OUTPUT_MOD_BLOCK\n");
+	}
+	else
+	{
+		CSVID_SetInputMode( vid_handle, VID_INPUT_DEMUX0 );
+		CSDEMUX_VID_SetOutputMode( xport_vidout_handle, DEMUX_OUTPUT_MOD_NONBLOCK );
+                  printf("CSDEMUX_VID_SetOutputMode: DEMUX_OUTPUT_MOD_NONBLOCK\n");
+	}
+
+    CSDEMUX_VID_SetPID(xport_vidout_handle,ProgramInfo.Video_PID);
+    if( ProgramInfo.VideoType == eCS_AV_VIDEO_STREAM_H264 )
+    {
+        CSVID_SetStreamType( vid_handle, VID_STREAM_TYPE_H264_TS );
+    }
+    else
+    {
+        CSVID_SetStreamType( vid_handle, VID_STREAM_TYPE_MPEG2_TS );
+    }
+
+    CSVID_WaitSync(vid_handle, 1);
+    
+    CSVID_EnablePTSSync(vid_handle); 
+
+    //CSVID_StartDelay(vid_handle, 2300);
+    sdk_err = CSVID_Play(vid_handle);
+
+    CSDEMUX_VID_Enable(xport_vidout_handle);
+    CSDEMUX_PIDFT_Enable(xport_pid_filter0_handle);
+
+    CSVID_SyncNotify(vid_handle, Sycro_call_back, 5000*1000, 1);
+    //printf("CSVID_Play err = %d\n", sdk_err);
+
+    //printf("begin CSVID_Play, time = %d\n", CS_OS_time_now());
+
+    video_set_show = TRUE;
+
+    return (err);
+        
+}
+
+tCS_AV_Error Play_Audio(tCS_AV_PlayParams ProgramInfo)
+{
+    tCS_AV_Error    err = eCS_AV_OK;
+    
+    if(( aud_handle == NULL )||( xport_pid_filter1_handle == CSDEMUX_UNVALID_HANDLE )||( xport_audout_handle == CSDEMUX_UNVALID_HANDLE ))
+	{
+		return eCS_AV_ERROR;
+	}
+
+    if(ProgramInfo.Audio_PID == kDB_DEMUX_INVAILD_PID)
+        {
+                return eCS_AV_ERROR;
+        }
+
+        CSAUD_EnableMute( aud_handle );
+
+        CSAUD_Stop(aud_handle);
+
+        CSDEMUX_PIDFT_Disable(xport_pid_filter1_handle);
+
+        CSDEMUX_AUD_Disable(xport_audout_handle);
+
+        CSDEMUX_PIDFT_SetChannel(xport_pid_filter1_handle,DEMUX_CHL_ID0);
+        CSDEMUX_PIDFT_SetPID(xport_pid_filter1_handle,ProgramInfo.Audio_PID);  
+
+        DB_DemuxSetAudPid(xport_pid_filter1_handle, ProgramInfo.Audio_PID);
+
+        if( CS_PVR_GetExecStatus() == CS_PVR_STATUS_PLAYER )
+		{
+			CSDEMUX_AUD_SetOutputMode( xport_audout_handle, DEMUX_OUTPUT_MOD_BLOCK );
+		}
+		else
+		{
+    		CSDEMUX_AUD_SetOutputMode( xport_audout_handle, DEMUX_OUTPUT_MOD_NONBLOCK );
+		}
+
+        CSDEMUX_AUD_SetPID(xport_audout_handle,ProgramInfo.Audio_PID);
+
+        CSAUD_Init( aud_handle );
+        //CSAUD_SetOutputDevice( aud_handle, AUD_OUTPUT_I2S_SPDIFPCM );
+	CSAUD_EnableMute( aud_handle );
+
+        if( ProgramInfo.AudioType == eCS_AV_AUDIO_STREAM_MPEG2 )
+        {
+            CSAUD_SetOutputDevice( aud_handle, AUD_OUTPUT_I2S_SPDIFPCM );
+            CSAUD_SetCodecType( aud_handle, AUD_STREAM_TYPE_MPA );
+            
+        }
+        else
+        {
+            if(CS_DBU_GetDefaultAudioType() == eCS_DBU_AUDIO_AC3)
+                {
+                    CSAUD_SetOutputDevice( aud_handle, AUD_OUTPUT_SPDIFAC3 );
+                }
+            else
+                {
+                    CSAUD_SetOutputDevice( aud_handle, AUD_OUTPUT_I2S_SPDIFPCM );
+                }
+            
+            CSAUD_SetCodecType( aud_handle, AUD_STREAM_TYPE_AC3 );
+        }
+        CSAUD_EnablePTSSync(aud_handle);
+
+    //CSAUD_SetStartDelay(aud_handle, 3000);
+        
+        CSAUD_Play(aud_handle); 
+        
+        CSDEMUX_AUD_Enable(xport_audout_handle);
+        CSDEMUX_PIDFT_Enable(xport_pid_filter1_handle);
+
+         err = AV_AudioSetVolume(CS_AV_AudioGetVolume());
+        err = AV_AudioSetStereoMode(ProgramInfo.AudioMode);
+
+        return (err);
+}
+
+#if 0
+#define CHECK_NULL(x) do { \
+	if (NULL == (x)) printf(" NULL pointer returned, at %s:%d \n", __FUNCTION__, __LINE__); \
+} while(0);
+
+#define CHECK_CSAPI_RET(x) do { \
+	if (CSAPI_FAILED == (x)) printf(" CSAPI_FAILED returned, at %s:%d \n", __FUNCTION__, __LINE__); \
+} while(0);
+
+#define CHECK_ETC_RET(x) do { \
+	if (0 != (x)) printf(" ETC_FAILED returned, at %s:%d \n", __FUNCTION__, __LINE__); \
+} while(0);
+
+static CSDEMUX_HANDLE demux_vid_pidft;
+static CSDEMUX_HANDLE demux_aud_pidft;
+
+static CSDEMUX_HANDLE demux_vidout;
+static CSDEMUX_HANDLE demux_audout;
+
+void set_program(int vid_pid, int aud_pid, int v_type, int a_type, int vin_mode, int demux_out_mode)
+{
+        demux_vid_pidft     = xport_pid_filter0_handle;
+        demux_aud_pidft   = xport_pid_filter1_handle;
+        demux_vidout = xport_vidout_handle;
+        demux_audout = xport_audout_handle;
+        
+	CHECK_CSAPI_RET(CSVID_SetOutputAlpha(vid_handle, 0x00));
+	CHECK_CSAPI_RET(CSAUD_EnableMute(aud_handle));
+
+	CHECK_CSAPI_RET(CSAUD_Stop(aud_handle));
+	CHECK_CSAPI_RET(CSVID_Stop(vid_handle));
+
+	CHECK_CSAPI_RET(CSDEMUX_PIDFT_Disable(demux_vid_pidft));
+	CHECK_CSAPI_RET(CSDEMUX_PIDFT_Disable(demux_aud_pidft));
+
+	CHECK_CSAPI_RET(CSDEMUX_VID_Disable(demux_vidout));
+	CHECK_CSAPI_RET(CSDEMUX_AUD_Disable(demux_audout));
+
+	// PID Filter Config
+	CHECK_CSAPI_RET(CSDEMUX_PIDFT_SetChannel(demux_vid_pidft, DEMUX_CHL_ID0));
+	CHECK_CSAPI_RET(CSDEMUX_PIDFT_SetPID(demux_vid_pidft, vid_pid));
+
+	CHECK_CSAPI_RET(CSDEMUX_PIDFT_SetChannel(demux_aud_pidft, DEMUX_CHL_ID0));
+	CHECK_CSAPI_RET(CSDEMUX_PIDFT_SetPID(demux_aud_pidft, aud_pid));
+
+	// VID Output Config
+	CHECK_CSAPI_RET(CSDEMUX_VID_SetOutputMode(demux_vidout, demux_out_mode));	/* play file mode. */
+	CHECK_CSAPI_RET(CSDEMUX_VID_SetPID(demux_vidout, vid_pid));
+
+	// AUD Output Config
+	CHECK_CSAPI_RET(CSDEMUX_AUD_SetOutputMode(demux_audout, demux_out_mode));
+	CHECK_CSAPI_RET(CSDEMUX_AUD_SetPID(demux_audout, aud_pid));
+
+	CHECK_CSAPI_RET(CSAUD_Init(aud_handle));
+	CHECK_CSAPI_RET(CSAUD_SetCodecType(aud_handle, a_type));
+
+	CHECK_CSAPI_RET(CSAUD_EnablePTSSync(aud_handle));
+
+	CHECK_CSAPI_RET(CSVID_SetStreamType(vid_handle, v_type));
+	CHECK_CSAPI_RET(CSVID_EnablePTSSync(vid_handle));
+
+	CHECK_CSAPI_RET(CSDEMUX_VID_Enable(demux_vidout));
+	CHECK_CSAPI_RET(CSDEMUX_AUD_Enable(demux_audout));
+	CHECK_CSAPI_RET(CSDEMUX_PIDFT_Enable(demux_vid_pidft));
+	CHECK_CSAPI_RET(CSDEMUX_PIDFT_Enable(demux_aud_pidft));
+
+	CHECK_CSAPI_RET(CSVID_Play(vid_handle));
+	CHECK_CSAPI_RET(CSAUD_Play(aud_handle));
+
+	CHECK_CSAPI_RET(CSVID_SetInputMode(vid_handle, vin_mode));
+
+    video_set_show = TRUE;
+
+        // CHECK_CSAPI_RET(CSVID_SyncNotify(vid_handle, sync_notify, 3000000, 1));
+        usleep(800000); 
+        CHECK_CSAPI_RET(CSVID_SetOutputAlpha(vid_handle, 0xff));
+	CHECK_CSAPI_RET(CSAUD_DisableMute(aud_handle));/* this is a bug, because H.264 does not support Sync notifiacation interrupt. */
+
+	return;
+}
+#endif
+
+tCS_AV_Error CS_AV_ProgramPlay( tCS_AV_PlayParams ProgramInfo )
+{
+     tCS_AV_Error    err = eCS_AV_OK;
+#if 1
+    printf( "*******************cs_middleware*************************\n" );
+    printf( "Play Program Video = 0x%x , VideoType = %s\n", 
+                      ProgramInfo.Video_PID, 
+                    ( ProgramInfo.VideoType > 0 )? "H.264": "MPEG2" );
+    printf( "             Audio = 0x%x , AudioType = %s\n", 
+                      ProgramInfo.Audio_PID,
+                    ( ProgramInfo.AudioType > 0 )? "AC3": "MPEG2" );    
+    printf( "*********************************************************\n" );
+#endif
+  
+    
+        CSOS_WaitSemaphore(sem_AVAccess); 
+
+        err = Play_Audio(ProgramInfo);
+        err = Play_Video(ProgramInfo);
+        //set_program(ProgramInfo.Video_PID, ProgramInfo.Audio_PID, VID_STREAM_TYPE_H264_TS, AUD_STREAM_TYPE_AC3, VID_INPUT_DEMUX0, DEMUX_OUTPUT_MOD_NONBLOCK);
+
+        CSOS_SignalSemaphore(sem_AVAccess);
+
+	return (err);
+}
+
+
+
+tCS_AV_Error CS_AV_ChangeAudioPid( U16 AudioPID, tCS_AV_AudioType AudioType )
+{
+         tCS_AV_Error    err = eCS_AV_OK;
+	
+         CSOS_WaitSemaphore(sem_AVAccess);   
+         
+	if( aud_handle == NULL )
+	{ 
+		CSOS_SignalSemaphore(sem_AVAccess);
+		return eCS_AV_ERROR;
+	}
+
+    CSAUD_EnableMute( aud_handle );
+
+	
+        CSAUD_Stop(aud_handle);       
+        //CSAUD_Close(aud_handle);
+        //aud_handle = NULL; 
+
+    CSDEMUX_PIDFT_Disable(xport_pid_filter1_handle);
+     
+    if( xport_audout_handle != CSDEMUX_UNVALID_HANDLE )
+    {
+       CSDEMUX_AUD_Disable(xport_audout_handle);
+       //CSDEMUX_AUD_Close(xport_audout_handle);
+    }
+
+    //PID Filter Config
+    CSDEMUX_PIDFT_SetChannel(xport_pid_filter1_handle,DEMUX_CHL_ID0);
+    CSDEMUX_PIDFT_SetPID(xport_pid_filter1_handle, AudioPID);  
+
+    //AUD Output Config
+    //CSDEMUX_AUD_SetCABBuf(xport_audout_handle,CAB_REGION,CAB_SIZE);
+    //CSDEMUX_AUD_SetPTSBuf(xport_audout_handle,AUD_PTS_REGION,AUD_PTS_SIZE);
+
+    CSDEMUX_AUD_SetOutputMode(xport_audout_handle,DEMUX_OUTPUT_MOD_NONBLOCK);
+
+    //CSDEMUX_AUD_SetSWMode(xport_audout_handle,xport_chl_handle);
+    CSDEMUX_AUD_SetPID( xport_audout_handle, AudioPID );
+
+    CSAUD_Init( aud_handle );
+    CSAUD_EnableMute( aud_handle );
+
+    if( AudioType == eCS_AV_AUDIO_STREAM_MPEG2 )
+    {
+        CSAUD_SetOutputDevice( aud_handle, AUD_OUTPUT_I2S_SPDIFPCM );
+        CSAUD_SetCodecType( aud_handle, AUD_STREAM_TYPE_MPA );
+    }
+    else
+    {
+            if(CS_DBU_GetDefaultAudioType() == eCS_DBU_AUDIO_AC3)
+                {
+                    CSAUD_SetOutputDevice( aud_handle, AUD_OUTPUT_SPDIFAC3 );
+                }
+            else
+                {
+                    CSAUD_SetOutputDevice( aud_handle, AUD_OUTPUT_I2S_SPDIFPCM );
+                }
+            
+        CSAUD_SetCodecType( aud_handle, AUD_STREAM_TYPE_AC3 );
+    }
+    CSAUD_EnablePTSSync(aud_handle);
+
+    CSDEMUX_AUD_Enable(xport_audout_handle);
+    CSDEMUX_PIDFT_Enable(xport_pid_filter1_handle);
+
+
+    CSAUD_Play(aud_handle);     
+
+    CSOS_DelayTaskMs(200);
+
+    err = AV_AudioSetVolume(CS_AV_AudioGetVolume());
+    err = Audio_SetMuteStatus(CS_AV_Audio_GetMuteStatus());
+        
+    CSOS_SignalSemaphore(sem_AVAccess);
+    
+
+	return (err);
+
+}
+
+tCS_AV_Error CS_AV_EnableTVOut(void)
+{
+    if(CSTVOUT_Enable(tve_handle) == CSAPI_SUCCEED)
+        return eCS_AV_OK;
+    else
+        return eCS_AV_ERROR;
+}
+
+
+tCS_AV_Error CS_AV_DisableTVOut(void)
+{
+    if(CSTVOUT_Disable(tve_handle) == CSAPI_SUCCEED)
+        return eCS_AV_OK;
+    else
+        return eCS_AV_ERROR;
+}
+
+void testac3(void)
+{
+    if( aud_handle == NULL )
+	{
+		return;
+	}
+    printf("testac3\n");
+    CSAUD_SetOutputDevice( aud_handle, AUD_OUTPUT_SPDIFAC3 );
+}
+
+FILE*   vid_file=NULL;
+
+tCS_AV_Error CS_AV_Play_IFrame(const char* file_path)
+{
+    int read_len = 0;
+    unsigned int bufsize = 0;
+    unsigned char  read_buf[4096+100];
+    static int first_in = 1;
+    unsigned int datasize = 1;
+    U8  i = 0;
+
+    memset(read_buf, 0, 4096+100);
+
+    CSVID_PFMClose(vid_handle);
+
+    //CSVID_SetOutputPostion(vid_handle, &src_rect, &dst_rect);
+    CSVID_SetOutputAlpha(vid_handle, 0);
+    CSVID_SetStreamType(vid_handle, VID_STREAM_TYPE_MPEG2_TS);
+    CSVID_SetInputMode(vid_handle, VID_INPUT_STILLPIC);
+    //CSVID_SyncNotify(vid_handle, testvideocallback2, 15, 1);
+    CSVID_Play(vid_handle);
+    video_set_show = TRUE;
+    //CSVID_EnablePTSSync(vid_handle);
+    CSVID_PFMOpen(vid_handle);
+    CSVID_GetPFMBufferSize(vid_handle, &bufsize);
+
+    //CSVID_SetNotifyPFMDataEmpty(vid_handle, &datasize, testvideocallback, 1);
+    //CSVID_PScanCropNotify(vid_handle, testvideocallback_pscancrop, 1);
+    //CSVID_AspectRatioChangeNotify(vid_handle, testvideocallback_aspectratio, 1);
+    printf("bufsize = %d\n",bufsize);
+
+    vid_file = fopen(file_path,"rb");//mpeg2_mpa_480p_qianlizhiwai_video1.mpv//mpeg2_mpa_1080i_video1.mpv
+    if(vid_file == NULL)
+    {
+       printf("======>file open failed\n");
+       return eCS_AV_ERROR;
+    }
+    fseek(vid_file,0L, SEEK_SET);
+    if ((read_len=fread(read_buf,1,4096,vid_file))!=4096)
+    {
+        fseek(vid_file,0L, SEEK_SET);
+        printf("read_len = %d ,===no data \n",read_len);
+    }
+
+
+    for(i=0;i<50;i++){
+            if(CSAPI_SUCCEED == CSVID_WritePFMData(vid_handle, read_buf, read_len)){
+                if ((read_len=fread(read_buf,1,4096,vid_file))!=4096)
+                {
+                    fseek(vid_file,0L, SEEK_SET);
+                    printf("read_len = %d ,===no data \n",read_len);
+                    //break;
+                }
+            }
+    }
+
+     usleep(300000);
+     CSVID_SetOutputAlpha(vid_handle, 0xff);
+
+     //CSVID_PFMClose(vid_handle);
+    
+    return eCS_AV_OK;
+}
+

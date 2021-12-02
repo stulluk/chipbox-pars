@@ -1,0 +1,11 @@
+#!/bin/sh
+
+for dir in open_sources csapi mvapi Mvapp oscam
+do
+	echo "****************"
+	echo "**Cleaning $dir**"
+	sleep 2
+	cd $dir
+	./ca
+	cd ..
+done

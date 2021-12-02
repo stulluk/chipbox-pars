@@ -1,0 +1,11 @@
+#!/bin/sh
+
+for dir in open_sources csapi mvapi Mvapp oscam
+do
+	echo "****************"
+	echo "**Building $dir**"
+	sleep 1
+	cd $dir
+	./ba
+	cd ..
+done
