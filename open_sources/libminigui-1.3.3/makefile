@@ -71,3 +71,5 @@ defconfig:
 	$(MAKE) -C scripts/lxdialog -f makefile.lx all
 	$(CONFIG_SHELL) scripts/Menuconfig configs/config.in
 	@rm .defconfig
+.PHONY : clean
+.PHONY : distclean
