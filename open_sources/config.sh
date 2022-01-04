@@ -43,16 +43,30 @@ while test $# -ge 1
 do
 case "$1" in
 
+# Sertac switch to new version 4.Jan.2021
+# busybox*)
+# echo "---------------------------------------------------------"
+# echo " busybox-1.4.1"
+# echo "---------------------------------------------------------"
+# pushd busybox-1.4.2
+# if test ! -f .config; then
+# 	cp scripts/defconfig_arm .config
+# 	make oldconfig
+# fi
+# make ARCH=arm CROSS_COMPILE=$CROSS_COMPILE- CONFIG_PREFIX="$TARGET_ROOTFS" install
+# popd
+# shift;;
+
 busybox*)
 echo "---------------------------------------------------------"
-echo " busybox-1.4.1"
+echo " busybox-1.20.2"
 echo "---------------------------------------------------------"
-pushd busybox-1.4.2
+sleep 2
+pushd busybox-1.20.2
 if test ! -f .config; then
-	cp scripts/defconfig_arm .config
-	make oldconfig
+	cp chipbox-busybox-1.20.2-defconfig .config
 fi
-make ARCH=arm CROSS_COMPILE=$CROSS_COMPILE- CONFIG_PREFIX="$TARGET_ROOTFS" install
+make -j16 ARCH=arm CROSS_COMPILE=$CROSS_COMPILE- CONFIG_PREFIX="$TARGET_ROOTFS" install
 popd
 shift;;
 
@@ -60,6 +74,7 @@ zlib*)
 echo "---------------------------------------------------------"
 echo " zlib-1.2.3"
 echo "---------------------------------------------------------"
+sleep 2
 pushd zlib-1.2.3
 ./configure \
 	--shared \
@@ -67,7 +82,7 @@ pushd zlib-1.2.3
 	--exec-prefix="$TARGET_BIN" \
 	--libdir="$TARGET_LIBS" \
 	--includedir="$TARGET_INC"
-make CFLAGS=-fPIC CC="$CC" CPP="$CPP" AR="$AR rc" LDSHARED="$LD -shared -Wl,-soname,libz.so.1"
+make -j16 CFLAGS=-fPIC CC="$CC" CPP="$CPP" AR="$AR rc" LDSHARED="$LD -shared -Wl,-soname,libz.so.1"
 make install
 popd
 shift;;
@@ -76,6 +91,7 @@ bzip2*)
 echo "---------------------------------------------------------"
 echo " bzip2-1.0.4"
 echo "---------------------------------------------------------"
+sleep 2
 pushd bzip2-1.0.4
 make CC=$CC RANLIB=$RANLIB AR=$AR -f Makefile-libbz2_so 
 make CC=$CC RANLIB=$RANLIB AR=$AR libbz2.a
@@ -93,6 +109,7 @@ jpeg*)
 echo "---------------------------------------------------------"
 echo " jpeg-6b"
 echo "---------------------------------------------------------"
+sleep 2
 pushd jpeg-6b
 ./configure \
 	--target="$CROSS_COMPILE" \
@@ -107,7 +124,8 @@ pushd jpeg-6b
 	--enable-shared \
 	--enable-static \
 	--without-x
-make CC=$CC AR=$AR RANLIB=$RANLIB LD=$LD1
+sleep 2
+make -j16 CC=$CC AR=$AR RANLIB=$RANLIB LD=$LD1
 make install-lib
 popd
 shift;;
@@ -116,6 +134,7 @@ png*)
 echo "---------------------------------------------------------"
 echo " libpng-1.2.16"
 echo "---------------------------------------------------------"
+sleep 2
 pushd libpng-1.2.16
 CFLAGS=-I$TARGET_INC \
 LDFLAGS=-L$TARGET_LIBS \
@@ -136,7 +155,8 @@ ac_cv_func_realloc_0_nonnull=yes \
 	--includedir=$TARGET_INC \
 	--without-libpng-compat \
 	--without-x 
-make
+sleep 2
+make -j16
 make install
 popd
 shift;;
@@ -145,6 +165,7 @@ freetype*)
 echo "---------------------------------------------------------"
 echo " freetype-2.2.1"
 echo "---------------------------------------------------------"
+sleep 2
 pushd freetype-2.2.1
 ./configure \
 	--target="$CROSS_COMPILE" \
@@ -156,7 +177,8 @@ pushd freetype-2.2.1
 	--libdir=$TARGET_LIBS \
 	--libexecdir=$TARGET_LIBS \
 	--includedir=$TARGET_INC
-make CCexe=gcc
+sleep 2
+make -j16 CCexe=gcc
 make install
 popd
 shift;;
@@ -165,6 +187,7 @@ directfb*)
 echo "---------------------------------------------------------"
 echo " DirectFB-1.0.0"
 echo "---------------------------------------------------------"
+sleep 2
 pushd DirectFB-1.0.0
 CFLAGS=-I$TARGET_INC \
 LDFLAGS=-L$TARGET_LIBS \
@@ -190,13 +213,15 @@ ac_cv_header_linux_sisfb_h=no \
 	--enable-jpeg \
 	--enable-png \
 	--enable-zlib \
-	--enable-freetype \
 	--disable-sysfs \
 	--disable-sdl \
 	--disable-video4linux \
 	--disable-video4linux2 \
-	--disable-fusion
-make
+	--disable-fusion \
+	--disable-tslib \
+	--enable-freetype
+sleep 3
+make -j16
 make DESTDIR=$WORK_DIR install
 cp $WORK_DIR/lib/* $TARGET_LIBS/ -fa
 cp $WORK_DIR/include/* $TARGET_INC/ -fa
@@ -209,6 +234,7 @@ minigui*)
 echo "---------------------------------------------------------"
 echo " libminigui-1.3.3"
 echo "---------------------------------------------------------"
+sleep 2
 pushd libminigui-1.3.3
 CFLAGS="-I$TARGET_INC -I$TARGET_INC/freetype2 -march=armv5te" \
 LDFLAGS=-L$TARGET_LIBS \
@@ -238,9 +264,9 @@ LDFLAGS=-L$TARGET_LIBS \
 	--enable-debug \
 	--enable-kbdfrpc \
 	--enable-extskin 
-
+sleep 2
 cp config_optimized.h config.h
-make CC=$CC
+make -j16 CC=$CC
 make install
 cp src/font/freetype-1.3.1/lib/libttf.so $TARGET_LIBS
 mkdir -p $TARGET_ROOTFS/usr/local/etc
@@ -256,8 +282,9 @@ mtdutils*)
 echo "---------------------------------------------------------" 
 echo "  mtd-utils-1.0.0"
 echo "---------------------------------------------------------"
+sleep 2
 pushd  mtd-utils-1.0.0
-make CC=$CC RANLIB=$RANLIB AR=$AR SBINDIR=$TARGET_ROOTFS/usr/bin INCLUDEDIR=$TARGET_INC LIBDIR=$TARGET_LIBS 
+make -j16 CC=$CC RANLIB=$RANLIB AR=$AR SBINDIR=$TARGET_ROOTFS/usr/bin INCLUDEDIR=$TARGET_INC LIBDIR=$TARGET_LIBS 
 make CC=$CC RANLIB=$RANLIB AR=$AR SBINDIR=$TARGET_ROOTFS/usr/bin INCLUDEDIR=$TARGET_INC LIBDIR=$TARGET_LIBS  install
 popd 
 shift;;
@@ -266,8 +293,9 @@ hdparm*)
 echo "---------------------------------------------------------" 
 echo "  hdparm-7.7 "
 echo "---------------------------------------------------------"
+sleep 2
 pushd hdparm-7.7
-make CC=$CC
+make -j16 CC=$CC
 cp hdparm $TARGET_ROOTFS/usr/sbin -fa
 popd 
 shift;;

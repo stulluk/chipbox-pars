@@ -1,0 +1,16 @@
+*.lo
+.deps/*
+.libs/*
+Makefile
+config.h
+config.log
+config.status
+libpng-config
+libpng.sym
+libpng.vers
+libpng12-config
+libpng12.la
+libpng12.pc
+libtool
+stamp-h1
+libpng.pc

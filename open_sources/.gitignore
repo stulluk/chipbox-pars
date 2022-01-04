@@ -1,0 +1,5 @@
+.vscode
+inc/*
+libs/*
+rootfs/*
+temp/*
