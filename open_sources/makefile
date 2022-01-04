@@ -3,7 +3,7 @@
 ########################
 # Add for make system version 0 support
 CS_STB_MAKE_VERSION :=0
-SUBDIRS :=  bzip2-1.0.4 DirectFB-1.0.0 libminigui-1.3.3 busybox-1.4.2 freetype-2.2.1 jpeg-6b libpng-1.2.16 zlib-1.2.3  mtd-utils-1.0.0 hdparm-7.7
+SUBDIRS :=  bzip2-1.0.4 DirectFB-1.0.0 libminigui-1.3.3 busybox-1.20.2 freetype-2.2.1 jpeg-6b libpng-1.2.16 zlib-1.2.3  mtd-utils-1.0.0 hdparm-7.7
 LIB_NAMES := busybox bzip2 zlib freetype png jpeg directfb minigui mtdutils hdparm
 MAKEFUNC = @MakeSubDir() \
         { \
@@ -48,5 +48,5 @@ distclean:
 	rm -rf inc libs rootfs
 	$(call LOOPMAKEFUNC,distclean)
 
-.PHONY: disclean all jpeg bzip2 zlib minigui busybox freetype directfb mtdutils
+.PHONY: distclean all jpeg bzip2 zlib minigui busybox freetype directfb mtdutils
 

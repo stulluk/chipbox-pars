@@ -65,6 +65,7 @@ sleep 2
 pushd busybox-1.20.2
 if test ! -f .config; then
 	cp chipbox-busybox-1.20.2-defconfig .config
+	#make ARCH=arm oldconfig # I will retry this
 fi
 make -j16 ARCH=arm CROSS_COMPILE=$CROSS_COMPILE- CONFIG_PREFIX="$TARGET_ROOTFS" install
 popd
@@ -189,6 +190,8 @@ echo " DirectFB-1.0.0"
 echo "---------------------------------------------------------"
 sleep 2
 pushd DirectFB-1.0.0
+FREETYPE_CFLAGS=-I$TARGET_INC/freetype2 \
+FREETYPE_LIBS=-I$TARGET_LIBS \
 CFLAGS=-I$TARGET_INC \
 LDFLAGS=-L$TARGET_LIBS \
 ac_cv_header_linux_wm97xx_h=no \
@@ -217,10 +220,8 @@ ac_cv_header_linux_sisfb_h=no \
 	--disable-sdl \
 	--disable-video4linux \
 	--disable-video4linux2 \
-	--disable-fusion \
-	--disable-tslib \
 	--enable-freetype
-sleep 3
+sleep 2
 make -j16
 make DESTDIR=$WORK_DIR install
 cp $WORK_DIR/lib/* $TARGET_LIBS/ -fa
