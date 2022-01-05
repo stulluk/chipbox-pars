@@ -65,7 +65,7 @@ sleep 2
 pushd busybox-1.20.2
 if test ! -f .config; then
 	cp chipbox-busybox-1.20.2-defconfig .config
-	#make ARCH=arm oldconfig # I will retry this
+	make ARCH=arm oldconfig # I will retry this
 fi
 make -j16 ARCH=arm CROSS_COMPILE=$CROSS_COMPILE- CONFIG_PREFIX="$TARGET_ROOTFS" install
 popd
