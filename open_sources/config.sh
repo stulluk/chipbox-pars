@@ -242,6 +242,7 @@ LDFLAGS=-L$TARGET_LIBS \
 ./configure \
 	--target="$CROSS_COMPILE" \
 	--host="$CROSS_COMPILE" \
+	--build="x86_64-unknown-linux-gnu" \
 	--prefix=$WORK_DIR \
 	--exec-prefix=$WORK_DIR \
 	--bindir=$TARGET_BIN \
