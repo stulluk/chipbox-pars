@@ -97,6 +97,7 @@ tools/dfbsummon
 tools/directfb-csource
 tools/fusion_bench
 tools/fx
+tools/mkdgiff
 tools/mkdfiff
 tools/raw15toraw24
 tools/raw16toraw24
