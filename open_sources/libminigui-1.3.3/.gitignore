@@ -77,7 +77,7 @@ stamp-h1
 autom4te.cache/output.0
 autom4te.cache/requests
 autom4te.cache/traces.0
-config.h.in
-config.h.in~
-configure
-examples/Makefile
+#config.h.in
+#config.h.in~
+#configure
+#examples/Makefile

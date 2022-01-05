@@ -45,7 +45,7 @@ hdparm:
 
 clean:distclean
 distclean:
-	rm -rf inc libs rootfs
+	rm -rf bin man share inc libs rootfs
 	$(call LOOPMAKEFUNC,distclean)
 
 .PHONY: distclean all jpeg bzip2 zlib minigui busybox freetype directfb mtdutils
