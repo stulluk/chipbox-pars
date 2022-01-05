@@ -1,5 +1,7 @@
 #!/bin/sh
 
+# this script builds all chipbox-pars in a docker container
+
 for dir in open_sources csapi mvapi Mvapp oscam
 do
 	echo "****************"
