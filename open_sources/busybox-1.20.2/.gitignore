@@ -36,3 +36,4 @@ Kbuild
 core
 .gdb_history
 .gdbinit
+busybox.links
