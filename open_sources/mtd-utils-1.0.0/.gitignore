@@ -1,2 +1,14 @@
 *.dep
 *.o
+flash_erase
+flash_eraseall
+flash_info
+flash_lock
+flash_otp_dump
+flash_otp_info
+flash_unlock
+flashcp
+jffs2dump
+mtd_debug
+nanddump
+nandwrite
