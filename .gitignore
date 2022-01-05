@@ -1,3 +1,5 @@
 *.o
 mvapp.elf
 oscam-chipbox
+!crosstool/**/*
+#*.o
