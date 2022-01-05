@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+
 pushd ../
 docker run -it -v $(pwd):/chipbox stulluk/chipbox-docker-builder \
 /bin/bash -c "cd /chipbox && \

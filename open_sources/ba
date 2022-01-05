@@ -1,6 +1,8 @@
+#!/usr/bin/env bash
+
 pushd ../
 docker run -it -v $(pwd):/chipbox stulluk/chipbox-docker-builder \
 /bin/bash -c "cd /chipbox && \
 export PATH=$PATH:/chipbox/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/bin/ \
-&& cd open_sources/ && make clean && make"
+&& cd open_sources/ && make clean ; make"
 popd
