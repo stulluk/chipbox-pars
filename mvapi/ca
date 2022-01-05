@@ -1,1 +1,6 @@
-make clean
+pushd ../
+docker run -it -v $(pwd):/chipbox stulluk/chipbox-docker-builder \
+/bin/bash -c "cd /chipbox && \
+export PATH=$PATH:/chipbox/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/bin/ \
+&& cd csapi/ && make clean"
+popd
