@@ -49,10 +49,11 @@ static U32					OSCAM_EnableIdx[2] = {
 							};
 #endif
 
-static U32					OSCAM_StatusIdx[2] = {
-								CSAPP_STR_CONNECTED,
-								CSAPP_STR_NOT_CONNECTED
-							};
+// Sertac disabling below to avoid compiler warnings 6.1.2022
+// static U32					OSCAM_StatusIdx[2] = {
+// 								CSAPP_STR_CONNECTED,
+// 								CSAPP_STR_NOT_CONNECTED
+// 							};
 
 static U32					ScreenWidth = CSAPP_OSD_MAX_WIDTH;
 
