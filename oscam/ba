@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 pushd ../
-docker run -it -v $(pwd):/chipbox stulluk/chipbox-docker-builder \
+docker run --rm -it -v $(pwd):/chipbox stulluk/chipbox-docker-builder \
 /bin/bash -c "cd /chipbox && \
 cd oscam/ && mkdir -p build \
 && cd build \
