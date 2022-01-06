@@ -9,7 +9,7 @@ MAKEFUNC = @MakeSubDir() \
                if [ -f makefile -o -f Makefile ]; then \
                         echo ""; \
                         pwd; \
-                        make $(1); \
+                        $(MAKE) $(1); \
                         if [ "$$?" != "0" ]; then \
                             exit 1; \
                         fi; \

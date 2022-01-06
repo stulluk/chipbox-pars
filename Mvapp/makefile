@@ -7,9 +7,10 @@ SUBDIRS = system csmid mvmid middleware app
 MAKEFUNC = @MakeSubDir() \
         { \
                if [ -f makefile -o -f Makefile ]; then \
-                        echo ""; \
+                        printf "\033[0;31m\n*******\n"; \
                         pwd; \
-                        make $(1); \
+                        printf "******* \033[0m \n"; \
+                        $(MAKE) -j16 $(1); \
                         if [ "$$?" != "0" ]; then \
                             exit 1; \
                         fi; \
