@@ -554,7 +554,7 @@ U32	ScalerHeigthPixel(U32	Pixel);
 U16 get_page_count(U16 total, U8 nbItemPerPage);
 U16 get_focus_line(U16 *page, U16 current, U8 nbItemPerPage);
 
-void ComboList_Create( const tComboList_Element * first, U8 element_num );
+void ComboList_Create( /*const*/ tComboList_Element * first, U8 element_num );
 void ComboList_UpdateAll( HWND hWnd );
 void ComboList_Update_Element( HWND hWnd, U8 element );
 void ComboList_Update_Field( HWND hWnd, U8 element, U8 field );

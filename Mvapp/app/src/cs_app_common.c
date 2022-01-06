@@ -346,7 +346,7 @@ U16 get_focus_line(U16 *page, U16 current, U8 nbItemPerPage)
 static tComboList	Combo_List;
 static RECT 		update_prc = {0, 0, 0, 0};
 
-void ComboList_Create( const tComboList_Element * first, U8 element_num )
+void ComboList_Create( /*const*/ tComboList_Element * first, U8 element_num )
 {
 	Combo_List.element_num = element_num;
 	Combo_List.first_element = first;
@@ -1296,10 +1296,10 @@ void MV_Warning_Report_Window_Open( HWND hwnd, ePopupIndex MenuKind /*, U8 SubKi
 	switch (MenuKind)
 	{
 		case MV_WINDOW_WARNING:
-			sprintf(temp_str, "%s", "PIN Doðru");
+			sprintf(temp_str, "%s", "PIN Doï¿½ru");
 			break;
 		case MV_WINDOW_REPORT:
-			sprintf(temp_str, "%s", "PIN Doðru");
+			sprintf(temp_str, "%s", "PIN Doï¿½ru");
 			break;
 		case MV_WINDOW_USB_MOUNT:
 			sprintf(temp_str, "%s", CS_MW_LoadStringByIdx(CSAPP_STR_USB_MOUNT));
@@ -1317,7 +1317,7 @@ void MV_Warning_Report_Window_Open( HWND hwnd, ePopupIndex MenuKind /*, U8 SubKi
 			sprintf(temp_str, "%s", CS_MW_LoadStringByIdx(CSAPP_STR_USB_CONNECTING));
 			break;
 		case MV_WINDOW_USB_UNMOUNT_FAIL:
-			sprintf(temp_str, "%s", "USB aygýtý düzgün çýkartýlamadý...");
+			sprintf(temp_str, "%s", "USB aygï¿½tï¿½ dï¿½zgï¿½n ï¿½ï¿½kartï¿½lamadï¿½...");
 			break;
 		case MV_WINDOW_NO_FAV_CHANNEL:
 			sprintf(temp_str, "%s", "Favorilerde Kanal Yok ...");
