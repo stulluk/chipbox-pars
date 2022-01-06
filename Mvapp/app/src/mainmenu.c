@@ -118,8 +118,8 @@ static int MainMenu_Msg_cb(HWND hwnd, int message, WPARAM wparam, LPARAM lparam)
 	int 				i;
 	static int 			input_count;
 	static char 		input_keys[PIN_MAX_NUM+2];
-	int 				x = 0;
-	U16					Start_y = 0;
+	//int 				x = 0;
+	//U16					Start_y = 0;
 
 
 #ifdef Screen_1080
@@ -551,7 +551,7 @@ static int MainMenu_Msg_cb(HWND hwnd, int message, WPARAM wparam, LPARAM lparam)
 
 					case CSAPP_KEY_INFO :
 
-					//v37den itibaren komple degiþtirdim aþaðýyý...
+					//v37den itibaren komple degiï¿½tirdim aï¿½aï¿½ï¿½yï¿½...
 
 					eklfile = fopen("/usr/work1/scinfo.sh" , "r");
 					if (eklfile){
@@ -572,52 +572,51 @@ static int MainMenu_Msg_cb(HWND hwnd, int message, WPARAM wparam, LPARAM lparam)
                         SetBkMode(hdc, BM_TRANSPARENT);
 
                         SetTextColor(hdc, MVAPP_YELLOW_COLOR);
-                        CS_MW_TextOut(hdc, ScalerWidthPixel(500), ScalerHeigthPixel(20), "KISAYOL BÝLGÝ EKRANI");
+                        CS_MW_TextOut(hdc, ScalerWidthPixel(500), ScalerHeigthPixel(20), "KISAYOL Bï¿½LGï¿½ EKRANI");
 
 
-                        if (pluginfile = fopen("/usr/work1/scplay.sh", "r")){
+                        if ( (pluginfile = fopen("/usr/work1/scplay.sh", "r")) != NULL ){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
                             CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(60), "IPTV =======> PLAY");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(60), "IPTV yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(60), "IPTV yï¿½klï¿½ deï¿½il..");
                         }
-
-                        if (pluginfile = fopen("/usr/work1/scsat.sh", "r")){
+						if ( (pluginfile = fopen("/usr/work1/scsat.sh", "r")) != NULL ){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(60), "MAÇ BÝLGÝ =======> UYDU");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(60), "MAï¿½ Bï¿½LGï¿½ =======> UYDU");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(60), "MAÇ BÝLGÝ yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(60), "MAï¿½ Bï¿½LGï¿½ yï¿½klï¿½ deï¿½il..");
                         }
 
-                        if(pluginfile = fopen("/usr/work1/sc8.sh", "r")){
+                        if( (pluginfile = fopen("/usr/work1/sc8.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
                             CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(90), "Gazeteler =========> 8");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(90), "Gazeteler yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(90), "Gazeteler yï¿½klï¿½ deï¿½il..");
                         }
 
-                        if(pluginfile = fopen("/usr/work1/scf1.sh", "r")){
+                        if((pluginfile = fopen("/usr/work1/scf1.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
                             CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(90), "Puan Durumu =======> F1");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(90), "Puan Durumu yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(90), "Puan Durumu yï¿½klï¿½ deï¿½il..");
                         }
 
-                        if(pluginfile = fopen("/usr/work1/S70oscam", "r")){
+                        if((pluginfile = fopen("/usr/work1/S70oscam", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(120), "OSCAM sunucularý ====> MAVÝ");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(120), "OSCAM sunucularï¿½ ====> MAVï¿½");
                             CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(150), "OSCAM restart ======> SARI");
                             CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(120), "OSCAM durdur ====> 4");
                             CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(150), "OSCAM bilgiler ======> 9");
@@ -625,134 +624,134 @@ static int MainMenu_Msg_cb(HWND hwnd, int message, WPARAM wparam, LPARAM lparam)
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(120), "OSCAM yüklü deðil..");
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(150), "OSCAM yüklü deðil..");
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(120), "OSCAM yüklü deðil..");
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(150), "OSCAM yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(120), "OSCAM yï¿½klï¿½ deï¿½il..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(150), "OSCAM yï¿½klï¿½ deï¿½il..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(120), "OSCAM yï¿½klï¿½ deï¿½il..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(150), "OSCAM yï¿½klï¿½ deï¿½il..");
                         }
 
-                        if(pluginfile = fopen("/usr/work1/scred.sh", "r")){
+                        if((pluginfile = fopen("/usr/work1/scred.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
                             CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(180), "Haritalar ==========> KIRMIZI");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(180), "Haritalar yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(180), "Haritalar yï¿½klï¿½ deï¿½il..");
                         }
 
-                        if(pluginfile = fopen("/usr/work1/scf2.sh", "r")){
+                        if((pluginfile = fopen("/usr/work1/scf2.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
                             CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(180), "FIKRA ========> F2");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(180), "FIKRA yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(180), "FIKRA yï¿½klï¿½ deï¿½il..");
                         }
 
-                        if(pluginfile = fopen("/usr/work1/sc3.sh", "r")){
+                        if((pluginfile = fopen("/usr/work1/sc3.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
                             CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(210), "Hava Durumu ==========> 3");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(210), "Hava Durumu yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(210), "Hava Durumu yï¿½klï¿½ deï¿½il..");
                         }
 
-                        if(pluginfile = fopen("/usr/work1/screc.sh", "r")){
+                        if((pluginfile = fopen("/usr/work1/screc.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
                             CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(210), "NFS KAYIT =====> KAYIT");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(210), "NFS KAYIT yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(210), "NFS KAYIT yï¿½klï¿½ deï¿½il..");
                         }
 
-                        if(pluginfile = fopen("/usr/work1/sc1.sh", "r")){
+                        if((pluginfile = fopen("/usr/work1/sc1.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
                             CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(240), "AutoZAP ==========> 1");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(240), "AutoZAP yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(240), "AutoZAP yï¿½klï¿½ deï¿½il..");
                         }
 
-                        if(pluginfile = fopen("/usr/work1/screcall.sh", "r")){
+                        if((pluginfile = fopen("/usr/work1/screcall.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(240), "Yeniden Baþlat =====> GERÝ");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(240), "Yeniden Baï¿½lat =====> GERï¿½");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(240), "Yeniden Baþlat yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(240), "Yeniden Baï¿½lat yï¿½klï¿½ deï¿½il..");
                         }
 
-                        if(pluginfile = fopen("/usr/work1/sc5.sh", "r")){
+                        if((pluginfile = fopen("/usr/work1/sc5.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(270), "Döviz / Altýn =========> 5");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(270), "Dï¿½viz / Altï¿½n =========> 5");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(270), "Döviz / Altýn yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(270), "Dï¿½viz / Altï¿½n yï¿½klï¿½ deï¿½il..");
                         }
 
-                        if(pluginfile = fopen("/usr/work1/sc6.sh", "r")){
+                        if((pluginfile = fopen("/usr/work1/sc6.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
                             CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(300), "Namaz Vakitleri =========> 6");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(300), "Namaz Vakitleri yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(300), "Namaz Vakitleri yï¿½klï¿½ deï¿½il..");
 
                         }
 
 
-                        if(pluginfile = fopen("/usr/work1/scepg.sh", "r")){
+                        if((pluginfile = fopen("/usr/work1/scepg.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(270), "Yayýn Akýþý ==========> EPG");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(270), "Yayï¿½n Akï¿½ï¿½ï¿½ ==========> EPG");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(270), "Yayýn Akýþý yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(270), "Yayï¿½n Akï¿½ï¿½ï¿½ yï¿½klï¿½ deï¿½il..");
                         }
 
 
-                        if(pluginfile = fopen("/usr/work1/scepg.sh", "r")){
+                        if((pluginfile = fopen("/usr/work1/scepg.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
                             CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(300), "MailYedek ========> PageDown");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(300), "MailYedek yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(660), ScalerHeigthPixel(300), "MailYedek yï¿½klï¿½ deï¿½il..");
                         }
 
 
-                        if(pluginfile = fopen("/usr/work1/sc7.sh", "r")){
+                        if((pluginfile = fopen("/usr/work1/sc7.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
                             CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(330), "InfoShow ==========> 7");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(330), "InfoShow yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(330), "InfoShow yï¿½klï¿½ deï¿½il..");
                         }
 
-                        if(pluginfile = fopen("/usr/work1/sc0.sh", "r")){
+                        if((pluginfile = fopen("/usr/work1/sc0.sh", "r")) != NULL){
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR);
                             CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(360), "Turksat frekans ====> 0");
                             fclose(pluginfile);
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(360), "Turksat frekans yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(360), "Turksat frekans yï¿½klï¿½ deï¿½il..");
                         }
 
                         /*if(pluginfile = fopen("/usr/work1/scinfo.sh", "r")){
@@ -762,14 +761,14 @@ static int MainMenu_Msg_cb(HWND hwnd, int message, WPARAM wparam, LPARAM lparam)
                         }
                         else{
                             SetTextColor(hdc, MVAPP_YELLOW_COLOR_ALPHA);
-                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(390), "Ekl. Eklentisi yüklü deðil..");
+                            CS_MW_TextOut(hdc, ScalerWidthPixel(120), ScalerHeigthPixel(390), "Ekl. Eklentisi yï¿½klï¿½ deï¿½il..");
                         }*/
 
 
 
 
                         SetTextColor(hdc, MVAPP_YELLOW_COLOR);
-                        CS_MW_TextOut(hdc, ScalerWidthPixel(350), ScalerHeigthPixel(490), "Çýkmak için EXIT butonuna basýnýz");
+                        CS_MW_TextOut(hdc, ScalerWidthPixel(350), ScalerHeigthPixel(490), "ï¿½ï¿½kmak iï¿½in EXIT butonuna basï¿½nï¿½z");
                         EndPaint(hwnd,hdc);
 
                         break;
@@ -991,10 +990,10 @@ static int MainMenu_Msg_cb(HWND hwnd, int message, WPARAM wparam, LPARAM lparam)
                     MV_FillBox( hdc, ScalerWidthPixel(700), ScalerHeigthPixel(100), ScalerWidthPixel(500), ScalerHeigthPixel(CSAPP_OSD_MAX_HEIGHT/10) );
                     SetBkMode(hdc, BM_TRANSPARENT);
                     SetTextColor(hdc, MVAPP_YELLOW_COLOR);
-                    CS_MW_TextOut(hdc, ScalerWidthPixel(720), ScalerHeigthPixel(120), "Streaming baþlýyor...");
+                    CS_MW_TextOut(hdc, ScalerWidthPixel(720), ScalerHeigthPixel(120), "Streaming baï¿½lï¿½yor...");
                     EndPaint(hwnd,hdc);
 						system( "/usr/work1/scff.sh" );
-						/*printf("Streaming baþlýyor...\n");
+						/*printf("Streaming baï¿½lï¿½yor...\n");
                                 FbSendFndDisplay("STRM");
                                 FbSendFndDisplay("MENU");*/
 
@@ -1054,7 +1053,7 @@ static int MainMenu_Msg_cb(HWND hwnd, int message, WPARAM wparam, LPARAM lparam)
                         MV_FillBox( hdc, ScalerWidthPixel(700), ScalerHeigthPixel(100), ScalerWidthPixel(500), ScalerHeigthPixel(CSAPP_OSD_MAX_HEIGHT/10) );
                         SetBkMode(hdc, BM_TRANSPARENT);
                         SetTextColor(hdc, MVAPP_YELLOW_COLOR);
-                        CS_MW_TextOut(hdc, ScalerWidthPixel(720), ScalerHeigthPixel(120), "Oscam yeniden baþlatýlýyor..");
+                        CS_MW_TextOut(hdc, ScalerWidthPixel(720), ScalerHeigthPixel(120), "Oscam yeniden baï¿½latï¿½lï¿½yor..");
                         EndPaint(hwnd,hdc);
                         system( "/usr/work1/S70oscam restart" );
 					}
@@ -1064,7 +1063,7 @@ static int MainMenu_Msg_cb(HWND hwnd, int message, WPARAM wparam, LPARAM lparam)
                         MV_FillBox( hdc, ScalerWidthPixel(700), ScalerHeigthPixel(100), ScalerWidthPixel(500), ScalerHeigthPixel(CSAPP_OSD_MAX_HEIGHT/10) );
                         SetBkMode(hdc, BM_TRANSPARENT);
                         SetTextColor(hdc, MVAPP_YELLOW_COLOR);
-                        CS_MW_TextOut(hdc, ScalerWidthPixel(720), ScalerHeigthPixel(120), "Oscam zaten yüklü deðil..");
+                        CS_MW_TextOut(hdc, ScalerWidthPixel(720), ScalerHeigthPixel(120), "Oscam zaten yï¿½klï¿½ deï¿½il..");
                         EndPaint(hwnd,hdc);
 
 					}
@@ -1253,7 +1252,7 @@ static int MainMenu_Msg_cb(HWND hwnd, int message, WPARAM wparam, LPARAM lparam)
                     case CSAPP_KEY_PAUSE:
 						/*if ( CFG_Factory_Mode == FALSE )
 						{
-							//CFG_Factory_Mode = FALSE; //Sertac v37-test1 fabrika menüsünü kapatma için...
+							//CFG_Factory_Mode = FALSE; //Sertac v37-test1 fabrika menï¿½sï¿½nï¿½ kapatma iï¿½in...
 							//MV_Fac_End_cfg(KIND_ON);
 							CSApp_MainMenu_Applets = CSApp_Applet_MainMenu;
 							SendMessage (hwnd, MSG_CLOSE, 0, 0);
