@@ -478,7 +478,7 @@ typedef  enum
 {
 	eCS_DB_OK,
 	eCS_DB_ERROR
-} tCS_DB_Error;				/*Êý¾Ý¿âÄ£¿é´íÎóÀàÐÍ*/
+} tCS_DB_Error;				/*ï¿½ï¿½ï¿½Ý¿ï¿½Ä£ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
 
 typedef enum
 {
@@ -487,7 +487,7 @@ typedef enum
 	eCS_DB_RADIO_SERVICE,
 	eCS_DB_HDTV_SERVICE,
 	eCS_DB_DATA_SERVICE		
-} tCS_DB_ServiceType;		/*½ÚÄ¿ÀàÐÍ*/
+} tCS_DB_ServiceType;		/*ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½*/
 
 typedef enum
 {
@@ -498,19 +498,19 @@ typedef enum
 	eCS_DB_SAT_TV_LIST,
 	eCS_DB_SAT_RADIO_LIST,
 	eCS_DB_INVALID_LIST		
-} tCS_DB_ServiceListType;		/*½ÚÄ¿ÁÐ±íÀàÐÍ*/
+} tCS_DB_ServiceListType;		/*ï¿½ï¿½Ä¿ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½*/
 
 typedef enum
 {
 	eCS_DB_NOT_LOCKED = 0,
 	eCS_DB_LOCKED
-} tCS_DB_LockStatus;					/*¼ÓËø×´Ì¬*/
+} tCS_DB_LockStatus;					/*ï¿½ï¿½ï¿½ï¿½×´Ì¬*/
 
 typedef enum
 {
 	eDBASE_DELETE = 0,	
 	eDBASE_NOT_DELETE
-} tCS_DB_DeleteStatus;				/*É¾³ý×´Ì¬*/
+} tCS_DB_DeleteStatus;				/*É¾ï¿½ï¿½×´Ì¬*/
 
 typedef enum
 {
@@ -520,9 +520,9 @@ typedef enum
 
 typedef	enum
 {
-	eCS_DB_Appearing_Order = 0,		/*ÆÕÍ¨Ä£Ê½£¬½ÚÄ¿°´ËÑË÷Ë³ÐòÅÅÁÐ*/
-	eCS_DB_Operator_Defined			/*½ÚÄ¿°´ÔËÓªÉÌ¶¨ÒåË³ÐòÅÅÁÐ*/
-} tCS_DB_LCNMode;					/*LCNÄ£Ê½*/				/*ÒôÆµÉùµÀÄ£Ê½*/
+	eCS_DB_Appearing_Order = 0,		/*ï¿½ï¿½Í¨Ä£Ê½ï¿½ï¿½ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
+	eCS_DB_Operator_Defined			/*ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½Óªï¿½Ì¶ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
+} tCS_DB_LCNMode;					/*LCNÄ£Ê½*/				/*ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½Ä£Ê½*/
 
 typedef enum
 {
@@ -530,7 +530,7 @@ typedef enum
 	MV_DB_MONO,	
 	MV_DB_LEFT,
 	MV_DB_RIGHT
-} MV_DB_AudioMode;					/*ÒôÆµÉùµÀÄ£Ê½*/
+} MV_DB_AudioMode;					/*ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½Ä£Ê½*/
 
 typedef enum
 {
@@ -562,15 +562,15 @@ typedef enum
 
 typedef	enum
 {
-	eCS_DBU_SCARTCVBS,	/*CVBSÐÅºÅÑ¡Ôñ*/
-	eCS_DBU_SCARTRGB		/*RGBÐÅºÅÑ¡Ôñ*/
+	eCS_DBU_SCARTCVBS,	/*CVBSï¿½Åºï¿½Ñ¡ï¿½ï¿½*/
+	eCS_DBU_SCARTRGB		/*RGBï¿½Åºï¿½Ñ¡ï¿½ï¿½*/
 } tCS_DBU_ScartMode;
 
 typedef	enum
 {
 	eCS_DBU_OFF,
 	eCS_DBU_ON
-} tCS_DBU_Status;		/*´ò¿ª/¹Ø±Õ×´Ì¬£¬ÊÊÓÃÓÚËùÓÐ0£¬1×´Ì¬µÄÊý¾Ý*/
+} tCS_DBU_Status;		/*ï¿½ï¿½/ï¿½Ø±ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½1×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
 
 #if 0 /* By KB Kim 2010.08.31 */
 typedef	enum
@@ -601,7 +601,7 @@ typedef	enum
 	eCS_DBU_DEFINITION_1080I,
 	//eCS_DBU_DEFINITION_1080P,
 	eCS_DBU_DEFINITION_AUTOMATIC
-} tCS_DBU_VideoDefinition; 	/*Í¼ÏñÇåÎú¶È*/
+} tCS_DBU_VideoDefinition; 	/*Í¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
 
 typedef enum
 {
@@ -616,34 +616,34 @@ typedef	enum
 	eCS_DBU_PAL,
 	eCS_DBU_SECAM,
 	eCS_DBU_AUTOMATIC
-} tCS_DBU_VideoEncodingMode; 	/*ÊÓÆµÖÆÊ½*/
+} tCS_DBU_VideoEncodingMode; 	/*ï¿½ï¿½Æµï¿½ï¿½Ê½*/
 
 typedef	enum
 {
 	eCS_DBU_ASPECT_RATIO_4_3	 = 0,
 	eCS_DBU_ASPECT_RATIO_16_9,
 	eCS_DBU_ASPECT_RATIO_AUTOMATIC
-} tCS_DBU_VideoAspectRatio;		/*ÊÓÆµÆÁ¿í±È*/
+} tCS_DBU_VideoAspectRatio;		/*ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
 
 typedef enum
 {
 	eCS_DBU_ARM_COMBINED = 0,	
 	eCS_DBU_ARM_LETTER_BOX,
 	eCS_DBU_ARM_PANSCAN
-} tCS_DBU_AspectRatioMode;		/*ÊÓÆµÆÁ¿í±ÈÏÔÊ¾Ä£Ê½*/
+} tCS_DBU_AspectRatioMode;		/*ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾Ä£Ê½*/
 
 typedef	enum
 {
-	eCS_DBU_TIME_AUTOMATIC = 0, 	/*´ÓTDT/TOTÖÐ¶ÁÈ¡Ê±¼ä*/
-	eCS_DBU_TIME_MANUAL,			/*ÓÃ»§×Ô¼ºÊäÈëÊ±¼ä*/
+	eCS_DBU_TIME_AUTOMATIC = 0, 	/*ï¿½ï¿½TDT/TOTï¿½Ð¶ï¿½È¡Ê±ï¿½ï¿½*/
+	eCS_DBU_TIME_MANUAL,			/*ï¿½Ã»ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½*/
 	eCS_DBU_TIME_INTERNET
-} tCS_DBU_TimeMode;					/*Ê±¼äÉèÖÃÄ£Ê½*/
+} tCS_DBU_TimeMode;					/*Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½*/
 
 typedef struct
 {
-	tCS_DB_ServiceListType 	sCS_DB_ServiceListType;		/*ÁÐ±íÀàÐÍ*/
-	U32						sCS_DB_ServiceListTypeValue;/*ÁÐ±íË÷ÒýÖµ*/
-} tCS_DB_ServiceListTriplet;								/*½ÚÄ¿ÁÐ±í¹Ø¼ü×ÖÊý¾Ý*/
+	tCS_DB_ServiceListType 	sCS_DB_ServiceListType;		/*ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½*/
+	U32						sCS_DB_ServiceListTypeValue;/*ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½Öµ*/
+} tCS_DB_ServiceListTriplet;								/*ï¿½ï¿½Ä¿ï¿½Ð±ï¿½ï¿½Ø¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
 
 typedef enum
 {
@@ -845,27 +845,27 @@ typedef struct
 
 typedef struct
 {
-	U16 	u16DB_List_ServiceNum[MV_LIST_NUMBER];	/*ÁÐ±íÖÐµÄ½ÚÄ¿×ÜÊý*/
-} tCS_DB_ServiceListInfo;			/*½ÚÄ¿ÁÐ±íµÄÏà¹ØÐÅÏ¢*/
+	U16 	u16DB_List_ServiceNum[MV_LIST_NUMBER];	/*ï¿½Ð±ï¿½ï¿½ÐµÄ½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½*/
+} tCS_DB_ServiceListInfo;			/*ï¿½ï¿½Ä¿ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢*/
 
 typedef	struct
 {
 	char	sCS_DBU_CheckString[4];
-	U8		sCS_DBU_ScartMode;										/*SCARTÊä³öÐÅºÅ¸ñÊ½*/
-	U8		sCS_DBU_SpdifStatus;									/*SPDIFÊä³ö×´Ì¬*/	
-	U8 		sCS_DBU_VideoOutPut;									/*ÊÓÆµÊä³ö¶Ë¿Ú*/
-	U8 		sCS_DBU_VideoDefinition;								/*ÊÓÆµÇåÎú¶È*/
-	U32		sCS_DBU_VideoEncodingMode;								/*ÊÓÆµÖÆÊ½*/
-	U32		sCS_DBU_VideoAspectRatio;								/*ÊÓÆµÆÁ¿í±È*/
-	U32		sCS_DBU_AspectRatioMode;								/*ÊÓÆµÆÁ¿í±ÈÏÔÊ¾Ä£Ê½*/
-	U32		sCS_DBU_DefaultAudioType;								/*Ä¬ÈÏÒôÆµÀàÐÍ*/
+	U8		sCS_DBU_ScartMode;										/*SCARTï¿½ï¿½ï¿½ï¿½ÅºÅ¸ï¿½Ê½*/
+	U8		sCS_DBU_SpdifStatus;									/*SPDIFï¿½ï¿½ï¿½×´Ì¬*/	
+	U8 		sCS_DBU_VideoOutPut;									/*ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½Ë¿ï¿½*/
+	U8 		sCS_DBU_VideoDefinition;								/*ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
+	U32		sCS_DBU_VideoEncodingMode;								/*ï¿½ï¿½Æµï¿½ï¿½Ê½*/
+	U32		sCS_DBU_VideoAspectRatio;								/*ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
+	U32		sCS_DBU_AspectRatioMode;								/*ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê¾Ä£Ê½*/
+	U32		sCS_DBU_DefaultAudioType;								/*Ä¬ï¿½ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½*/
 	U32		sCS_DBU_AudioLanguage;									/* Audio Language */
 	U32		sCS_DBU_SubtitleLanguage;								/* SubTitle Language */
 	U32		sCS_DBU_MenuLanguage;									/* OSD Language */
-	U32		sCS_DBU_TimeOffset;										/*Ê±¼äÆ«ÒÆ,Ê±¼ä¸ñÊ½µÚ31Î»: 1±íÊ¾£­£¬0±íÊ¾+, µÍ16Î»ÊÇ4Êý×Ö4Î»BCDÂë*/
-	U32		sCS_DBU_TimeMode;										/*Ê±¼äÉèÖÃÄ£Ê½*/
-	U32		sCS_DBU_TimeRegion;										/*Ê±¼äÇøÓòË÷ÒýÖµ*/
-	char	sCS_DBU_PinCode[4];										/*ÃÜÂë*/
+	U32		sCS_DBU_TimeOffset;										/*Ê±ï¿½ï¿½Æ«ï¿½ï¿½,Ê±ï¿½ï¿½ï¿½Ê½ï¿½ï¿½31Î»: 1ï¿½ï¿½Ê¾ï¿½ï¿½ï¿½ï¿½0ï¿½ï¿½Ê¾+, ï¿½ï¿½16Î»ï¿½ï¿½4ï¿½ï¿½ï¿½ï¿½4Î»BCDï¿½ï¿½*/
+	U32		sCS_DBU_TimeMode;										/*Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä£Ê½*/
+	U32		sCS_DBU_TimeRegion;										/*Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Öµ*/
+	char	sCS_DBU_PinCode[4];										/*ï¿½ï¿½ï¿½ï¿½*/
 	U8		sCS_DBU_InstallLockStatus;								/* Menu Lock status */
 	U8		sCS_DBU_BootLockStatus;									/* Boot Lock status */
 	U8		sCS_DBU_EditLockStatus;									/* Channel Edit Lock status */
@@ -900,13 +900,13 @@ typedef	struct
 	U8      sCS_DBU_HeartBit;                                       /* Heart Bit On & Off */
 	U8      sCS_DBU_Use_Subtitle;                                   /* Subtitle Auto display On & Off */
 	U8      sCS_DBU_Fix_Fontsize;                                   /* Fixed Font Size 0 ~ 5 */
-}tCS_DBU_UserSetting_Save; 	/*ÓÃ»§ÉèÖÃÊý¾Ý²¿·Ö£¬±£³Ö32Î»¶ÔÆë£¬·½±ãe2p¶ÁÐ´*/
+}tCS_DBU_UserSetting_Save; 	/*ï¿½Ã»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý²ï¿½ï¿½Ö£ï¿½ï¿½ï¿½ï¿½ï¿½32Î»ï¿½ï¿½ï¿½ë£¬ï¿½ï¿½ï¿½ï¿½e2pï¿½ï¿½Ð´*/
 
 typedef struct
 {
-	tCS_DB_ServiceListTriplet 	sCS_DBU_ServiceList;				/*½ÚÄ¿ËùÔÚÁÐ±íÐÅÏ¢*/
-	U32          				sCS_DBU_ServiceIndex;				/*ÁÐ±íÖÐ¸Ã½ÚÄ¿Ë÷ÒýºÅ*/	
-} tCS_DBU_Service;													/*½ÚÄ¿Ë÷ÒýÐÅÏ¢¹Ø¼ü×Ö,32Î»¶ÔÆë£¬·½±ãE2P¶ÁÐ´*/
+	tCS_DB_ServiceListTriplet 	sCS_DBU_ServiceList;				/*ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½Ï¢*/
+	U32          				sCS_DBU_ServiceIndex;				/*ï¿½Ð±ï¿½ï¿½Ð¸Ã½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/	
+} tCS_DBU_Service;													/*ï¿½ï¿½Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½Ø¼ï¿½ï¿½ï¿½,32Î»ï¿½ï¿½ï¿½ë£¬ï¿½ï¿½ï¿½ï¿½E2Pï¿½ï¿½Ð´*/
 
 #ifdef SMART_PHONE
 enum
@@ -1199,6 +1199,7 @@ U16	MV_Get_TVServiceCount_at_Sat(U8 u8SatIndex);
 U16	MV_Get_RDServiceCount_at_Sat(U8 u8SatIndex);
 tCS_DB_Error CS_DB_All_Ch_Delete (void);
 void MV_SetCHData_DEL_BySatellite(U8 u8Delete_Sat_index);
+void MV_SetCHIndex_DEL_ByFavorite(U8 u8Delete_Fav_index);
 void CS_DB_Set_TVLastServiceTriplet(void);
 tCS_DBU_Service CS_DB_Get_TVLastServiceTriplet(void);
 void CS_DB_Set_RadioLastServiceTriplet(void);
