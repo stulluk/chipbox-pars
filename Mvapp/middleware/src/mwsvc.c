@@ -1050,7 +1050,7 @@ BOOL CS_MW_SVC_Init(void)
 
 	/* Added for CI TS Control by KB Kim 20110107 */
 	GpioOpenParam_t         tsControlGpioOpenParam;
-	GpioOpenParam_t         tsResetGpioOpenParam;
+	//GpioOpenParam_t         tsResetGpioOpenParam; // Sertac disabling to avoid compiler warnings 6.1.2022
 #endif
 
 	SiRegisterLiveSearchCallBack(LivePmtCallBack);
