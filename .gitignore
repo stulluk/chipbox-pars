@@ -3,3 +3,4 @@ mvapp.elf
 oscam-chipbox
 !crosstool/**/*
 #*.o
+.vscode
