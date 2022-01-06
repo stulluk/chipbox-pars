@@ -3,8 +3,7 @@
 pushd ../
 docker run -it -v $(pwd):/chipbox stulluk/chipbox-docker-builder \
 /bin/bash -c "cd /chipbox && \
-export PATH=$PATH:/chipbox/crosstool/gcc-3.4.6-glibc-2.3.6/arm-linux/bin/ \
-&& cd oscam/ && mkdir -p build \
+cd oscam/ && mkdir -p build \
 && cd build \
 && cmake -DCMAKE_TOOLCHAIN_FILE=../toolchains/toolchain-arm-dockstar-openwrt.cmake .. \
 && make -j16"
