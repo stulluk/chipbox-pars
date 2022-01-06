@@ -1954,7 +1954,7 @@ static int PVR_Streaming_Msg_cb(HWND hwnd , int message, WPARAM wparam, LPARAM l
 
 					if(PVR_Rec_Banner.OnScreen == FALSE)
 					{
-						CS_MW_CloseSubtitle(); /* By KB Kim : 2011.06.13
+						CS_MW_CloseSubtitle(); // By KB Kim : 2011.06.13 
 						PVR_Rec_Banner.Draw = TRUE;
 						u8InputCount = 0;
 
@@ -1973,7 +1973,7 @@ static int PVR_Streaming_Msg_cb(HWND hwnd , int message, WPARAM wparam, LPARAM l
 					PVR_Record_PaintBanner(hdc);
 					MV_EndPaint(hwnd,hdc);
 
-					/* By KB Kim : 2011.06.13
+					// By KB Kim : 2011.06.13
 					if (CS_MW_GetSubtitlePid() >= kDB_DEMUX_INVAILD_PID)
 					{
 						if( PVR_Rec_Banner.Draw == FALSE && PVR_Banner.Draw == FALSE)
