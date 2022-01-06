@@ -16,6 +16,7 @@
 #include "csmpr_usb.h"
 #include "mvosapi.h"
 #include "userdefine.h"
+#include "mv_oscam.h"
 
 #include "casapi.h"  /* By KB Kim : 2010_07_23 */
 #include "security.h"  /* By KB Kim : 2010_11_16 */
@@ -54,6 +55,8 @@ U8 MV_Get_BootMode(void)
 
 int MiniGUIMain (int argc, const char *argv[])  				//cs_app_main  (int argc, const char *argv[])
 {
+	// Sertac just to avoid compiler warnings
+	printf("Argument count is %d , my name is %s \n", argc, argv[0]);
 	int i=0;
 
 	printf("MiniGUIMain %d\n", CS_OS_time_Get_Sec());
@@ -133,13 +136,13 @@ int MiniGUIMain (int argc, const char *argv[])  				//cs_app_main  (int argc, co
 }
 
 #include <termios.h>
-int 	fd;  /*¶¨ÒåÉè±¸ÎÄ¼þÃèÊö·û*/
+int 	fd;  /*ï¿½ï¿½ï¿½ï¿½ï¿½è±¸ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
 
 int lowpower_open_serial(int k)
 {
-	if(k==0)       /*´®¿ÚÑ¡Ôñ*/
+	if(k==0)       /*ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½ï¿½*/
 	{
-		fd = open("/dev/ttyS0",O_RDWR|O_NOCTTY);  /*¶ÁÐ´·½Ê½´ò¿ª´®¿Ú*/
+		fd = open("/dev/ttyS0",O_RDWR|O_NOCTTY);  /*ï¿½ï¿½Ð´ï¿½ï¿½Ê½ï¿½ò¿ª´ï¿½ï¿½ï¿½*/
 		printf("open /dev/ttyS0");
 	}
 	else
@@ -148,7 +151,7 @@ int lowpower_open_serial(int k)
 		printf("open /dev/ttyS1");
 	}
 
-	if(fd == -1)  /*´ò¿ªÊ§°Ü*/
+	if(fd == -1)  /*ï¿½ï¿½Ê§ï¿½ï¿½*/
 	{
 		printf("Open serial %d fail\n",k);
 		return -1;
@@ -162,22 +165,22 @@ int lowpower_open_serial(int k)
 
 int lowpower_send_serial(void)
 {
-	char 	sbuf[]={"Hello,this is a Serial_Port test!\n"};/*´ý·¢ËÍµÄÄÚÈÝ£¬ÒÔ\nÎª½áÊø±êÖ¾*/
+	char 	sbuf[]={"Hello,this is a Serial_Port test!\n"};/*ï¿½ï¿½ï¿½ï¿½ï¿½Íµï¿½ï¿½ï¿½ï¿½Ý£ï¿½ï¿½ï¿½\nÎªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¾*/
 
 	int 		retv;
 	int 		flag_close;
 
 	struct termios option;
 
-	int length=sizeof(sbuf);/*·¢ËÍ»º³åÇøÊý¾Ý¿í¶È*/
+	int length=sizeof(sbuf);/*ï¿½ï¿½ï¿½Í»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ý¿ï¿½ï¿½ï¿½*/
 
 	/*******************************************************************/
 
-	lowpower_open_serial(0);    /*´ò¿ª´®¿Ú1*/
+	lowpower_open_serial(0);    /*ï¿½ò¿ª´ï¿½ï¿½ï¿½1*/
 
 	/*******************************************************************/
 
-	printf("ready for sending data...\n"); /*×¼±¸¿ªÊ¼·¢ËÍÊý¾Ý*/
+	printf("ready for sending data...\n"); /*×¼ï¿½ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
 
 	tcgetattr(fd,&option);
 
@@ -185,7 +188,7 @@ int lowpower_send_serial(void)
 
 	/*****************************************************************/
 
-	cfsetispeed(&option,B115200); /*²¨ÌØÂÊÉèÖÃÎª9600bps*/
+	cfsetispeed(&option,B115200); /*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Îª9600bps*/
 
 	cfsetospeed(&option,B115200);
 
@@ -193,7 +196,7 @@ int lowpower_send_serial(void)
 
 	tcsetattr(fd,TCSANOW,&option);
 
-	retv=write(fd,sbuf,length);  /*½ÓÊÕÊý¾Ý*/
+	retv=write(fd,sbuf,length);  /*ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½*/
 
 	if(retv==-1)
 	{
@@ -206,8 +209,8 @@ int lowpower_send_serial(void)
 
 	flag_close =close(fd);
 
-	if(flag_close ==-1)   /*ÅÐ¶ÏÊÇ·ñ³É¹¦¹Ø±ÕÎÄ¼þ*/
-		printf("Close the Device failur£¡\n");
+	if(flag_close ==-1)   /*ï¿½Ð¶ï¿½ï¿½Ç·ï¿½É¹ï¿½ï¿½Ø±ï¿½ï¿½Ä¼ï¿½*/
+		printf("Close the Device failurï¿½ï¿½\n");
 
 #endif
 
