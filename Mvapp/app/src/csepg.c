@@ -1076,6 +1076,7 @@ static void    epg_date_time_callback(tCS_DT_UpdateEvent event, U16 currentMjd, 
 
 void EpgChangeChannel(HWND hwnd, U8 playOn)
 {
+	printf("%d\n", playOn); //Just to get rid of unused variable warning
 	tCS_DB_ServiceManageData	    channelItemData;
 	MV_stServiceInfo			    channelServiceData;
 	tCS_DBU_Service                 serviceTriplet;
