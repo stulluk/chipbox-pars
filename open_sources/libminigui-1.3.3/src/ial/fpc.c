@@ -255,63 +255,96 @@ int SetRcuKeyCode(char *data)
 	return 0;
 }
 
+/*
+ * Read one byte from the front-panel UART, waiting at most timeoutMs. 0 = ok, -1 = timeout or
+ * error.
+ */
+static int FbUartReadByte(int fd, unsigned char *byte, int timeoutMs)
+{
+	struct pollfd pfd;
+
+	pfd.fd      = fd;
+	pfd.events  = POLLIN;
+	pfd.revents = 0;
+	if (poll(&pfd, 1, timeoutMs) <= 0)
+		return -1;
+	return (read(fd, byte, 1) == 1) ? 0 : -1;
+}
+
+/*
+ * Receive one front MCU frame: F0 <cmd> <len> <data * len> 0F.
+ * buffer gets <cmd> <len> <data>; returns 2 + len, or -1 for a timeout / malformed frame.
+ *
+ * The original code read() a whole frame at once and trusted <len> even when read()
+ * returned only part of the frame (cfmakeraw: VMIN=1). <len> was then stale stack data
+ * and the copy overran the caller's buffer, smashing the event thread stack (mvapp
+ * crashed on fast front-panel key presses with kernel 7.x, which hands the 5-byte frame
+ * to user space in pieces more often than the CBS 2.6 UART driver). Now the frame is
+ * assembled byte by byte, the length is bounded and the end code is checked.
+ * timeout: kept for the old interface (units of 100 us) and used as the wait for the
+ * start code; the remaining bytes of a frame must follow within 50 ms each.
+ */
 int FbUartReceiveFrontData(int fd, char *buffer, unsigned int timeout)
 {
-	unsigned int  timeCount;
-	int           count;
-	int           dataLen;
-	char          header[MAX_FB_COMM_LENGTH];
-	char          waitHeader;
+	unsigned char byte;
+	unsigned char cmd;
+	unsigned char len;
+	int           startMs = (int)(timeout / 10);
+	int           i;
 
-	if (buffer == NULL)
+	if ((buffer == NULL) || (fd < 0))
 	{
 		return -1;
 	}
-	
-	timeCount  = 0;
-	waitHeader = 1;
-	count      = 0;
-	while (waitHeader && (timeCount < timeout))
+	if (startMs < 1)
 	{
-		count = read(fd, header, MAX_FB_COMM_LENGTH);
-		if (count != (-1))
+		startMs = 1;
+	}
+
+	/* Hunt for the start code; skip garbage between frames. */
+	for (i = 0; i < MAX_FB_COMM_LENGTH; i++)
+	{
+		if (FbUartReadByte(fd, &byte, (i == 0) ? startMs : 50))
 		{
-			// printf("FbReceiveFrontData info : Get data %d Bytes Header[0x%02X] \n", count, header[0]);
-			if (header[0] == FRONT_START_CODE)
-			{
-				waitHeader = 0;
-			}
+			printf("FbReceiveFrontData Error : read Timeout\n");
+			return -1;
 		}
-		else
+		if (byte == FRONT_START_CODE)
 		{
-			usleep (100);
-			timeCount++;
+			break;
 		}
 	}
-
-	if ((timeCount >= timeout) && waitHeader && (count < 3))
+	if (byte != FRONT_START_CODE)
 	{
-		/* Receive Timeout */
-		printf("FbReceiveFrontData Error : read Timeout\n");
-		return (-1);
+		return -1;
 	}
 
-	dataLen = 2;
-	memcpy(buffer, header + 1, dataLen);
-
-	count = (int)header[2];
-	if (count > 0)
+	if (FbUartReadByte(fd, &cmd, 50) || FbUartReadByte(fd, &len, 50))
 	{
-		memcpy(buffer + dataLen, header + dataLen +1, count);
-		dataLen += count;
+		return -1;
+	}
+	/* start + cmd + len + data + end must fit the frame buffers of the callers. */
+	if (len > (MAX_FB_COMM_LENGTH - 4))
+	{
+		printf("FbReceiveFrontData Error : bad length %u (cmd 0x%02X)\n", len, cmd);
+		return -1;
+	}
+	buffer[0] = (char)cmd;
+	buffer[1] = (char)len;
+	for (i = 0; i < len; i++)
+	{
+		if (FbUartReadByte(fd, &byte, 50))
+		{
+			return -1;
+		}
+		buffer[2 + i] = (char)byte;
+	}
+	if (FbUartReadByte(fd, &byte, 50) || (byte != FRONT_END_CODE))
+	{
+		return -1;
 	}
 
-	if (header[dataLen + 1] == FRONT_END_CODE)
-	{
-		return dataLen;
-	}
-
-	return (-1);
+	return 2 + len;
 }
 
 /* For Front Communication by kb : 20110201 */
@@ -367,7 +400,13 @@ static int keyboard_update(void)
 	
 	if (FrontKeyIn)
 	{
-		FbUartReceiveFrontData(FrontFd, uipData, 1000);
+		memset(uipData, 0, sizeof(uipData));
+		if (FbUartReceiveFrontData(FrontFd, uipData, 1000) < 2)
+		{
+			/* Timeout or malformed frame: no key (uipData is not valid). */
+			FrontKeyIn = 0;
+			return 0;
+		}
 
 		/* For Front Communication by kb : 20110201 */
 		if ((uipData[0] & FRONT_KEY_COMMAND_HIGH_MASK) != FRONT_RCU_KEY)
