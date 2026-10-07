@@ -1,0 +1,34 @@
+#!/bin/sh
+#
+# Start the dropbear....
+#
+
+start() {
+ 	echo "Starting dropbear..."
+	/usr/plugin/dropbear -b /usr/plugin/dr_banner.txt
+}	
+stop() {
+	echo -n "Stopping dropbear..."
+	killall dropbear
+}
+restart() {
+	stop
+	start
+}	
+
+case "$1" in
+  start)
+  	start
+	;;
+  stop)
+  	stop
+	;;
+  restart|reload)
+  	restart
+	;;
+  *)
+	echo $"Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?

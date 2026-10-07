@@ -5,6 +5,8 @@
 CS_STB_MAKE_VERSION :=0
 SUBDIRS :=  bzip2-1.0.4 DirectFB-1.0.0 libminigui-1.3.3 busybox-1.20.2 freetype-2.2.1 jpeg-6b libpng-1.2.16 zlib-1.2.3  mtd-utils-1.0.0 hdparm-7.7
 LIB_NAMES := busybox bzip2 zlib freetype png jpeg directfb minigui mtdutils hdparm
+LIB_NAMES_ROOTFS := busybox bzip2 zlib mtdutils
+LIB_NAMES_UI := zlib jpeg png freetype directfb minigui
 MAKEFUNC = @MakeSubDir() \
         { \
                if [ -f makefile -o -f Makefile ]; then \
@@ -22,6 +24,10 @@ LOOPMAKEFUNC = $(MAKEFUNC) $(foreach dir,$(SUBDIRS),$(call MAKEME,$(1),$(dir)))
 
 all: 
 	./config.sh $(LIB_NAMES)
+rootfs-min:
+	./config.sh $(LIB_NAMES_ROOTFS)
+ui-libs:
+	./config.sh $(LIB_NAMES_UI)
 jpeg:
 	./config.sh jpeg
 bzip2:
@@ -48,5 +54,5 @@ distclean:
 	rm -rf bin man share inc libs rootfs
 	$(call LOOPMAKEFUNC,distclean)
 
-.PHONY: distclean all jpeg bzip2 zlib minigui busybox freetype directfb mtdutils
+.PHONY: distclean all jpeg bzip2 zlib minigui busybox freetype directfb mtdutils rootfs-min ui-libs
 
