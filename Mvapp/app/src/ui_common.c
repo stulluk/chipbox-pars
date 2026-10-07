@@ -131,6 +131,23 @@ static U16						u16Prev_WgetPage;
 static U16						u16Current_Wgetindex;
 static pthread_t  				hProgress_TaskHandle;
 static pthread_t				hDownload_TaskHandle;
+
+/*
+ * Stop a helper thread started with pthread_create(). The original code called
+ * pthread_cancel() on handles that may never have been set (0) and never joined or
+ * detached the threads. glibc 2.3.6 returned ESRCH for a bad handle; glibc 2.36
+ * dereferences it and crashes (SIGSEGV at 0x68 in pthread_cancel). Cancel only a
+ * valid handle, detach it so its resources are freed, and clear it.
+ */
+static void MV_Thread_Stop(pthread_t *handle)
+{
+	if (*handle == (pthread_t)0)
+		return;
+	pthread_cancel(*handle);
+	pthread_detach(*handle);
+	*handle = (pthread_t)0;
+}
+
 static long long				DownloadFileSize = 1;
 #endif
 
@@ -4547,7 +4564,7 @@ int Progress_Init(void)
 
 void Progress_Stop(void)
 {
-	pthread_cancel( hProgress_TaskHandle );
+	MV_Thread_Stop( &hProgress_TaskHandle );
 }
 
 BOOL MV_CheckDownLoadStatus(void)
@@ -4558,7 +4575,7 @@ BOOL MV_CheckDownLoadStatus(void)
 void Download_Stop(void)
 {
 	Download_Status = FALSE;
-	pthread_cancel( hDownload_TaskHandle );
+	MV_Thread_Stop( &hDownload_TaskHandle );
 }
 
 void *Download_Task( void *param )
@@ -6156,7 +6173,7 @@ int Disc_Ani_Init(void)
 
 void Disc_Ani_Stop(void)
 {
-	pthread_cancel( hAni_TaskHandle );
+	MV_Thread_Stop( &hAni_TaskHandle );
 }
 
 U8		u8Main_Focus_Item;
@@ -6213,7 +6230,7 @@ int MainMenu_Ani_Init(U8 MainMenu_Focus_Item)
 void MainMenu_Ani_Stop(void)
 {
 	b8Main_Focus_State = FALSE;
-	pthread_cancel( hAni_TaskHandle );
+	MV_Thread_Stop( &hAni_TaskHandle );
 }
 
 MV_File_Return MV_Load_TS_fileData(stFile_db *stFileDB)
@@ -6318,7 +6335,7 @@ int Timer_Clock_Init(RECT *Dr_Rect, DWORD Clock_Back, DWORD Color_Font)
 
 void Timer_Clock_Stop(void)
 {
-	pthread_cancel( hAni_TaskHandle );
+	MV_Thread_Stop( &hAni_TaskHandle );
 }
 
 /***************************************************************************/
@@ -6410,7 +6427,7 @@ void Motor_Moving_Stop(void)
 		hdc = MV_BeginPaint(hwnd);
 		Clear_Motor_Moving_Massage(hdc);
 		MV_EndPaint (hwnd, hdc);
-		pthread_cancel( hMotor_Moving_TaskHandle );
+		MV_Thread_Stop( &hMotor_Moving_TaskHandle );
 	}
 
 	b8Moving_Window_Flag = FALSE;

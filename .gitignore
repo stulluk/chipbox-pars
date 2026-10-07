@@ -14,3 +14,6 @@ open_sources/libminigui-1.3.3/src/font/freetype-1.3.1/lib/file.c
 open_sources/libminigui-1.3.3/src/font/freetype-1.3.1/lib/memory.c
 open_sources/libminigui-1.3.3/src/font/freetype-1.3.1/lib/mutex.c
 open_sources/libminigui-1.3.3/src/font/freetype-1.3.1/po/Makefile.in
+Mvapp/out-eabi/
+Mvapp/out-eabi-build.log
+open_sources/libminigui-1.3.3/src/font/freetype-1.3.1/lib/.libs/

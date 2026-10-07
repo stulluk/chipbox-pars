@@ -73,10 +73,14 @@ BOOL InitTimer (void)
     struct itimerval timerv;
     struct sigaction siga;
     
+    /*
+     * SA_RESTART: with NPTL a blocked sem_wait()/futex wait returns EINTR when a
+     * handler without SA_RESTART runs. This 10 ms timer would then break every
+     * semaphore wait in the process (LinuxThreads never returned EINTR there).
+     */
+    memset (&siga, 0, sizeof (siga));
     siga.sa_handler = sig_handler;
-    siga.sa_flags = 0;
-    
-    memset (&siga.sa_mask, 0, sizeof (sigset_t));
+    siga.sa_flags = SA_RESTART;
 
     sigaction (SIGALRM, &siga, &old_alarm_handler);
 

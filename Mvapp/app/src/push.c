@@ -31,7 +31,7 @@ U16 		Level_value=0;
 U16 		Max_Level_value=0;
 static U16 	move_count=0;
 static U16 	clean_back=0;
-static U16 	round;
+static U16 	push_round; /* was 'round': clashes with round() from <math.h> on modern glibc */
 
 static U16 	backup_count=0;
 static U16 	back_x[3];
@@ -60,7 +60,7 @@ void find_pusher(void)
 
 static void init_data(void)
 {
-	Level_value = round = (U16)CS_DBU_Get_Push_Game_Level();
+	Level_value = push_round = (U16)CS_DBU_Get_Push_Game_Level();
 }
 
 static void save_data(void)

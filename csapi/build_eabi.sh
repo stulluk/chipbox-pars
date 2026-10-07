@@ -13,7 +13,7 @@ img="${CHIPBOX_EABI_IMAGE:-chipbox-mainline-kernel-builder:bookworm}"
 jobs=$(( $(nproc) * 8 / 10 ))
 install_root="${1:-}"
 modules="csevt cstvout csi2c cshdmi csgpio csaud csosd csvid cssqc csdemux cssi csspi csplayer_new"
-tc="CC=arm-linux-gnueabi-gcc AR=arm-linux-gnueabi-ar LD=arm-linux-gnueabi-ld \
+tc="CC='arm-linux-gnueabi-gcc -fPIC' AR=arm-linux-gnueabi-ar LD=arm-linux-gnueabi-ld \
 LINK=arm-linux-gnueabi-gcc RANLIB=arm-linux-gnueabi-ranlib STRIP=arm-linux-gnueabi-strip \
 NM=arm-linux-gnueabi-nm"
 out="${csapi}/out-eabi"
