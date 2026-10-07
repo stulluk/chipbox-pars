@@ -9,6 +9,8 @@
 
 #ifndef GUI_KEYBOARD_H
   #define GUI_KEYBOARD_H
+
+#include <sys/types.h>   /* u_short, ushort (no longer pulled in implicitly by glibc 2.36) */
  
 #ifdef __cplusplus
 extern "C" {

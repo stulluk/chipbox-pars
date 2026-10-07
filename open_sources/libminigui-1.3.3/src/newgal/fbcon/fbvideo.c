@@ -35,7 +35,9 @@
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
-#include <asm/page.h>        /* For definition of PAGE_SIZE */
+#ifndef PAGE_SIZE
+#define PAGE_SIZE 4096UL         /* <asm/page.h> is not exported anymore; ARM926 uses 4 KiB pages */
+#endif
 
 #include <linux/vt.h>
 #include <linux/kd.h>

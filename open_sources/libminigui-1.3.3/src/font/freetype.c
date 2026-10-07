@@ -823,7 +823,7 @@ static void delete_instance (DEVFONT* devfont)
 }
 
 /**************************** Global data ************************************/
-static FONTOPS freetype_font_ops = {
+FONTOPS freetype_font_ops = {
     get_char_width,
     get_str_width,
     get_ave_width,
