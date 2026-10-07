@@ -369,13 +369,25 @@ unsigned int GUIAPI GetTickCount ()
     return __mg_timer_counter;
 }
 
+/*
+ * mvapp passes SetTimer()/ResetTimer() periods in milliseconds. On the CBS 2.6.12 kernel
+ * (HZ=100, jiffy-rounded itimers) the 10 ms SIGALRM above really fired every ~30 ms, hence the
+ * original "/ 30". Kernel 7.x (hrtimer itimers, EABI build) delivers a true 10 ms tick, so the
+ * same divisor made every UI timer run 3x fast (e.g. channel-number entry timed out after 1 s).
+ */
+#ifdef __ARM_EABI__
+#define TIMER_MS_PER_TICK   10
+#else
+#define TIMER_MS_PER_TICK   30
+#endif
+
 BOOL GUIAPI SetTimer (HWND hWnd, int id, unsigned int speed)
 {
     TIMER timer;
     
     timer.hWnd = hWnd;
     timer.id = id;
-    timer.speed = speed / 30;
+    timer.speed = speed / TIMER_MS_PER_TICK;
     
     return SendMessage (HWND_DESKTOP, MSG_ADDTIMER, 0, (LPARAM)&timer);
 }
@@ -396,7 +408,7 @@ BOOL GUIAPI ResetTimer (HWND hWnd, int id, unsigned int speed)
     
     timer.hWnd = hWnd;
     timer.id = id;
-    timer.speed = speed / 30;
+    timer.speed = speed / TIMER_MS_PER_TICK;
     
     return SendMessage (HWND_DESKTOP, MSG_RESETTIMER, 0, (LPARAM)&timer);
 }
