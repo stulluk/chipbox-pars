@@ -253,6 +253,9 @@ static void *notify_proc(void *arg)
 	int tmp_event, ms_wait = 10;
 
 	struct fds_data *pf;
+	event_proc cb;
+	void *cb_user;
+	int cb_fd;
 
 	struct timeval sto;
 	fd_set rd_set, wr_set, ex_set;
@@ -308,8 +311,13 @@ static void *notify_proc(void *arg)
 						{
 							if (pf->p_callback != NULL) 
 							{
+								/* Copy under the lock: CSEVT_UnRegister() may clear the
+								 * entry while the callback runs unlocked. */
+								cb      = pf->p_callback;
+								cb_user = pf->p_user;
+								cb_fd   = pf->fd;
 								FDS_UNLOCK(evt_obj->evt_mutex);
-								pf->p_callback(pf->p_user, pf->fd, EVT_USER);
+								cb(cb_user, cb_fd, EVT_USER);
 								FDS_LOCK(evt_obj->evt_mutex);
 							}
 							
@@ -344,8 +352,11 @@ static void *notify_proc(void *arg)
 
 						if ((tmp_event != 0) && (pf->p_callback != NULL) && (pf->fd >= 0))
 						{
+							cb      = pf->p_callback;
+							cb_user = pf->p_user;
+							cb_fd   = pf->fd;
 							FDS_UNLOCK(evt_obj->evt_mutex);
-							pf->p_callback(pf->p_user, pf->fd, tmp_event);
+							cb(cb_user, cb_fd, tmp_event);
 							FDS_LOCK(evt_obj->evt_mutex);
 						}
 					}
@@ -377,8 +388,11 @@ static void *notify_proc(void *arg)
 							{
 								if ((pf->p_callback != NULL) && (pf->fd >= 0))
 								{
+									cb      = pf->p_callback;
+									cb_user = pf->p_user;
+									cb_fd   = pf->fd;
 									FDS_UNLOCK(evt_obj->evt_mutex);
-									pf->p_callback(pf->p_user, pf->fd, EVT_INVALID);
+									cb(cb_user, cb_fd, EVT_INVALID);
 									FDS_LOCK(evt_obj->evt_mutex);
 								}
 								fds_free(evt_obj, pf);
