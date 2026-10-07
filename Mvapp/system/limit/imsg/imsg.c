@@ -88,6 +88,9 @@ void IMessageReceiveTask(void *param)
 
 	while(1)
 	{
+		/* Any type: MvReceiveMessage() overwrites dataType (DATA_NULL on error, e.g.
+		 * EINTR), and reusing it as the msgrcv() type filter stopped all RCU keys. */
+		dataType = 0;
 		result = MvReceiveMessage(messageId, &dataType, &msgLength, data);
 
 		if (result != (-1))

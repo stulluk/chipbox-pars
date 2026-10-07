@@ -1,6 +1,6 @@
 #!/bin/bash
 # Build an EABI mvapp.elf (gcc 12 / glibc 2.36) with the closed OABI libraries replaced by
-# system/eabi_stubs/closed_stubs.c (no CAS/CI/teletext/subtitles, tuner never locks).
+# system/eabi_stubs/closed_stubs.c (no CAS/CI/teletext/subtitles/SI scan); tuner: system/merih_eabi.
 #
 # Needs: csapi/build_eabi.sh and open_sources/config_eabi.sh (zlib jpeg png freetype
 # minigui) run first. Output: Mvapp/out-eabi/mvapp_eabi.elf
@@ -26,9 +26,13 @@ inc='-I/w/csapi/include -I/w/open_sources/out-eabi/inc -I/oinc -I/oinc/directfb'
 inc=\"\$inc -I/oinc/directfb/direct -I/oinc/directfb/fusion -I/w/mvapi/include\"
 for d in \$(find /w/Mvapp /w/mvapi -type d -name include -not -path '*/out-eabi/*'); do inc=\"\$inc -I\$d\"; done
 for d in \$(find /w/Mvapp -type d -name src -not -path '*/out-eabi/*'); do inc=\"\$inc -I\$d\"; done
-cflags='-O2 -g -funwind-tables -march=armv5te -w -fcommon -fgnu89-inline -D_FILE_OFFSET_BITS=64 -DSUPPORT_CI'
+# -mstructure-size-boundary=32: OABI rounded every struct to 4 bytes. The channel database
+# and settings files are raw struct dumps (MV_stIndex 4 vs 2 bytes, MV_stTPInfo 32 vs 30 ...),
+# so mvapp keeps the OABI struct layout to read existing data. Shared libc / MiniGUI / csapi
+# structs only gain trailing padding (checked 2026-10-07, notes/eabi/abi_probe).
+cflags='-O2 -g -funwind-tables -march=armv5te -mstructure-size-boundary=32 -w -fcommon -fgnu89-inline -D_FILE_OFFSET_BITS=64 -DSUPPORT_CI'
 cflags=\"\$cflags -DCS_ARCH_CSM1201 -DARCH_CSM1201 -D_LINUX_\"
-srcs=\$(find /w/Mvapp/system/limit /w/Mvapp/system/open /w/Mvapp/system/eabi_stubs \
+srcs=\$(find /w/Mvapp/system/limit /w/Mvapp/system/open /w/Mvapp/system/eabi_stubs /w/Mvapp/system/merih_eabi \
   /w/Mvapp/csmid /w/Mvapp/mvmid /w/Mvapp/middleware /w/Mvapp/app /w/mvapi -name '*.c' \
   | grep -v -E '/test/|/demo/|/dvbt_tuner/' | sort)
 compile() {

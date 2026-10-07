@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <signal.h>
 #include <semaphore.h>
 #include <mqueue.h>
 #include <sys/stat.h>
@@ -353,6 +354,9 @@ BOOL OsCreateTask(U32  *taskId,
 	pthread_t          *threadId;
 	pthread_attr_t      taskAttr;
 	struct sched_param  sParam;
+	sigset_t            blockSet;
+	sigset_t            oldSet;
+	int                 createResult;
 
 	*taskId = 0;
 
@@ -387,7 +391,17 @@ BOOL OsCreateTask(U32  *taskId,
 
 	threadId = (pthread_t *)OsMemoryAllocate(sizeof(pthread_t));
 	
-	if (pthread_create(threadId, &taskAttr, (void *)task, param) != 0)
+	/*
+	 * Tasks start with SIGALRM blocked. With NPTL the process-wide MiniGUI 10 ms
+	 * SIGALRM can hit any thread and makes its blocking calls (msgrcv, select, sleeps)
+	 * fail with EINTR; LinuxThreads only signalled the thread that set the timer.
+	 */
+	sigemptyset(&blockSet);
+	sigaddset(&blockSet, SIGALRM);
+	pthread_sigmask(SIG_BLOCK, &blockSet, &oldSet);
+	createResult = pthread_create(threadId, &taskAttr, (void *)task, param);
+	pthread_sigmask(SIG_SETMASK, &oldSet, NULL);
+	if (createResult != 0)
 	{
 		OsDebugPrintf("OsCreateTask Error : pthread_create error\n");
 		return OS_RETURN_ERROR;

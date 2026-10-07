@@ -4,8 +4,8 @@
  * libsystem_merih.a, libsystem_sc.a, libci.a, libteletext.a, libsubtitle.a and
  * libsecurity.a exist only as OABI objects without source, so an EABI mvapp cannot
  * link them. These stubs let an EABI mvapp link and run with the features switched
- * off: no CAS/BISS/oscam, no CI CAM, no teletext/subtitles, and a tuner that never
- * locks. They are to be replaced by real implementations (tuner and SI first).
+ * off: no CAS/BISS/oscam, no CI CAM, no teletext/subtitles, no SI scan. The tuner part
+ * of libsystem_merih is re-implemented in system/merih_eabi/.
  *
  * Return values follow the callers: TUNER_NO_ERROR (0) for tuner calls, FALSE for
  * CAS/SI "did something" BOOLs, 0 for int "init ok", empty data for getters.
@@ -26,85 +26,7 @@
 #include "subtitle.h"
 #include "security.h"
 
-/* ---- libsystem_merih: tuner ------------------------------------------------ */
-
-TunerError TunerInit(TunerInitParam_t initParam)
-{
-  (void)initParam;
-  return TUNER_NO_ERROR;
-}
-
-TunerError TunerOpen(U32 *tunerHandleId, TunerOpenParam_t *openParam)
-{
-  (void)openParam;
-  if (tunerHandleId != NULL)
-    *tunerHandleId = 0;
-  return TUNER_NO_ERROR;
-}
-
-TunerError TunerOff(U32 tunerHandleId)
-{
-  (void)tunerHandleId;
-  return TUNER_NO_ERROR;
-}
-
-TunerError TunerSearchStart(U32 tunerHandleId, TunerSearchParam_t *searchData)
-{
-  (void)tunerHandleId;
-  (void)searchData;
-  return TUNER_NO_ERROR;
-}
-
-TunerError TunerSearchStop(U32 tunerHandleId)
-{
-  (void)tunerHandleId;
-  return TUNER_NO_ERROR;
-}
-
-TunerError TunerReadSignalState(U32 tunerHandleId, TunerSignalState_t *siganlState)
-{
-  (void)tunerHandleId;
-  if (siganlState != NULL)
-    memset(siganlState, 0, sizeof(*siganlState));
-  return TUNER_NO_ERROR;
-}
-
-TunerError TunerControlMotor(U32 tunerHandleId, DistqcMotorCommand command, S16 value)
-{
-  (void)tunerHandleId;
-  (void)command;
-  (void)value;
-  return TUNER_NO_ERROR;
-}
-
-S16 TunerGetMotorAngle(int satLongitude, int myLongitude, int myLatitude)
-{
-  (void)satLongitude;
-  (void)myLongitude;
-  (void)myLatitude;
-  return 0;
-}
-
-U8 TunerGetBlindProcess(U32 tunerHandleId)
-{
-  (void)tunerHandleId;
-  return 0;
-}
-
-TunerError TunerSetBlindProcess(U32 tunerHandleId, U8 procss)
-{
-  (void)tunerHandleId;
-  (void)procss;
-  return TUNER_NO_ERROR;
-}
-
-U16 TunerGetBlindTpData(U32 tunerHandleId, U8 currentPol, TunerBlindTpData_t *tpData)
-{
-  (void)tunerHandleId;
-  (void)currentPol;
-  (void)tpData;
-  return 0;
-}
+/* libsystem_merih tuner part: real implementation in system/merih_eabi/. */
 
 /* ---- libsystem_merih: SI tables --------------------------------------------- */
 
