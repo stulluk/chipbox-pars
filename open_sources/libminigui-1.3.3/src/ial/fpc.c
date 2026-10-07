@@ -534,6 +534,7 @@ static int wait_event (int which, fd_set *in, fd_set *out, fd_set *except,
 		struct timeval *timeout)
 #endif
 {
+	struct timeval tv_copy;
 	int    e;
 	fd_set rfds;
 
@@ -565,6 +566,16 @@ static int wait_event (int which, fd_set *in, fd_set *out, fd_set *except,
 	
 #endif // #ifdef _MERIH_UART1_IAL
 
+	/*
+	 * Linux select() writes the time left back into *timeout. The caller passes the
+	 * global __mg_event_timeout and its reset (GetLWEvent timeout path) is disabled, so
+	 * after the first timeout every select() returned at once and the event thread
+	 * used ~80 % CPU. Give select() a copy.
+	 */
+	if (timeout) {
+		tv_copy = *timeout;
+		timeout = &tv_copy;
+	}
 #ifdef _LITE_VERSION
 	e = select (maxfd + 1, in, out, except, timeout) ;
 #else
