@@ -3,20 +3,20 @@
 char MV_Bitmap_Link[MVBMP_INFO_BANNER_CIRCLE+1][64] =
 {
 	"loading.jpg",						/* 000 MVBMP_BOOT_LOADING = 0,		channel list board left top round icon */
-	"board_top_left.jpg",				/* 001 MVBMP_BOARD_TOP_LEFT,		channel list board left top round icon */
-	"board_top_right.jpg",				/* 002 MVBMP_BOARD_TOP_RIGHT,		channel list board right top round icon */
-	"board_bot_left.jpg",				/* 003 MVBMP_BOARD_BOT_LEFT,		channel list board left bottom round icon */
-	"board_bot_right.jpg",				/* 004 MVBMP_BOARD_BOT_RIGHT,		channel list board right bottom round icon */
+	"board_top_left.png",				/* 001 MVBMP_BOARD_TOP_LEFT,		channel list board left top round icon */
+	"board_top_right.png",				/* 002 MVBMP_BOARD_TOP_RIGHT,		channel list board right top round icon */
+	"board_bot_left.png",				/* 003 MVBMP_BOARD_BOT_LEFT,		channel list board left bottom round icon */
+	"board_bot_right.png",				/* 004 MVBMP_BOARD_BOT_RIGHT,		channel list board right bottom round icon */
 	"menu_title_left.gif",				/* 005 MVBMP_MENU_TITLE_LEFT,		main sub menu title background bar left icon */
 	"menu_title_middle.gif",			/* 006 MVBMP_MENU_TITLE_MID,		main sub menu title background bar body icon */
 	"menu_title_right.gif",				/* 007 MVBMP_MENU_TITLE_RIGHT,		main sub menu title background bar right icon */
 
-	"left_arrow.jpg",					/* 008 MVBMP_LEFT_ARROW,			menu bar left arrow icon */
-	"right_arrow.jpg",					/* 009 MVBMP_RIGHT_ARROW,			menu bar right arrow icon */
-	"blue_button.jpg",					/* 010 MVBMP_BLUE_BUTTON,			menu bottom function blue icon */
-	"green_button.jpg",					/* 011 MVBMP_GREEN_BUTTON,			menu bottom function green icon */
-	"red_button.jpg",					/* 012 MVBMP_RED_BUTTON,			menu bottom function red icon */
-	"yellow_button.jpg",				/* 013 MVBMP_YELLOW_BUTTON,			menu bottom function yellow icon */
+	"left_arrow.png",					/* 008 MVBMP_LEFT_ARROW,			menu bar left arrow icon */
+	"right_arrow.png",					/* 009 MVBMP_RIGHT_ARROW,			menu bar right arrow icon */
+	"blue_button.png",					/* 010 MVBMP_BLUE_BUTTON,			menu bottom function blue icon */
+	"green_button.png",					/* 011 MVBMP_GREEN_BUTTON,			menu bottom function green icon */
+	"red_button.png",					/* 012 MVBMP_RED_BUTTON,			menu bottom function red icon */
+	"yellow_button.png",				/* 013 MVBMP_YELLOW_BUTTON,			menu bottom function yellow icon */
 	"green_signal.gif",					/* 014 MVBMP_GREEN_SIGNAL,			signal green bar */
 	"red_signal.gif",					/* 015 MVBMP_RED_SIGNAL,			signal red bar */
 	"orange_signal.gif",				/* 016 MVBMP_ORANGE_SIGNAL,			signal orange bar */
@@ -34,69 +34,69 @@ char MV_Bitmap_Link[MVBMP_INFO_BANNER_CIRCLE+1][64] =
 	"mainmenu/sd_tool_2.jpg",			/* 027 MVBMP_SD_TOOL2,				*/
 	"mainmenu/sd_tool_3.jpg",			/* 028 MVBMP_SD_TOOL3,				*/
 #else
-	"mainmenu/sd_inst_1.jpg",			/* 017 MVBMP_SD_INST1,				main installation menu animation first icon */
-	"mainmenu/sd_inst_2.jpg",			/* 018 MVBMP_SD_INST2,				*/
-	"mainmenu/sd_inst_3.jpg",			/* 019 MVBMP_SD_INST3,				*/
-	"mainmenu/sd_medi_1.jpg",			/* 020 MVBMP_SD_MEDIA1,				main media menu animation first icon */
-	"mainmenu/sd_medi_2.jpg",			/* 021 MVBMP_SD_MEDIA2,				*/
-	"mainmenu/sd_medi_3.jpg",			/* 022 MVBMP_SD_MEDIA3,				*/
-	"mainmenu/sd_syst_1.jpg",			/* 023 MVBMP_SD_SYSTEM1,			main system menu animation first icon */
-	"mainmenu/sd_syst_2.jpg",			/* 024 MVBMP_SD_SYSTEM2,			*/
-	"mainmenu/sd_syst_3.jpg",			/* 025 MVBMP_SD_SYSTEM3,			*/
-	"mainmenu/sd_tool_1.jpg",			/* 026 MVBMP_SD_TOOL1,				main tool menu animation first icon */
-	"mainmenu/sd_tool_2.jpg",			/* 027 MVBMP_SD_TOOL2,				*/
-	"mainmenu/sd_tool_3.jpg",			/* 028 MVBMP_SD_TOOL3,				*/
+	"mainmenu/sd_inst_1.png",			/* 017 MVBMP_SD_INST1,				main installation menu animation first icon */
+	"mainmenu/sd_inst_2.png",			/* 018 MVBMP_SD_INST2,				*/
+	"mainmenu/sd_inst_3.png",			/* 019 MVBMP_SD_INST3,				*/
+	"mainmenu/sd_medi_1.png",			/* 020 MVBMP_SD_MEDIA1,				main media menu animation first icon */
+	"mainmenu/sd_medi_2.png",			/* 021 MVBMP_SD_MEDIA2,				*/
+	"mainmenu/sd_medi_3.png",			/* 022 MVBMP_SD_MEDIA3,				*/
+	"mainmenu/sd_syst_1.png",			/* 023 MVBMP_SD_SYSTEM1,			main system menu animation first icon */
+	"mainmenu/sd_syst_2.png",			/* 024 MVBMP_SD_SYSTEM2,			*/
+	"mainmenu/sd_syst_3.png",			/* 025 MVBMP_SD_SYSTEM3,			*/
+	"mainmenu/sd_tool_1.png",			/* 026 MVBMP_SD_TOOL1,				main tool menu animation first icon */
+	"mainmenu/sd_tool_2.png",			/* 027 MVBMP_SD_TOOL2,				*/
+	"mainmenu/sd_tool_3.png",			/* 028 MVBMP_SD_TOOL3,				*/
 #endif
-	"y_bar_left.jpg",					/* 029 MVBMP_YELLOW_BAR_LEFT,		menu select yellow bar left icon */
-	"y_bar_middle.jpg",					/* 030 MVBMP_YELLOW_BAR_MIDDLE,		*/
-	"y_bar_right.jpg",					/* 031 MVBMP_YELLOW_BAR_RIGHT,		*/
+	"y_bar_left.png",					/* 029 MVBMP_YELLOW_BAR_LEFT,		menu select yellow bar left icon */
+	"y_bar_middle.png",					/* 030 MVBMP_YELLOW_BAR_MIDDLE,		*/
+	"y_bar_right.png",					/* 031 MVBMP_YELLOW_BAR_RIGHT,		*/
 	"mainmenu/select_button_split.jpg",			/* 032 MVBMP_MAIN_SELECT_BAR,		main menu sub menu select bar */
 	"mainmenu/unselect_button_split.jpg",		/* 033 MVBMP_MAIN_UNSELECT_BAR,		main menu sub menu unselect bar */
 #if 0
-	"sd_inst.jpg",						/* 034 MVBMP_SD_INST,				installation menu top Icon */
+	"sd_inst.png",						/* 034 MVBMP_SD_INST,				installation menu top Icon */
 #endif
-	"y_enter.jpg",						/* 035 MVBMP_Y_ENTER,				list bar enter Icon */
-	"y_number.jpg",						/* 036 MVBMP_Y_NUMBER,				list bar numeric Icon */
-	"f2.jpg",							/* 037 MVBMP_F2_BUTTON,				menu bottom function f2 icon */
-	"top_menu_back_top.jpg",			/* 038 MVBMP_TOP_MENU_BACK_TOP,		main menu sub menu background top */
+	"y_enter.png",						/* 035 MVBMP_Y_ENTER,				list bar enter Icon */
+	"y_number.png",						/* 036 MVBMP_Y_NUMBER,				list bar numeric Icon */
+	"f2.png",							/* 037 MVBMP_F2_BUTTON,				menu bottom function f2 icon */
+	"top_menu_back_top.png",			/* 038 MVBMP_TOP_MENU_BACK_TOP,		main menu sub menu background top */
 	"gray_signal.jpg",					/* 039 MVBMP_GRAY_SIGNAL,			signal background */
 #if 0
-	"sd_syst.jpg",						/* 040 MVBMP_SD_SYST,				system menu top Icon */
-	"sd_medi.jpg",						/* 041 MVBMP_SD_MEDI,				media menu top Icon */
-	"sd_tool.jpg",						/* 042 MVBMP_SD_TOOL,				tool menu top Icon */
+	"sd_syst.png",						/* 040 MVBMP_SD_SYST,				system menu top Icon */
+	"sd_medi.png",						/* 041 MVBMP_SD_MEDI,				media menu top Icon */
+	"sd_tool.png",						/* 042 MVBMP_SD_TOOL,				tool menu top Icon */
 #endif
 	"uparrow.gif",						/* 043 MVBMP_UPARROW,				list scroll bar uparrow */
 	"downarrow.gif",					/* 044 MVBMP_DOWNARROW,				list scroll bar downarrow */
 	"chlist_bar.gif",					/* 045 MVBMP_CHLIST_SELBAR,			channel list select bar */
-	"black_button.jpg",					/* 046 MVBMP_BLACK_BUTTON,			menu bottom function black icon */
-	"gray_button.jpg",					/* 047 MVBMP_GRAY_BUTTON,			menu bottom function gray icon */
+	"black_button.png",					/* 046 MVBMP_BLACK_BUTTON,			menu bottom function black icon */
+	"gray_button.png",					/* 047 MVBMP_GRAY_BUTTON,			menu bottom function gray icon */
 	"chlist_info_icon.gif",				/* 048 MVBMP_CHLIST_INFO_ICON,		channel list board bottom infomation icon */
 	"scramble.gif",						/* 049 MVBMP_CHLIST_SCRAMBLE_ICON,	channel list scramble icon */
 	"favorite.gif",						/* 050 MVBMP_CHLIST_FAVORITE_ICON,	channel list favorite icon */
 	"lock.gif",							/* 051 MVBMP_CHLIST_LOCK_ICON,		channel list lock icon */
-	"scramble.jpg",						/* 052 MVBMP_CHLIST_NSCRAMBLE_ICON,	channel list scramble normal icon */
-	"favorite.jpg",						/* 053 MVBMP_CHLIST_NFAVORITE_ICON,	channel list favorite normal icon */
-	"lock.jpg",							/* 054 MVBMP_CHLIST_NLOCK_ICON,		channel list lock normal icon */
+	"scramble.png",						/* 052 MVBMP_CHLIST_NSCRAMBLE_ICON,	channel list scramble normal icon */
+	"favorite.png",						/* 053 MVBMP_CHLIST_NFAVORITE_ICON,	channel list favorite normal icon */
+	"lock.png",							/* 054 MVBMP_CHLIST_NLOCK_ICON,		channel list lock normal icon */
 	"unfocus_keypad.gif",				/* 055 MVBMP_UNFOCUS_KEYPAD,		unfocus keypad button */
 	"focus_keypad.gif",					/* 056 MVBMP_FOCUS_KEYPAD,			focus keypad button */
-	"info_banner_info_icon.jpg",		/* 057 MVBMP_INFO_BANNER_INFO_ICON,	infomation banner flat down info i icon */
-	"dolby_focus.jpg",					/* 058 MVBMP_INFO_DOLBY_FO_ICON,	infomation banner dolby focus icon */
-	"dolby_unfocus.jpg",				/* 059 MVBMP_INFO_DOLBY_UNFO_ICON,	infomation banner dolby unfocus icon */
-	"epg_focus.jpg",					/* 060 MVBMP_INFO_EPG_FO_ICON,		infomation banner epg focus icon */
-	"epg_unfocus.jpg",					/* 061 MVBMP_INFO_EPG_UNFO_ICON,	infomation banner epg unfocus icon */
-	"fav_focus.jpg",					/* 062 MVBMP_INFO_FAV_FO_ICON,		infomation banner favorite focus icon */
-	"fav_unfocus.jpg",					/* 063 MVBMP_INFO_FAV_UNFO_ICON,	infomation banner favorite unfocus icon */
-	"hd_focus.jpg",						/* 064 MVBMP_INFO_HD_FO_ICON,		infomation banner HD broadcast focus icon */
-	"hd_unfocus.jpg",					/* 065 MVBMP_INFO_HD_UNFO_ICON,		infomation banner HD broadcast unfocus icon */
-	"scramble_focus.jpg",				/* 066 MVBMP_INFO_SCRAM_FO_ICON,	infomation banner scramble focus icon */
-	"scramble_unfocus.jpg",				/* 067 MVBMP_INFO_SCRAM_UNFO_ICON,	infomation banner scramble unfocus icon */
-	"sub_focus.jpg",					/* 068 MVBMP_INFO_SUBT_FO_ICON,		infomation banner subtitle focus icon */
-	"sub_unfocus.jpg",					/* 069 MVBMP_INFO_SUBT_UNFO_ICON,	infomation banner subtitle unfocus icon */
-	"ttx_focus.jpg",					/* 070 MVBMP_INFO_TTX_FO_ICON,		infomation banner teletext focus icon */
-	"ttx_unfocus.jpg",					/* 071 MVBMP_INFO_TTX_UNFO_ICON,	infomation banner teletext unfocus icon */
-	"mute.jpg",							/* 072 MVBMP_MUTE_ICON,				Live screen mute icon */
-	"volume.jpg",						/* 073 MVBMP_VOLUME_ICON,			Live screen volume icon */
-	"pause.jpg",						/* 074 MVBMP_PAUSE_ICON,			Live screen pause icon */
+	"info_banner_info_icon.png",		/* 057 MVBMP_INFO_BANNER_INFO_ICON,	infomation banner flat down info i icon */
+	"dolby_focus.png",					/* 058 MVBMP_INFO_DOLBY_FO_ICON,	infomation banner dolby focus icon */
+	"dolby_unfocus.png",				/* 059 MVBMP_INFO_DOLBY_UNFO_ICON,	infomation banner dolby unfocus icon */
+	"epg_focus.png",					/* 060 MVBMP_INFO_EPG_FO_ICON,		infomation banner epg focus icon */
+	"epg_unfocus.png",					/* 061 MVBMP_INFO_EPG_UNFO_ICON,	infomation banner epg unfocus icon */
+	"fav_focus.png",					/* 062 MVBMP_INFO_FAV_FO_ICON,		infomation banner favorite focus icon */
+	"fav_unfocus.png",					/* 063 MVBMP_INFO_FAV_UNFO_ICON,	infomation banner favorite unfocus icon */
+	"hd_focus.png",						/* 064 MVBMP_INFO_HD_FO_ICON,		infomation banner HD broadcast focus icon */
+	"hd_unfocus.png",					/* 065 MVBMP_INFO_HD_UNFO_ICON,		infomation banner HD broadcast unfocus icon */
+	"scramble_focus.png",				/* 066 MVBMP_INFO_SCRAM_FO_ICON,	infomation banner scramble focus icon */
+	"scramble_unfocus.png",				/* 067 MVBMP_INFO_SCRAM_UNFO_ICON,	infomation banner scramble unfocus icon */
+	"sub_focus.png",					/* 068 MVBMP_INFO_SUBT_FO_ICON,		infomation banner subtitle focus icon */
+	"sub_unfocus.png",					/* 069 MVBMP_INFO_SUBT_UNFO_ICON,	infomation banner subtitle unfocus icon */
+	"ttx_focus.png",					/* 070 MVBMP_INFO_TTX_FO_ICON,		infomation banner teletext focus icon */
+	"ttx_unfocus.png",					/* 071 MVBMP_INFO_TTX_UNFO_ICON,	infomation banner teletext unfocus icon */
+	"mute.png",							/* 072 MVBMP_MUTE_ICON,				Live screen mute icon */
+	"volume.png",						/* 073 MVBMP_VOLUME_ICON,			Live screen volume icon */
+	"pause.png",						/* 074 MVBMP_PAUSE_ICON,			Live screen pause icon */
 	"0.gif",							/* 075 MVBMP_0_ICON,				Number 0 icon */
 	"1.gif",							/* 076 MVBMP_1_ICON,				Number 1 icon */
 	"2.gif",							/* 077 MVBMP_2_ICON,				Number 2 icon */
@@ -108,46 +108,46 @@ char MV_Bitmap_Link[MVBMP_INFO_BANNER_CIRCLE+1][64] =
 	"8.gif",							/* 083 MVBMP_8_ICON,				Number 8 icon */
 	"9.gif",							/* 084 MVBMP_9_ICON,				Number 9 icon */
 	"del.gif",							/* 085 MVBMP_CHLIST_DEL_ICON,		channel edit list delete icon */
-	"del.jpg",							/* 086 MVBMP_CHLIST_NDEL_ICON,		channel edit list delete normal icon */
+	"del.png",							/* 086 MVBMP_CHLIST_NDEL_ICON,		channel edit list delete normal icon */
 	"updown.gif",						/* 087 MVBMP_CHLIST_MOVE_ICON,		channel edit list move icon */
 	"scan_ani1.gif",					/* 088 MVBMP_SCAN_ANI1,				animation no.1 on scan time */
 	"scan_ani2.gif",					/* 089 MVBMP_SCAN_ANI2,				animation no.2 on scan time */
 	"scan_ani3.gif",					/* 090 MVBMP_SCAN_ANI3,				animation no.3 on scan time */
 	"scan_ani4.gif",					/* 091 MVBMP_SCAN_ANI4,				animation no.4 on scan time */
 	"scan_ani5.gif",					/* 092 MVBMP_SCAN_ANI5,				animation no.5 on scan time */
-	"updown.jpg",						/* 093 MVBMP_CHLIST_NMOVE_ICON,		channel edit list move normal icon */
+	"updown.png",						/* 093 MVBMP_CHLIST_NMOVE_ICON,		channel edit list move normal icon */
 	"hd_list.gif",						/* 094 MVBMP_CHLIST_HD_ICON,		channel edit list HD icon */
-	"hd_list_u.jpg",					/* 095 MVBMP_CHLIST_NHD_ICON,		channel edit list HD normal icon */
+	"hd_list_u.png",					/* 095 MVBMP_CHLIST_NHD_ICON,		channel edit list HD normal icon */
 	"check.gif",						/* 096 MVBMP_CHLIST_CHECK_ICON,		channel edit list HD icon */
-	"check.jpg",						/* 097 MVBMP_CHLIST_NCHECK_ICON,	channel edit list HD normal icon */
-	"message.jpg",						/* 098 MVBMP_DESCTOP_MSG_PANEL,		desktop dispaly message ( no signal, scramble .... ) background pannel */
-	"ok.jpg",							/* 099 MVBMP_OK_ICON,				ok button icon */
-	"exit.jpg",							/* 100 MVBMP_EXIT_ICON,				exit button icon */
-	"blue.jpg",							/* 101 MVBMP_BLUE_GROUND,			blue back ground */
-	"black.jpg",						/* 102 MVBMP_BLACK_GROUND,			black back ground */
-	"full_files.jpg",					/* 103 MVBMP_DIR_FOLDER,			folder icon */
-	"film.jpg",							/* 104 MVBMP_MOVIE_FILE,			movie and animation files icon */
-	"music.jpg",						/* 105 MVBMP_MUSIC_FILE,			music files icon */
-	"picture.jpg",						/* 106 MVBMP_IMAGE_FILE,			image files icon */
-	"text.jpg",							/* 107 MVBMP_TEXT_FILE,				text files icon */
-	"ts.jpg",							/* 108 MVBMP_TS_FILE,				ts recorded files icon */
-	"normal_file.jpg",					/* 109 MVBMP_NORMAL_FILE,			unknown files icon */
-	"key0.jpg",							/* 110 MVBMP_KEY_0_ICON,			Remocon Key 0 */
-	"key1.jpg",							/* 111 MVBMP_KEY_1_ICON,			Remocon Key 1 */
-	"key2.jpg",							/* 112 MVBMP_KEY_2_ICON,			Remocon Key 2 */
-	"key3.jpg",							/* 113 MVBMP_KEY_3_ICON,			Remocon Key 3 */
-	"key4.jpg",							/* 114 MVBMP_KEY_4_ICON,			Remocon Key 4 */
-	"key5.jpg",							/* 115 MVBMP_KEY_5_ICON,			Remocon Key 5 */
-	"key6.jpg",							/* 116 MVBMP_KEY_6_ICON,			Remocon Key 6 */
-	"key7.jpg",							/* 117 MVBMP_KEY_7_ICON,			Remocon Key 7 */
-	"key8.jpg",							/* 118 MVBMP_KEY_8_ICON,			Remocon Key 8 */
-	"key9.jpg",							/* 119 MVBMP_KEY_9_ICON,			Remocon Key 9 */
-	"keymute.jpg",						/* 120 MVBMP_KEY_MUTE_ICON,			Remocon Key mute */
-	"keyprev.jpg",						/* 121 MVBMP_KEY_PREV_ICON,			Remocon Key preview */
-	"mainmenu/main_menu_back.jpg",		/* 122 MVBMP_MAIN_BACK,				Main Menu Background Test */
-	"format1.jpg",						/* 123 MVBMP_ANI_DISC1,				Disc Format animation1 */
-	"format2.jpg",						/* 124 MVBMP_ANI_DISC2,				Disc Format animation2 */
-	"format3.jpg",						/* 125 MVBMP_ANI_DISC3,				Disc Format animation3 */
+	"check.png",						/* 097 MVBMP_CHLIST_NCHECK_ICON,	channel edit list HD normal icon */
+	"message.png",						/* 098 MVBMP_DESCTOP_MSG_PANEL,		desktop dispaly message ( no signal, scramble .... ) background pannel */
+	"ok.png",							/* 099 MVBMP_OK_ICON,				ok button icon */
+	"exit.png",							/* 100 MVBMP_EXIT_ICON,				exit button icon */
+	"blue.png",							/* 101 MVBMP_BLUE_GROUND,			blue back ground */
+	"black.png",						/* 102 MVBMP_BLACK_GROUND,			black back ground */
+	"full_files.png",					/* 103 MVBMP_DIR_FOLDER,			folder icon */
+	"film.png",							/* 104 MVBMP_MOVIE_FILE,			movie and animation files icon */
+	"music.png",						/* 105 MVBMP_MUSIC_FILE,			music files icon */
+	"picture.png",						/* 106 MVBMP_IMAGE_FILE,			image files icon */
+	"text.png",							/* 107 MVBMP_TEXT_FILE,				text files icon */
+	"ts.png",							/* 108 MVBMP_TS_FILE,				ts recorded files icon */
+	"normal_file.png",					/* 109 MVBMP_NORMAL_FILE,			unknown files icon */
+	"key0.png",							/* 110 MVBMP_KEY_0_ICON,			Remocon Key 0 */
+	"key1.png",							/* 111 MVBMP_KEY_1_ICON,			Remocon Key 1 */
+	"key2.png",							/* 112 MVBMP_KEY_2_ICON,			Remocon Key 2 */
+	"key3.png",							/* 113 MVBMP_KEY_3_ICON,			Remocon Key 3 */
+	"key4.png",							/* 114 MVBMP_KEY_4_ICON,			Remocon Key 4 */
+	"key5.png",							/* 115 MVBMP_KEY_5_ICON,			Remocon Key 5 */
+	"key6.png",							/* 116 MVBMP_KEY_6_ICON,			Remocon Key 6 */
+	"key7.png",							/* 117 MVBMP_KEY_7_ICON,			Remocon Key 7 */
+	"key8.png",							/* 118 MVBMP_KEY_8_ICON,			Remocon Key 8 */
+	"key9.png",							/* 119 MVBMP_KEY_9_ICON,			Remocon Key 9 */
+	"keymute.png",						/* 120 MVBMP_KEY_MUTE_ICON,			Remocon Key mute */
+	"keyprev.png",						/* 121 MVBMP_KEY_PREV_ICON,			Remocon Key preview */
+	"mainmenu/main_menu_back.png",		/* 122 MVBMP_MAIN_BACK,				Main Menu Background Test */
+	"format1.png",						/* 123 MVBMP_ANI_DISC1,				Disc Format animation1 */
+	"format2.png",						/* 124 MVBMP_ANI_DISC2,				Disc Format animation2 */
+	"format3.png",						/* 125 MVBMP_ANI_DISC3,				Disc Format animation3 */
 
 	"mainmenu/button_left_top.jpg",		/* 126 MVBMP_SUBMENU_TOP_LEFT,		mainmenu - Submenu box left-top icon */
 	"mainmenu/button_right_top.jpg",	/* 127 MVBMP_SUBMENU_TOP_RIGHT,		mainmenu - Submenu box right-top icon */
@@ -162,15 +162,15 @@ char MV_Bitmap_Link[MVBMP_INFO_BANNER_CIRCLE+1][64] =
 	"pvr_info/pvr_rec.jpg",				/* 135 MVBMP_PVR_REC,				PVR Recording Icon */
 	"pvr_info/pvr_play.jpg",			/* 136 MVBMP_PVR_RUN,				PVR Playing Icon */
 	"pvr_info/pvr_info_back.jpg",		/* 137 MVBMP_PVR_INFOBAR,			PVR Information Banner Background */
-	"pvr_info/calender_icon.jpg",		/* 138 MVBMP_PVR_DATE,				PVR Information Banner Calendar Icon */
-	"pvr_info/watch_icon.jpg",			/* 139 MVBMP_PVR_TIME,				PVR Information Banner clock Icon */
+	"pvr_info/calender_icon.png",		/* 138 MVBMP_PVR_DATE,				PVR Information Banner Calendar Icon */
+	"pvr_info/watch_icon.png",			/* 139 MVBMP_PVR_TIME,				PVR Information Banner clock Icon */
 	"pvr_info/recordbar2_rec.jpg",		/* 140 MVBMP_PVR_RECORD,			PVR Information Banner Record Icon */
 	"pvr_info/recordbar2_play.jpg",		/* 141 MVBMP_PVR_PLAY,				PVR Information Banner Play Icon */
-	"pvr_info/white_level.jpg",			/* 142 MVBMP_HDD_WHITE,				PVR Storage Information white level Icon */
-	"pvr_info/blue_level.jpg",			/* 143 MVBMP_HDD_BLUE,				PVR Storage Information blue level Icon */
-	"pvr_info/red_level.jpg",			/* 144 MVBMP_HDD_RED,				PVR Storage Information red level Icon */
-	"position.jpg",						/* 145 MVBMP_POSITION,				Progress Level Point Position Orange Icon */
-	"position_blue.jpg",				/* 146 MVBMP_POSITION,				Progress Level Point Position Blue Icon */
+	"pvr_info/white_level.png",			/* 142 MVBMP_HDD_WHITE,				PVR Storage Information white level Icon */
+	"pvr_info/blue_level.png",			/* 143 MVBMP_HDD_BLUE,				PVR Storage Information blue level Icon */
+	"pvr_info/red_level.png",			/* 144 MVBMP_HDD_RED,				PVR Storage Information red level Icon */
+	"position.png",						/* 145 MVBMP_POSITION,				Progress Level Point Position Orange Icon */
+	"position_blue.png",				/* 146 MVBMP_POSITION,				Progress Level Point Position Blue Icon */
 	"input_back.jpg",					/* 147 MVBMP_INPUT_BACK,			Input channel number background */
 
 /*********************** GAME IMAGE **************************************************/
@@ -198,7 +198,7 @@ char MV_Bitmap_Link[MVBMP_INFO_BANNER_CIRCLE+1][64] =
 
 /*************************************************************************************/
 #if 0
-	"info_banner_circle.jpg",			/* --- MVBMP_INFO_BANNER_CIRCLE,	infomation banner middle channel number circle icon */
+	"info_banner_circle.png",			/* --- MVBMP_INFO_BANNER_CIRCLE,	infomation banner middle channel number circle icon */
 #else
 	"main_munu_back_texture.jpg",			/* 165 MVBMP_MENU_BACK,				PVR Backward 16x Fast */
 	"info_bar/info_banner_circle.jpg",	/* --- MVBMP_INFO_BANNER_CIRCLE,	infomation banner middle channel number circle icon */
