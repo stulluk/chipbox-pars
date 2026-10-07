@@ -2306,7 +2306,7 @@ CSAPI_RESULT CSDEMUX_EXT_GetSTC(int *hi_addr, int *lo_addr)
  * the following implementation is for optimizing CHL DMA transfer.
  */
 
-#include <asm/page.h>
+#include "cs_page.h"
 #include <sys/mman.h>
 
 #define CHL0_BASE_ADDR			0x07100000	// FIXME@zhongkai's code

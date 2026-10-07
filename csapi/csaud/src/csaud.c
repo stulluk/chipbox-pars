@@ -13,7 +13,7 @@
 #include "csaud.h"
 
 #if 1 /*PFM*/
-#include <asm/page.h>
+#include "cs_page.h"
 #include <sys/mman.h>
 typedef void (*call_back_emptynotify) (CSAUD_HANDLE *);
 typedef struct {

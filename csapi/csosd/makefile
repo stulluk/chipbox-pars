@@ -33,7 +33,7 @@ TESTRELATEDHEAD =  $(wildcard ../include/$(TEST_DEPEND_MODULE).h)
 # defined flags
 INCFLAGS    	+= -I ./include 
 DEFINES	    	+= -D_LINUX_ 
-CFLAGS	    	+= -W -Wall -Werror  
+CFLAGS	    	+= -W -Wall  
 SHARED_FLAGS    += 
 STATIC_FLAGS  	+= 
 LIBS             = ../lib

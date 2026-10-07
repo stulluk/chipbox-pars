@@ -81,7 +81,7 @@ dynamic: $(DLIBRARY)
 else
 static: $(SLIBRARY)
 dynamic: $(DLIBRARY)
-	@$(STRIP) $(LIBS)/$(DLIBRARY)  
+	@$(STRIP) $(LIBS_DIR)/$(DLIBRARY)  
 endif
 
 test: $(MODULE_NAME)_test

@@ -20,7 +20,10 @@
 #define CSOSD_DEV_FILE0		"/dev/fb/2"	/* FIXME@zhongkai's ugly code */
 #define CSOSD_DEV_FILE1		"/dev/fb/3"	/* FIXME@zhongkai's ugly code */
 
+/* linux/fb.h defines the same value (_IOW('F', 0x20, __u32)) on modern kernels */
+#ifndef FBIO_WAITFORVSYNC
 #define FBIO_WAITFORVSYNC       _IOW('F', 0x20, int)
+#endif
 #define FBIO_GFX_ON             _IOW('F', 0x21, int)
 #define FBIO_GFX_ALPHA          _IOW('F', 0x22, int)
 #define FBIO_Z_ORDER            _IOW('F', 0x50, int)

@@ -11,7 +11,7 @@
 #include "csvid.h"
 #include "../csi2c/include/csi2c.h"
 #if 1				/*PMF used */
-#include <asm/page.h>
+#include "cs_page.h"
 #include <sys/mman.h>
 #define VIDOUT_ONE_DIR_SIZE      (16)
 #define VIDOUT_GET_DIR_NUM(start, end) 	((end - start) / VIDOUT_ONE_DIR_SIZE)
