@@ -506,6 +506,30 @@ static void ResetStreamTable(void)
 	}
 }
 
+/*
+ * Builds without a CAS (MVAPP_NO_CAS, the EABI build: the closed CAS library is stubbed)
+ * must not feed a scrambled service to the A/V decoders. The H.264 decoder firmware runs
+ * wild on encrypted data and wedged the whole box (no IRQs, serial or network) when
+ * zapping quickly through pay channels. Like the original box, show the "scrambled"
+ * screen with blanked video instead.
+ */
+static BOOL MW_SkipScrambledPlay(const char *who)
+{
+#ifdef MVAPP_NO_CAS
+	if (mv_service_data.u8Scramble)
+	{
+		printf("[mvapp] %s: service %u is scrambled, no CAS: A/V not started\n",
+			who, (unsigned)mv_service_data.u16ServiceId);
+		fflush(stdout);
+		CS_AV_ProgramStop();
+		CS_AV_VideoBlank();
+		return TRUE;
+	}
+#endif
+	(void)who;
+	return FALSE;
+}
+
 static void MW_PlayProgram(MV_stServiceInfo   service_data)
 {
 	tCS_AV_PlayParams   play_params;
@@ -598,6 +622,12 @@ static void MW_PlayProgram(MV_stServiceInfo   service_data)
 			break;
 	}
 
+	if (MW_SkipScrambledPlay("MW_PlayProgram"))
+	{
+		CS_MW_IsVideoFreezed = FALSE;
+		return;
+	}
+
 	printf("[mvapp] FE: CS_AV_ProgramPlay V=0x%x A=0x%x type=%s...\n",
 		(unsigned)play_params.Video_PID, (unsigned)play_params.Audio_PID,
 		play_params.VideoType > 0 ? "H264" : "MPEG2");
@@ -613,6 +643,9 @@ static void MW_PlayProgram(MV_stServiceInfo   service_data)
 void MvRePlayVideo(void)
 {
 	tCS_AV_PlayParams   play_params;
+
+	if (MW_SkipScrambledPlay("MvRePlayVideo"))
+		return;
 
 	play_params.Video_PID = mv_service_data.u16VideoPid;
 	play_params.Audio_PID = mv_service_data.u16AudioPid;
@@ -703,6 +736,9 @@ static void MW_UpdateAVPlay(tMWStream Audiostream, U16 Vpid, tCS_DB_VideoType Vt
 	//tCS_DB_ServiceData		NewService;
 	U8						i;
 	BOOL					Update=FALSE;
+
+	if (MW_SkipScrambledPlay("MW_UpdateAVPlay"))
+		return;
 
 	if(mv_service_data.u16AudioPid == kDB_DEMUX_INVAILD_PID)
 	{

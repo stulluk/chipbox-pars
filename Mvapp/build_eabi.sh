@@ -30,7 +30,7 @@ for d in \$(find /w/Mvapp -type d -name src -not -path '*/out-eabi/*'); do inc=\
 # and settings files are raw struct dumps (MV_stIndex 4 vs 2 bytes, MV_stTPInfo 32 vs 30 ...),
 # so mvapp keeps the OABI struct layout to read existing data. Shared libc / MiniGUI / csapi
 # structs only gain trailing padding (checked 2026-10-07, notes/eabi/abi_probe).
-cflags='-O2 -g -funwind-tables -march=armv5te -mstructure-size-boundary=32 -w -fcommon -fgnu89-inline -D_FILE_OFFSET_BITS=64 -DSUPPORT_CI'
+cflags='-O2 -g -funwind-tables -march=armv5te -mstructure-size-boundary=32 -w -fcommon -fgnu89-inline -D_FILE_OFFSET_BITS=64 -DSUPPORT_CI -DMVAPP_NO_CAS'
 cflags=\"\$cflags -DCS_ARCH_CSM1201 -DARCH_CSM1201 -D_LINUX_\"
 srcs=\$(find /w/Mvapp/system/limit /w/Mvapp/system/open /w/Mvapp/system/eabi_stubs /w/Mvapp/system/merih_eabi \
   /w/Mvapp/csmid /w/Mvapp/mvmid /w/Mvapp/middleware /w/Mvapp/app /w/mvapi -name '*.c' \
