@@ -4,8 +4,8 @@
  * libsystem_merih.a, libsystem_sc.a, libci.a, libteletext.a, libsubtitle.a and
  * libsecurity.a exist only as OABI objects without source, so an EABI mvapp cannot
  * link them. These stubs let an EABI mvapp link and run with the features switched
- * off: no CAS/BISS/oscam, no CI CAM, no teletext/subtitles, no SI scan. The tuner part
- * of libsystem_merih is re-implemented in system/merih_eabi/.
+ * off: no CAS/BISS/oscam, no CI CAM, no teletext/subtitles. libsystem_merih (tuner and
+ * SI) is re-implemented in system/merih_eabi/.
  *
  * Return values follow the callers: TUNER_NO_ERROR (0) for tuner calls, FALSE for
  * CAS/SI "did something" BOOLs, 0 for int "init ok", empty data for getters.
@@ -28,66 +28,7 @@
 
 /* libsystem_merih tuner part: real implementation in system/merih_eabi/. */
 
-/* ---- libsystem_merih: SI tables --------------------------------------------- */
-
-BOOL SiInitTable(void)
-{
-  return FALSE; /* caller prints an error only when this is non-zero */
-}
-
-/* Plain byte copy: no DVB character table conversion. */
-U32 SiCodeConverter(U8 *dest, U8 *src, U32 len, U16 *code)
-{
-  (void)code;
-  if (dest != NULL && src != NULL && len > 0)
-    memcpy(dest, src, len);
-  return len;
-}
-
-U32 SiGetLivePmtData(U8 *buffer)
-{
-  (void)buffer;
-  return 0;
-}
-
-void SiRegisterLiveSearchCallBack(LiveSearchResult_f callback) { (void)callback; }
-void SiRegisterNitCallBack(NitResult_f callback) { (void)callback; }
-void SiRegisterSearchCallBack(SearchResult_f callback) { (void)callback; }
-
-void SiStartLiveSearch(U8 tunerId, U8 channelMode, U16 serviceId)
-{
-  (void)tunerId;
-  (void)channelMode;
-  (void)serviceId;
-}
-
-void SiStopLiveSearch(void) {}
-
-void SiStartSearchChannel(U8 tunerId, U8 nitMode, U8 tpModeOn, U8 channelMode)
-{
-  (void)tunerId;
-  (void)nitMode;
-  (void)tpModeOn;
-  (void)channelMode;
-}
-
-void SiStopSearchChannel(void) {}
-
-BOOL SiStopLiveSection(U8 tableInfoId)
-{
-  (void)tableInfoId;
-  return FALSE;
-}
-
-BOOL SiStartLiveSection(U8 *infoId, U16 pid, U16 tableId, U8 tunerId, U8 channelMode,
-                        U8 numberOfFilter, U8 crcEnable, U8 *matchData, U8 *matchMask,
-                        U8 *notMask, DemuxCallback_f callBack)
-{
-  (void)infoId; (void)pid; (void)tableId; (void)tunerId; (void)channelMode;
-  (void)numberOfFilter; (void)crcEnable; (void)matchData; (void)matchMask;
-  (void)notMask; (void)callBack;
-  return FALSE;
-}
+/* libsystem_merih SI part: real implementation in system/merih_eabi/si_*.c. */
 
 /* ---- libsystem_sc: CAS / BISS / oscam --------------------------------------- */
 
