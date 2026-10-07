@@ -19,7 +19,7 @@
 #define	CSAPP_DHCP_ON 	0
 #define	CSAPP_DHCP_OFF 	1
 
-#define FONT_TEST  // ÇÑ°³ÀÇ ÆùÆ® creation Å×½ºÆ®
+#define FONT_TEST  // ï¿½Ñ°ï¿½ï¿½ï¿½ ï¿½ï¿½Æ® creation ï¿½×½ï¿½Æ®
 
 #ifdef USE_MV_FRONT
 #include "mvfront.h"
@@ -489,13 +489,11 @@ void CS_MW_Init_VideoDefinition(U8 mode)
 
 	if (mode)
 	{
+		/* CHIPBOX_TIP: mode1 used to restore EEPROM (often 1080I) after mode0
+		 * briefly forced 720P â€” that undid the boot workaround. Keep whatever
+		 * is already programmed (EEPROM/init). */
 		currentVideoDefinition = CS_MW_GetVideoDefinition();
-		// printf("CS_MW_Init_VideoDefinition : current = %d, boot Def = %d\n", currentVideoDefinition, DafaultBootVideoDefinition);
-		if (currentVideoDefinition != DafaultBootVideoDefinition)
-		{
-			// printf("Current Def [%d] is not same with Default Def [%d]\n", currentVideoDefinition, DafaultBootVideoDefinition);
-			CS_MW_SetVideoDefinition(DafaultBootVideoDefinition);
-		}
+		(void)currentVideoDefinition;
 	}
 	else
 	{
@@ -699,19 +697,32 @@ BOOL CS_MW_Init(void)
 	MV_CFG_RETURN 	ret;
 	U16				Current_TimeZone;
 
+	printf("[mvapp] MW: E2P_Init...\n");
+	fflush(stdout);
 	/* For EEPROM access problem by KB Kim 2011.09.13 */
 	E2P_Init();
+	printf("[mvapp] MW: E2P_Init done\n");
+	fflush(stdout);
 
+	printf("[mvapp] MW: Check_Mac_Address...\n");
+	fflush(stdout);
 	Check_Mac_Address();
+	printf("[mvapp] MW: Check_Mac_Address done\n");
+	fflush(stdout);
 
+	printf("[mvapp] MW: MV_LoadCFGFile...\n");
+	fflush(stdout);
 	ret = MV_LoadCFGFile();
-
-	//printf("\n\n\n %d ============ \n\n\n", ret);
-	// printf("\n\n\n %s = %d =========== \n\n\n", CFG_Resource, CFG_PNG_Test);
+	printf("[mvapp] MW: MV_LoadCFGFile ret=%d\n", (int)ret);
+	fflush(stdout);
 
 #ifdef USE_MV_FRONT
+	printf("[mvapp] MW: FbOpenFrontIf...\n");
+	fflush(stdout);
 	FbOpenFrontIf();
 	FbSendFndDisplay("Load");
+	printf("[mvapp] MW: front Load\n");
+	fflush(stdout);
 
 #else //#ifdef USE_MV_FRONT
 
@@ -730,6 +741,8 @@ BOOL CS_MW_Init(void)
     PanelF_Initialize(&PanelParas);
 }
 #else
+	printf("[mvapp] MW: CSFP_Open...\n");
+	fflush(stdout);
 	fp_handle = CSFP_Open();
 
 	//system("cat /dev/input/event0 |hexdump");
@@ -750,17 +763,26 @@ BOOL CS_MW_Init(void)
 
 	if ( !CFG_Factory_Mode )
 	{
-		//printf("\n\n ============= Normal Booting ================ \n\n");
+		printf("[mvapp] MW: CS_DRV_Init...\n");
+		fflush(stdout);
 	    CS_DRV_Init();
+		printf("[mvapp] MW: CS_DRV_Init done; Font_Creation...\n");
+		fflush(stdout);
 		CS_MW_Font_Creation(1);
 	    CS_MW_SetAspectRatio(CS_MW_GetAspectRatio());
 	    CS_MW_SetAspectMode(CS_MW_GetAspectMode());
 		/* For By KB Kim 20110604 */
 	    /* For 576i Mode booting problem by KB Kim 20101225 */
+		printf("[mvapp] MW: Init_VideoDefinition(0)...\n");
+		fflush(stdout);
 		CS_MW_Init_VideoDefinition(0);
 		AdjustVideoWindows();
+		printf("[mvapp] MW: CS_AV_Play_IFrame(BOOT_LOGO)...\n");
+		fflush(stdout);
 	    CS_AV_Play_IFrame(BOOT_LOGO);
 		Current_TimeZone = CS_MW_GetTimeZone();
+		printf("[mvapp] MW: CS_SYS_Init...\n");
+		fflush(stdout);
 	    CS_SYS_Init();
 	    CS_MW_ValidCurrentSetting();
 
@@ -773,8 +795,12 @@ BOOL CS_MW_Init(void)
 			Disc_Rdate_Init();
 		}
 
+		printf("[mvapp] MW: TTXSUB + SVC_Init...\n");
+		fflush(stdout);
 		CS_MW_TTXSUBInit();
 		CS_MW_SVC_Init();
+		printf("[mvapp] MW: SVC_Init done\n");
+		fflush(stdout);
 #if 0
 		if (CS_MW_GetTimeMode() == eCS_DBU_TIME_INTERNET)
 		{
@@ -788,6 +814,8 @@ BOOL CS_MW_Init(void)
 	}
 	else
 	{
+		printf("[mvapp] MW: factory CS_DRV_Init...\n");
+		fflush(stdout);
 		CS_DRV_Init();
 
 	    CS_MW_SetAspectRatio(CS_MW_GetAspectRatio());
@@ -807,6 +835,8 @@ BOOL CS_MW_Init(void)
 		CS_MW_SVC_Init();
 	}
 
+	printf("[mvapp] MW: CS_MW_Init return TRUE\n");
+	fflush(stdout);
     return TRUE;
 }
 

@@ -99,12 +99,15 @@ int MV_LoadBmp(BOOL b8Load_Kind)
 {
 
     printf("Image load started..\n");
+	fflush(stdout);
 	int		mv_error=0;
 	char 	temp[512];
 	char 	temp2[512];
 	U16		i;
 	HDC		hdc;
 
+	printf("[mvapp] LoadBmp: color file + paint box (resource=%s)\n", CFG_Resource);
+	fflush(stdout);
 	MV_LoadColorFile();
 #ifdef GOLDBOX
 	hdc =BeginPaint(HWND_DESKTOP);
@@ -121,24 +124,37 @@ int MV_LoadBmp(BOOL b8Load_Kind)
 	MV_FillBox( hdc, ScalerWidthPixel(104),ScalerHeigthPixel(104), ScalerWidthPixel(302),ScalerHeigthPixel(220) );
 	EndPaint(HWND_DESKTOP,hdc);
 #endif
+	printf("[mvapp] LoadBmp: paint box done\n");
+	fflush(stdout);
 
 	memset(&MV_BMP, 0x00, sizeof(BITMAP)*MVBMP_MAX);
 
 	memset(&temp, 0x00, 512);
 
 	sprintf(temp, "%s%s", CFG_Resource , MV_Bitmap_Link[0]);
+	printf("[mvapp] LoadBmp: file[0]=%s\n", temp);
+	fflush(stdout);
 
 	if (MV_BitmapFromFile(HDC_SCREEN, &MV_BMP[0], temp) != 0)
 	{
 		mv_error++;
 		printf("=============>>>> %s no Image file\n", temp);
 	}
+	else
+		printf("[mvapp] LoadBmp: file[0] ok w=%d h=%d\n",
+		       (int)MV_BMP[0].bmWidth, (int)MV_BMP[0].bmHeight);
+	fflush(stdout);
 	/*else
         printf("%s loaded succesfully!!\n", temp);*/
 
+	printf("[mvapp] LoadBmp: FillBoxWithBitmap boot loading...\n");
+	fflush(stdout);
 	hdc =BeginPaint(HWND_DESKTOP);
 	FillBoxWithBitmap(hdc, ScalerWidthPixel((1280 - MV_BMP[MVBMP_BOOT_LOADING].bmWidth)/2), ScalerHeigthPixel(424 - MV_BMP[MVBMP_BOOT_LOADING].bmHeight - 6), ScalerWidthPixel(MV_BMP[MVBMP_BOOT_LOADING].bmWidth), ScalerHeigthPixel(MV_BMP[MVBMP_BOOT_LOADING].bmHeight), &MV_BMP[MVBMP_BOOT_LOADING]);
 	EndPaint(HWND_DESKTOP,hdc);
+	printf("[mvapp] LoadBmp: FillBoxWithBitmap done; loop to %d\n",
+	       (int)(MVBMP_INFO_BANNER_CIRCLE + 1));
+	fflush(stdout);
 
 	for ( i = 1 ; i < MVBMP_INFO_BANNER_CIRCLE + 1 ; i++ )
 	{
@@ -149,10 +165,16 @@ int MV_LoadBmp(BOOL b8Load_Kind)
 		//sprintf(temp2, "%s", MV_Bitmap_Link[i]);
 		sprintf(temp2, "%s", Temp_String_Str[CS_DBU_GetMenuLanguage()][i]);
 
+		if ((i % 10) == 1 || i < 5) {
+			printf("[mvapp] LoadBmp: file[%u]=%s\n", (unsigned)i, temp);
+			fflush(stdout);
+		}
+
 		if (MV_BitmapFromFile(HDC_SCREEN, &MV_BMP[i], temp) != 0)
 		{
 			mv_error++;
 			printf("=============>>>> %s no Image file\n", temp);
+			fflush(stdout);
 		}
 
 		//printf("=============>>>> %s Loading \n", temp);
@@ -163,8 +185,11 @@ int MV_LoadBmp(BOOL b8Load_Kind)
 		}
 	}
 
+	printf("[mvapp] LoadBmp: CS_MW_Font_Creation...\n");
+	fflush(stdout);
 	CS_MW_Font_Creation(0);
 	printf("Image load finished..\n");
+	fflush(stdout);
 	return mv_error;
 }
 

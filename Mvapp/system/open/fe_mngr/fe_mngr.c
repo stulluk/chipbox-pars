@@ -209,6 +209,9 @@ BOOL CS_FE_Init (void)
 	// TunerInitial();
 	// printf("tunerHandleId = %d\n", Tuner_HandleId[0]);
 
+	printf("[mvapp] FE: CS_FE_Init (sem + state; Tuner already via CS_DRV_Init)\n");
+	fflush(stdout);
+
 	sem_FrontendAccess  = CSOS_CreateSemaphoreFifo ( NULL, 1 );
 
 #if 0 // by kb : 20100403
@@ -236,7 +239,9 @@ BOOL CS_FE_Init (void)
 
 	CSOS_StartTask(FE_TASK_HANDLE);
 #endif // #if 0
-	
+
+	printf("[mvapp] FE: CS_FE_Init OK (returns TRUE=1)\n");
+	fflush(stdout);
 	return(TRUE);
 }
 
@@ -526,9 +531,14 @@ tCS_FE_Error CS_FE_StartScan ( MV_ScanParams scanparam, unsigned char mode)
 		ScanParams.LagacySwitch       	= 0;
 #endif
 
-		// printf("\n\nCS_FE_StartScan : FrequencyKHz = %d, Pola = %d , POWER = %d \n\n\n", ScanParams.TpFrequency, ScanParams.HorVer, ScanParams.Power);
-		//printf("FrequencyKHz = %d, Priority = %d\n", ScanParams.TpFrequency, ScanParams.HorVer);
+		printf("[mvapp] FE: CS_FE_StartScan freq=%d pol=%d sr=%d pwr=%d lnb=%d handle=%lu\n",
+			(int)ScanParams.TpFrequency, (int)ScanParams.HorVer,
+			(int)ScanParams.Symbolrate, (int)ScanParams.Power,
+			(int)ScanParams.LnbType, (unsigned long)Tuner_HandleId[0]);
+		fflush(stdout);
 		TunerSearchStart(Tuner_HandleId[0], &ScanParams);
+		printf("[mvapp] FE: TunerSearchStart returned\n");
+		fflush(stdout);
 		//CS_DVBT_TUNER_SetFrequency( ScanParams );
 		//printf("TunerSearchStart END\n");
 		Current_TP_Data.TpFrequency		= scanparam.u16TPFrequency;

@@ -3149,7 +3149,7 @@ void AV_TrackTask(void)
 			{
 			    CS_AV_VideoBlank();
 			    if (eCS_AV_ERROR == CS_AV_Play_IFrame2("/usr/work0/app/black.mpg"))
-                                    printf("black.mpg error!!!\n");  //vdeneme sertac 16.05.2013--- ilk defa buraya aldým*/
+                                    printf("black.mpg error!!!\n");  //vdeneme sertac 16.05.2013--- ilk defa buraya ald?m*/
                 printf("Black.mpg played...\n");
 
                 //sleep(3);
@@ -3882,20 +3882,29 @@ tCS_AV_Error AV_AudioSetVolume( U8 Volume )
     CSAPI_RESULT 	csResult = CSAPI_SUCCEED;
     CSAUD_Volume 	aud_Volume;
     U8      		set_value = 0;
-    float   		temp;
 
     if( aud_handle == NULL )
     {
         return eCS_AV_ERROR;
     }
 
-    //set_value = Volume * 3 / 2;
-
-    temp = ( MAX_VOLUME_VALUE - MIN_VOLUME_VALUE )
+#if 1 /* CHIPBOX_TIP: log10f â†’ SIGILL on ARMv5 (no VFP); use linear scale */
+    {
+	unsigned int span = (unsigned int)(MAX_VOLUME_VALUE - MIN_VOLUME_VALUE);
+	unsigned int den = (unsigned int)(kCS_DBU_MAX_VOLUME + 1);
+	unsigned int num = (unsigned int)(Volume + 1);
+	if (den == 0)
+		den = 1;
+	set_value = (U8)(MIN_VOLUME_VALUE + (span * num) / den);
+    }
+#else
+    {
+	float temp;
+	temp = ( MAX_VOLUME_VALUE - MIN_VOLUME_VALUE )
 		   * log10f( Volume + 1 ) / log10f( kCS_DBU_MAX_VOLUME + 1 );
-    /*temp = ( MAX_VOLUME_VALUE - MIN_VOLUME_VALUE )
-		   * ( Volume + 1 ) / ( kCS_DBU_MAX_VOLUME + 1 );*/
-    set_value = temp;
+	set_value = temp;
+    }
+#endif
 
     aud_Volume.front_left  = set_value;
     aud_Volume.front_right = set_value;
@@ -4351,7 +4360,11 @@ tCS_AV_Error CS_AV_SetTVOutDefinition( tCS_AV_VideoDefinition vFormat )
 	memset(&lastsrc,0,sizeof(lastsrc));
 
 #ifdef USE_HDMI_CAT6611
-	//usleep(10000);
+	/*
+	 * CHIPBOX_TIP: Cat6611_init is skipped (kernel owns TX bring-up), but
+	 * SetOutputMode must still run so EEPROM/DBU 1080i reaches the TX.
+	 * Kernel DF must not clobber back to 576i after this (see orion_df).
+	 */
 	switch( definition )
 	{
 		case eCS_AV_VIDEO_FORMAT_NTSC:
@@ -4553,8 +4566,14 @@ tCS_AV_Error Play_Video(tCS_AV_PlayParams ProgramInfo)
     tCS_AV_Error    err = eCS_AV_OK;
     CSAPI_RESULT    sdk_err;
 
+    printf("[mvapp] Play_Video: pid=0x%x type=%d\n",
+	   (unsigned)ProgramInfo.Video_PID, (int)ProgramInfo.VideoType);
+    fflush(stdout);
+
     if(( vid_handle == NULL )||( xport_pid_filter0_handle == CSDEMUX_UNVALID_HANDLE )||( xport_vidout_handle == CSDEMUX_UNVALID_HANDLE ))
 	{
+		printf("[mvapp] Play_Video: bad handle\n");
+		fflush(stdout);
 		return eCS_AV_ERROR;
 	}
 
@@ -4598,14 +4617,18 @@ tCS_AV_Error Play_Video(tCS_AV_PlayParams ProgramInfo)
     CSDEMUX_VID_SetPID(xport_vidout_handle,ProgramInfo.Video_PID);
     if( ProgramInfo.VideoType == eCS_AV_VIDEO_STREAM_H264 )
     {
-		//printf("\nH.264 ########################################\n");
+		printf("[mvapp] Play_Video: SetStreamType H264\n");
+		fflush(stdout);
         CSVID_SetStreamType( vid_handle, VID_STREAM_TYPE_H264_TS );
     }
     else
     {
-		//printf("\nMPEG2 ########################################\n");
+		printf("[mvapp] Play_Video: SetStreamType MPEG2\n");
+		fflush(stdout);
         CSVID_SetStreamType( vid_handle, VID_STREAM_TYPE_MPEG2_TS );
     }
+    printf("[mvapp] Play_Video: after SetStreamType\n");
+    fflush(stdout);
 
     CSVID_WaitSync(vid_handle, 1);
 
@@ -4615,7 +4638,11 @@ tCS_AV_Error Play_Video(tCS_AV_PlayParams ProgramInfo)
     CSDEMUX_VID_Enable(xport_vidout_handle);
     CSDEMUX_PIDFT_Enable(xport_pid_filter0_handle);
 
+    printf("[mvapp] Play_Video: CSVID_Play...\n");
+    fflush(stdout);
     sdk_err = CSVID_Play(vid_handle);
+    printf("[mvapp] Play_Video: CSVID_Play sdk=%d\n", (int)sdk_err);
+    fflush(stdout);
 	CSVID_EnablePTSSync(vid_handle);
 
 	/* By KB Kim 2011.06.02 */
@@ -4637,6 +4664,10 @@ tCS_AV_Error Play_Audio(tCS_AV_PlayParams ProgramInfo)
 {
 	tCS_AV_Error    err = eCS_AV_OK;
 
+	printf("[mvapp] Play_Audio: pid=0x%x type=%d\n",
+	       (unsigned)ProgramInfo.Audio_PID, (int)ProgramInfo.AudioType);
+	fflush(stdout);
+
 	if(( aud_handle == NULL )||( xport_pid_filter1_handle == CSDEMUX_UNVALID_HANDLE )||( xport_audout_handle == CSDEMUX_UNVALID_HANDLE ))
 	{
 		printf("\n1 === %d , %d , %d =======\n", (int)aud_handle, (int)xport_pid_filter1_handle, (int)xport_audout_handle);
@@ -4649,14 +4680,13 @@ tCS_AV_Error Play_Audio(tCS_AV_PlayParams ProgramInfo)
 		return eCS_AV_ERROR;
 	}
 
+	printf("[mvapp] Play_Audio: EnableMute...\n"); fflush(stdout);
 	CSAUD_EnableMute( aud_handle );
-
+	printf("[mvapp] Play_Audio: Stop...\n"); fflush(stdout);
 	CSAUD_Stop(aud_handle);
 
-	//usleep(100*1000);
-
+	printf("[mvapp] Play_Audio: demux disable...\n"); fflush(stdout);
 	CSDEMUX_PIDFT_Disable(xport_pid_filter1_handle);
-
 	CSDEMUX_AUD_Disable(xport_audout_handle);
 
 	CSDEMUX_PIDFT_SetChannel(xport_pid_filter1_handle,DEMUX_CHL_ID0);
@@ -4664,6 +4694,8 @@ tCS_AV_Error Play_Audio(tCS_AV_PlayParams ProgramInfo)
 
 	DB_DemuxSetAudPid(xport_pid_filter1_handle, ProgramInfo.Audio_PID);
 
+	printf("[mvapp] Play_Audio: SetOutputMode (mpr=%d)...\n",
+	       (int)CSMPR_Player_GetStatus()); fflush(stdout);
 	if( CSMPR_Player_GetStatus() == CSMPR_PLAY_RUN )
 	{
 		CSDEMUX_AUD_SetOutputMode( xport_audout_handle, DEMUX_OUTPUT_MOD_BLOCK );
@@ -4675,11 +4707,12 @@ tCS_AV_Error Play_Audio(tCS_AV_PlayParams ProgramInfo)
 
 	CSDEMUX_AUD_SetPID(xport_audout_handle,ProgramInfo.Audio_PID);
 
+	printf("[mvapp] Play_Audio: CSAUD_Init...\n"); fflush(stdout);
 	CSAUD_Init( aud_handle );
-	//CSAUD_SetOutputDevice( aud_handle, AUD_OUTPUT_I2S_SPDIFPCM );
 	CSAUD_EnableMute( aud_handle );
 
-
+	printf("[mvapp] Play_Audio: codec switch type=%d...\n",
+	       (int)ProgramInfo.AudioType); fflush(stdout);
 	/* Modify By River 06.12.2008 */
 	switch( ProgramInfo.AudioType )
 	{
@@ -4692,7 +4725,6 @@ tCS_AV_Error Play_Audio(tCS_AV_PlayParams ProgramInfo)
 			else
 			{
 				CSAUD_SetOutputDevice( aud_handle, AUD_OUTPUT_I2S_SPDIFPCM );
-				// printf("@@@eAUD_OUTPUT_I2S_SPDIFPCM@@@@\n");
 			}
 			CSAUD_SetCodecType( aud_handle, AUD_STREAM_TYPE_AC3 );
 			break;
@@ -4700,40 +4732,37 @@ tCS_AV_Error Play_Audio(tCS_AV_PlayParams ProgramInfo)
 		case eCS_AV_AUDIO_STREAM_AAC:
 			CSAUD_SetOutputDevice( aud_handle, AUD_OUTPUT_I2S_SPDIFPCM );
 			CSAUD_SetCodecType( aud_handle, AUD_STREAM_TYPE_AAC );
-			// printf("@@@eAUD_OUTPUT_I2S_SPDIFPCM@@@@\n");
 			break;
 
 		case eCS_AV_AUDIO_STREAM_LATM:
 			CSAUD_SetOutputDevice( aud_handle, AUD_OUTPUT_I2S_SPDIFPCM );
 			CSAUD_SetCodecType( aud_handle, AUD_STREAM_TYPE_AAC_LATM );
-			// printf("@@@eAUD_OUTPUT_I2S_SPDIFPCM@@@@\n");
 			break;
 
 		case eCS_AV_AUDIO_STREAM_MPEG2:
 		default:
 			CSAUD_SetOutputDevice( aud_handle, AUD_OUTPUT_I2S_SPDIFPCM );
 			CSAUD_SetCodecType( aud_handle, AUD_STREAM_TYPE_MPA );
-			// printf("@@@eAUD_OUTPUT_I2S_SPDIFPCM@@@@\n");
 			break;
 
 	}
 
-	// CSAUD_EnablePTSSync(aud_handle);
-
-	// CSAUD_SetStartDelay(aud_handle, 300);
-	// printf("Play_Audio : Delay 1500\n");
-
+	printf("[mvapp] Play_Audio: demux enable...\n"); fflush(stdout);
 	CSDEMUX_AUD_Enable(xport_audout_handle);
+	printf("[mvapp] Play_Audio: pidft enable...\n"); fflush(stdout);
 	CSDEMUX_PIDFT_Enable(xport_pid_filter1_handle);
 
+	printf("[mvapp] Play_Audio: CSAUD_Play...\n"); fflush(stdout);
 	CSAUD_Play(aud_handle);
+	printf("[mvapp] Play_Audio: EnablePTSSync...\n"); fflush(stdout);
 	CSAUD_EnablePTSSync(aud_handle);
 
+	printf("[mvapp] Play_Audio: SetVolume...\n"); fflush(stdout);
 	err = AV_AudioSetVolume(ProgramInfo.Audio_Volume);
+	printf("[mvapp] Play_Audio: SetStereo...\n"); fflush(stdout);
 	err = AV_AudioSetStereoMode(ProgramInfo.AudioMode);
 
-	//Audio_ErrMoniter();
-
+	printf("[mvapp] Play_Audio: done err=%d\n", (int)err); fflush(stdout);
 	return (err);
 }
 
@@ -4864,11 +4893,16 @@ tCS_AV_Error CS_AV_ProgramPlay( tCS_AV_PlayParams ProgramInfo )
 
 	memset(&lastsrc,0,sizeof(lastsrc));
 
+	printf("[mvapp] ProgramPlay: Play_Audio...\n");
+	fflush(stdout);
 	err = Play_Audio(ProgramInfo);
-	//printf("--@@@--- Play_Audio --- %d , %d ---@@@@@@@@----\n", err, ProgramInfo.Audio_Volume);
+	printf("[mvapp] ProgramPlay: Play_Audio err=%d\n", (int)err);
+	fflush(stdout);
+	printf("[mvapp] ProgramPlay: Play_Video...\n");
+	fflush(stdout);
 	err = Play_Video(ProgramInfo);
-	//printf("--@@@--- Play_Video --- %d ---@@@@@@@@----\n", err);
-	//set_program(ProgramInfo.Video_PID, ProgramInfo.Audio_PID, VID_STREAM_TYPE_H264_TS, AUD_STREAM_TYPE_AC3, VID_INPUT_DEMUX0, DEMUX_OUTPUT_MOD_NONBLOCK);
+	printf("[mvapp] ProgramPlay: Play_Video err=%d\n", (int)err);
+	fflush(stdout);
 
 	CSOS_SignalSemaphore(sem_AVAccess);
 
@@ -5172,7 +5206,7 @@ tCS_AV_Error CS_AV_Play_IFrame2(const char* file_path)
     return eCS_AV_OK;
 }
 
-/*Yukarýsý deneme için*/
+/*Yukar?s? deneme i?in*/
 
 tCS_AV_Error CS_AV_VID_GetPTS(long long * VideoPts)
 {

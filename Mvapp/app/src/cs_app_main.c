@@ -59,18 +59,28 @@ int MiniGUIMain (int argc, const char *argv[])  				//cs_app_main  (int argc, co
 	printf("Argument count is %d , my name is %s \n", argc, argv[0]);
 	int i=0;
 
-	printf("MiniGUIMain %d\n", CS_OS_time_Get_Sec());
+	printf("[mvapp] MiniGUIMain t=%d\n", CS_OS_time_Get_Sec());
+	fflush(stdout);
 
+	printf("[mvapp] CasDrvInit...\n");
+	fflush(stdout);
 	CasDrvInit();  /* By KB Kim : 2010_07_23 */
+	printf("[mvapp] CasDrvInit done\n");
+	fflush(stdout);
+
+	printf("[mvapp] CS_MW_Init...\n");
+	fflush(stdout);
 	CS_MW_Init();
+	printf("[mvapp] CS_MW_Init done\n");
+	fflush(stdout);
 
 	/* For Front Communication By KB Kim 2011.02.01 */
 	CurrentBootMode  = FbGetBootMode();
 
 	/* For AC Power ON Control By KB Kim 2011.03.11 */
 	CurrentPowerMode = GetPowerStatus();
-	// printf("MiniGUIMain: Boot mode = %d\n", CurrentBootMode);
-	// printf("MiniGUIMain: Power mode = %d\n", CurrentPowerMode);
+	printf("[mvapp] Boot mode = %d Power mode = %d\n", CurrentBootMode, CurrentPowerMode);
+	fflush(stdout);
 	if (CurrentPowerMode != 0)
 	{
 		CurrentPowerMode = 1;
@@ -101,35 +111,49 @@ int MiniGUIMain (int argc, const char *argv[])  				//cs_app_main  (int argc, co
 	}
 
 
+	printf("[mvapp] Sc41Init...\n");
+	fflush(stdout);
 	Sc41Init();  /* By KB Kim : 2010_11_16 */
+	printf("[mvapp] Sc41Init done\n");
+	fflush(stdout);
 
 	if ( CFG_Default_Value || CS_MW_GetLcnMode()==eCS_DB_Operator_Defined)
 	{
-		// printf("\n===>>>>>> RUN CS_DBU_InitDefaultUserData ====>>> %d\n\n", i);
+		printf("[mvapp] CS_DBU_InitDefaultUserData...\n");
+		fflush(stdout);
 		CS_DBU_InitDefaultUserData();
 	}
-	//printf("\n\n ========== Loading Images Ready ============\n\n");
 	if ( !CFG_Factory_Mode )
 	{
-		//printf("\n\n ========== Loading Images Start ============\n\n");
+		printf("[mvapp] MV_LoadBmp...\n");
+		fflush(stdout);
 		i = MV_LoadBmp(TRUE);
 
 		if ( i > 0 )
 			printf("===>>>>>> LoadBmp Error ====>>> %d\n", i);
+		printf("[mvapp] MV_LoadBmp done i=%d\n", i);
+		fflush(stdout);
 	}
 
 	SetKeyInputControl(TRUE);
 
-	/* For Start Picture problem */
+	printf("[mvapp] CS_AV_VideoBlank...\n");
+	fflush(stdout);
 	CS_AV_VideoBlank();
 
-	/* For 576i Mode booting problem by KB Kim 20101225 */
+	printf("[mvapp] CS_MW_Init_VideoDefinition(1)...\n");
+	fflush(stdout);
 	CS_MW_Init_VideoDefinition(1);
 
-	/* For RCU Emulation */
+	printf("[mvapp] IMessageInit...\n");
+	fflush(stdout);
 	IMessageInit();
 
+	printf("[mvapp] CS_Gui_MainHandle enter\n");
+	fflush(stdout);
 	CS_Gui_MainHandle();
+	printf("[mvapp] CS_Gui_MainHandle returned\n");
+	fflush(stdout);
 
 	return 0;
 

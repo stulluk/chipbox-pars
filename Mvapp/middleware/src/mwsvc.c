@@ -32,6 +32,7 @@
 #include "mwlayers.h"
 #include "mvosapi.h"
 #include "mv_cfg.h"
+#include "dvbtuner.h"
 
 // #define MW_SVC_printf					printf
 #define MW_SVC_printf(fmt, ... )  {;}
@@ -509,6 +510,12 @@ static void MW_PlayProgram(MV_stServiceInfo   service_data)
 {
 	tCS_AV_PlayParams   play_params;
 
+	printf("[mvapp] FE: MW_PlayProgram enter vpid=%u apid=%u pcr=%u\n",
+		(unsigned)mv_service_data.u16VideoPid,
+		(unsigned)mv_service_data.u16AudioPid,
+		(unsigned)mv_service_data.u16PCRPid);
+	fflush(stdout);
+
 	OpenSVC = TRUE;
 	play_params.Video_PID = mv_service_data.u16VideoPid;
 	play_params.Audio_PID = mv_service_data.u16AudioPid;
@@ -591,7 +598,13 @@ static void MW_PlayProgram(MV_stServiceInfo   service_data)
 			break;
 	}
 
+	printf("[mvapp] FE: CS_AV_ProgramPlay V=0x%x A=0x%x type=%s...\n",
+		(unsigned)play_params.Video_PID, (unsigned)play_params.Audio_PID,
+		play_params.VideoType > 0 ? "H264" : "MPEG2");
+	fflush(stdout);
 	CS_AV_ProgramPlay(play_params);
+	printf("[mvapp] FE: CS_AV_ProgramPlay done\n");
+	fflush(stdout);
 
 	CS_MW_IsVideoFreezed = FALSE;
 }
@@ -1412,9 +1425,15 @@ BOOL CS_MW_PlayServiceByIdx(U16 Index, U8 RetuneKind)
 	//FE
 	// printf("CS_MW_PlayServiceByIdx index = %d  %d\n", Index, RetuneKind);
 
+	printf("[mvapp] FE: PlayServiceByIdx idx=%u retune=%u lastTP=%u newTP=%u\n",
+		(unsigned)Index, (unsigned)RetuneKind,
+		(unsigned)LastTPIdx, (unsigned)mv_service_data.u16TransponderIndex);
+	fflush(stdout);
+
 	if ((LastTPIdx != mv_service_data.u16TransponderIndex) || (RetuneKind != NOT_TUNNING))
 	{
-		// printf("CS_MW_PlayServiceByIdx New Tune\n");
+		printf("[mvapp] FE: PlayServiceByIdx → new tune + CS_FE_StartScan\n");
+		fflush(stdout);
 		b8PlayService = TRUE;
 		//CS_FE_StopScan();
 		CS_DT_Stop();
@@ -1443,9 +1462,18 @@ BOOL CS_MW_PlayServiceByIdx(U16 Index, U8 RetuneKind)
 		scan_data.u8Polar_H			=	channel_data.u8Polar_H;
 		/* By KB Kim 2011.08.08 */
 		// printf("CS_MW_PlayServiceByIdx : Start Scan + CasDrvStartNewChannel!!\n");
+		printf("[mvapp] FE: CasDrvStartNewChannel sid=%u\n",
+			(unsigned)mv_service_data.u16ServiceId);
+		fflush(stdout);
 		CasDrvStartNewChannel  (0, 0, Index, mv_service_data.u16ServiceId, mv_service_data.u16VideoPid, mv_service_data.u16AudioPid);
+		printf("[mvapp] FE: CasDrvStartNewChannel done → StartScan\n");
+		fflush(stdout);
 		CS_FE_StartScan(scan_data, 1);
+		printf("[mvapp] FE: StartScan done → MW_PlayProgram\n");
+		fflush(stdout);
 		MW_PlayProgram( mv_service_data );
+		printf("[mvapp] FE: MW_PlayProgram returned\n");
+		fflush(stdout);
 	}
 	else
 	{

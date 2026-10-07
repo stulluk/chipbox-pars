@@ -247,12 +247,16 @@ int CS_DRV_Init(void)
 	printf("Tuner Driver init succesfully!!...\n");
 
 #ifdef USE_HDMI_CAT6611
+#if 1 /* CHIPBOX_TIP: kernel chipbox_hdmi owns CAT6611 — skip userspace init */
+	printf("[mvapp] HDMI: tip skip Cat6611_init (kernel owns TX)\n");
+	fflush(stdout);
+#else
 	if( Cat6611_init() != 0 )
 	{
 		dprintf(("Orion Cat6611_init Failed ...\n"));
 		return FALSE;
 	}
-
+#endif
 	printf("HDMI Driver init succesfully!!...\n");
 #else
 	if( CSHDMI_Init() != HDMI_SUCCESS )
@@ -393,20 +397,21 @@ BOOL CS_SYS_Init(void)
 
 	status = CS_DT_Init(start_date, start_time);
 
-	printf("CS_DT_Init error = %d, time[%d]\n", status, CS_OS_time_now());
+	/* BOOL: TRUE=1 success, FALSE=0 fail (legacy printf said "error") */
+	printf("CS_DT_Init status = %d (1=OK), time[%d]\n", status, CS_OS_time_now());
 
 #if 1
 	status = CS_FE_Init();
-	printf("CS_FE_Init error = %d, time[%d]\n", status, CS_OS_time_now());
+	printf("CS_FE_Init status = %d (1=OK), time[%d]\n", status, CS_OS_time_now());
 
     status = CS_INSTALL_Init();
-	printf("CS_INSTALL_Init error = %d, time[%d]\n", status, CS_OS_time_now());
+	printf("CS_INSTALL_Init status = %d (1=OK), time[%d]\n", status, CS_OS_time_now());
 #endif
     status = CS_EIT_Init();
-    printf("CS_EIT_Init error = %d, time[%d]\n", status, CS_OS_time_now());
+    printf("CS_EIT_Init status = %d (1=OK), time[%d]\n", status, CS_OS_time_now());
 
     status = CS_TIMER_Init();
-    printf("CS_TIMER_Init error = %d, time[%d]\n", status, CS_OS_time_now());
+    printf("CS_TIMER_Init status = %d (1=OK), time[%d]\n", status, CS_OS_time_now());
 
     /*status = CS_GFX_Init();
     printf("CS_GFX_Init error = %d\n", status);*/
