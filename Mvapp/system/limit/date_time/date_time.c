@@ -414,6 +414,8 @@ void DT_Filter_CallBack(void* userparam,
 							U8 const* data,
 							U32 size)
 							*/
+int tunerDebugEnabled(void);
+
 void DT_Filter_CallBack(U8 tableInfoId, U8 *data, U32 size)
 {
 	U8  *buffer;
@@ -514,6 +516,11 @@ void DT_Filter_CallBack(U8 tableInfoId, U8 *data, U32 size)
 #endif
 
 	CSOS_SignalSemaphore( sem_DateTimeAccess);
+	if (tunerDebugEnabled())
+	{
+		printf("[dt] table 0x%02x mjd(raw) 0x%02x%02x -> %u utc 0x%04x\n", Table_ID, data[3], data[4], date_mjd, time_utc);
+		fflush(stdout);
+	}
 	DT_CorrectTimeByTDTTOT(date_mjd, time_utc);	
 
 	return;

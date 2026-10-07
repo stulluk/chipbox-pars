@@ -310,6 +310,10 @@ static void LiveTableCallBack(U8 infoId, U8 *data, U32 size)
 	LiveProcessData_t *live = FindLiveProcessDataByInfoId(infoId);
 	U8                *copy;
 
+	/* EIT (0x4e..0x6f) is frequent; report the other live tables (TDT/TOT, ...). */
+	if ((size > 0) && ((data[0] < 0x4e) || (data[0] > 0x6f)))
+		SI_DEBUG("live section info %u tid 0x%02x len %u %s\n", infoId, data[0], (unsigned)size,
+		         (live && live->CallBack) ? "-> callback" : "(no callback)");
 	if (live == NULL)
 	{
 		printf("LiveTableCallBack : Can't find Live Process data for InfoID[%d]\n", infoId);

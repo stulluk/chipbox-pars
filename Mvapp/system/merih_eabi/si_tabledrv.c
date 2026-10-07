@@ -227,11 +227,11 @@ static void SectionReceived(CSDEMUX_HANDLE filter, CSDEMUX_SECEVENT *event)
 	DemuxLeaveCriticalSection();
 
 	{
-		static U32 traced;
+		static U32 traced[DEMUX_INFO_NUMBER + 1];
 
-		if (traced < 20)
+		if (traced[found] < 3)
 		{
-			traced++;
+			traced[found]++;
 			SI_DEBUG("notify filter %p slot %u event %d\n", filter, found, (int)*event);
 		}
 	}
@@ -545,13 +545,14 @@ static void SectionReceiveTask(void *param)
 		size = DEMUX_SECTION_MAX;
 		available = 0;
 		{
-			static U32 traced;
+			static U32 traced[DEMUX_INFO_NUMBER];
 			CSAPI_RESULT check = CSDEMUX_Filter_CheckDataSize(filter, &available);
 
-			if (traced < 20)
+			if (traced[index] < 3)
 			{
-				traced++;
-				SI_DEBUG("read slot %u check %d available %u\n", index, (int)check, available);
+				traced[index]++;
+				SI_DEBUG("read slot %u pid 0x%x check %d available %u\n", index, info->Pid,
+				         (int)check, available);
 			}
 		}
 		if (available == 0)
@@ -568,11 +569,11 @@ static void SectionReceiveTask(void *param)
 		}
 		length = DemuxGetInfoLength(&section[1], section[0]) + 3;
 		{
-			static U32 traced;
+			static U32 traced[DEMUX_INFO_NUMBER];
 
-			if (traced < 50)
+			if (traced[index] < 3)
 			{
-				traced++;
+				traced[index]++;
 				SI_DEBUG("section slot %u tid 0x%02x len %u (read %u)\n", index, section[0],
 				         (unsigned)length, size);
 			}
