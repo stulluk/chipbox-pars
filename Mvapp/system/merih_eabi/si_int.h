@@ -66,6 +66,7 @@ U16   DemuxGetStreamId(U8 *data);
 BOOL  DemuxSendTableNotifyMessage(U32 type);
 BOOL  DemuxReceiveTableNotifyMessage(U32 *type);
 BOOL  DemuxSendTableProcessMessage(SiProcessMessage_t message);
+U8   *DemuxLinearBufferBase(void);
 BOOL  DemuxReceiveTableProcessMessage(SiProcessMessage_t *message, U32 timeout);
 void  DemuxTableProcessLock(void);
 void  DemuxTableProcessRelease(void);

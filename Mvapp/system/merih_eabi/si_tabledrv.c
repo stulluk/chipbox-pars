@@ -467,6 +467,15 @@ BOOL DemuxStartTable(DemuxStartParam_t *param, U8 *infoId)
 		CSDEMUX_FILTER_SetSectionNotify(secFilter, SectionReceived, DEMUX_SECTION_AVAIL, 1);
 		CSDEMUX_PIDFT_Enable(pidFilter);
 		CSDEMUX_Filter_Enable(secFilter);
+		{
+			unsigned int left = 0;
+
+			/* A freshly started filter must be empty; anything here is stale. */
+			CSDEMUX_Filter_CheckDataSize(secFilter, &left);
+			if (left)
+				SI_DEBUG("slot %u pid 0x%x: %u bytes already queued right after start\n", slot,
+				         param->Pid, left);
+		}
 
 		info->Pid         = param->Pid;
 		info->PidFilter   = pidFilter;
@@ -568,6 +577,9 @@ static void SectionReceiveTask(void *param)
 			continue;
 		}
 		length = DemuxGetInfoLength(&section[1], section[0]) + 3;
+		if (section[0] == 0x00)
+			SI_DEBUG("PAT read slot %u ts %u lin %u size %u\n", index,
+			         (section[3] << 8) | section[4], LinearWritePointer, size);
 		{
 			static U32 traced[DEMUX_INFO_NUMBER];
 
@@ -628,6 +640,12 @@ static void SectionReceiveTask(void *param)
 		DemuxUpdateLinearPoint(length, TRUE);
 		DemuxLeaveCriticalSection();
 	}
+}
+
+/* Start of the section linear buffer (diagnostics). */
+U8 *DemuxLinearBufferBase(void)
+{
+	return SectionLinearBuff;
 }
 
 /* Allocate the section buffer, queues, semaphores and the three SI tasks. FALSE = ok. */

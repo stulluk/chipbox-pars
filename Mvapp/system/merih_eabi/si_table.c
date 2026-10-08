@@ -1579,6 +1579,9 @@ void TableSiParseProcess(void *param)
 				switch (tableId)
 				{
 					case PAT_TABLE_ID:
+						SI_DEBUG("PAT parse info %u ts %u lin %ld\n", message.InfoId,
+						         (message.Data[3] << 8) | message.Data[4],
+						         (long)(message.Data - DemuxLinearBufferBase()));
 						TableStopSection(&PATProcessData);
 						PatProcess(message.Data, message.Length);
 						if (PatData.NumberOfProgram == 0)
